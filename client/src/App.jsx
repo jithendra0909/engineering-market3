@@ -1,0 +1,120 @@
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+
+// Components
+import Navbar from './components/Navbar';
+import MobileBottomNav from './components/MobileBottomNav';
+import CreateNewModal from './components/CreateNewModal';
+import Toast from './components/Toast';
+import ProtectedRoute from './components/ProtectedRoute';
+import VerifiedOnly from './components/VerifiedOnly';
+
+// Pages
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import GeneralMarket from './pages/GeneralMarket';
+import CollegeMarket from './pages/CollegeMarket';
+import ProductDetails from './pages/ProductDetails';
+import CreateListing from './pages/CreateListing';
+import Profile from './pages/Profile';
+import Vendors from './pages/Vendors';
+import Orders from './pages/Orders';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+
+// Layout wrapper to inject Navbar & BottomNav
+const AppLayout = ({ children }) => {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col antialiased">
+      {/* Desktop + Mobile Header */}
+      <Navbar />
+
+      {/* Main Page Panel */}
+      <main className="flex-1 w-full">
+        {children}
+      </main>
+
+      {/* Mobile Floating Bottom Bar */}
+      <MobileBottomNav isCreateOpen={isCreateOpen} setIsCreateOpen={setIsCreateOpen} />
+
+      {/* Global Center Modal */}
+      <CreateNewModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      
+      {/* Toast Notification overlay */}
+      <Toast />
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppLayout>
+          <Routes>
+            {/* Market Browse Pages */}
+            <Route path="/" element={<Home />} />
+            <Route path="/general-market" element={<GeneralMarket />} />
+            <Route 
+              path="/college-market" 
+              element={
+                <ProtectedRoute>
+                  <CollegeMarket />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/listing/:id" element={<ProductDetails />} />
+
+            {/* Creation (requires verification) */}
+            <Route 
+              path="/listing/new" 
+              element={
+                <ProtectedRoute>
+                  <VerifiedOnly>
+                    <CreateListing />
+                  </VerifiedOnly>
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Auth Flows */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Stubs / Coming Soon */}
+            <Route path="/vendors" element={<Vendors />} />
+            <Route path="/orders" element={<Orders />} />
+
+            {/* Admin Management */}
+            <Route path="/dev/admin-simulator" element={<AdminLogin />} />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Redirect fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AppLayout>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;
