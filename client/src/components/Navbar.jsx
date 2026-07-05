@@ -174,8 +174,8 @@ export const Navbar = () => {
       </header>
 
       {/* ══════════ MOBILE HEADER ══════════ */}
-      {/* Hidden on /vendors and /orders — those pages render their own sub-headers */}
-      {!['/vendors', '/orders'].includes(location.pathname) && (
+      {/* Hidden on /vendors, /orders, /profile — those pages render their own headers */}
+      {!['/vendors', '/orders', '/profile'].includes(location.pathname) && (
       <header className="lg:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E9E6F8]/40">
         <div className="px-5 h-[56px] flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">

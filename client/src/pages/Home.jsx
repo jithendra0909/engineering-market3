@@ -240,29 +240,18 @@ export const Home = () => {
             </div>
           </div>
 
-          {/* Top Vendors Coming Soon */}
+          {/* Top Vendors Coming Soon — Full banner */}
           <div className="lg:flex-1">
             <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827] mb-5">
               Top Vendors <span className="text-[12px] font-semibold text-[#9CA3AF]">(Coming Soon)</span>
             </h2>
-            <div className="bg-white border border-[#E9E6F8]/70 rounded-[20px] overflow-hidden flex items-center h-[160px] lg:h-[180px]">
-              <div className="flex-1 p-5 lg:p-6">
-                <h3 className="font-bold text-[15px] text-[#111827]">Vendor Section Coming Soon!</h3>
-                <p className="text-[11px] text-[#9CA3AF] mt-1.5 leading-relaxed max-w-[240px]">
-                  We're working hard to bring you verified vendors and great deals.
-                </p>
-              </div>
-              <div className="h-full w-[45%] relative flex-shrink-0">
-                <img
-                  src="/images/file_00000000592871f8a49c9c3cf84fde89.png"
-                  alt="Vendors Coming Soon"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-3 right-3 bg-[#6C4EFF] text-white text-[9px] font-bold px-2.5 py-1 rounded-lg rotate-3 shadow-sm">
-                  Coming<br/>Soon!
-                </div>
-              </div>
-            </div>
+            <Link to="/vendors" className="block rounded-[20px] overflow-hidden h-[160px] lg:h-[180px] group">
+              <img
+                src="/images/file_0000000089387207ae3efbac0454e8bd.png"
+                alt="Vendor Section Coming Soon"
+                className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+              />
+            </Link>
           </div>
         </section>
 
