@@ -2,6 +2,7 @@
   "name": "engineering-market-root",
   "version": "1.0.0",
   "description": "Engineering Market - Full Stack Student Marketplace",
+  "type": "module",
   "scripts": {
     "install-all": "npm install --prefix server && npm install --prefix client",
     "dev-server": "npm run dev --prefix server",
