@@ -1,10 +1,10 @@
 {
-  "buildCommand": "cd client && npm install && npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "client/dist",
-  "installCommand": "npm install --prefix server && npm install --prefix client",
   "functions": {
     "api/index.js": {
-      "includeFiles": "server/**"
+      "includeFiles": "server/**",
+      "maxDuration": 30
     }
   },
   "rewrites": [
