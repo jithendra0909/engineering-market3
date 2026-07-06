@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data);
       showToast('Logged in successfully!', 'success');
-      return { success: true };
+      return { success: true, user: data };
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed';
       showToast(msg, 'error');
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data);
       showToast('Registration successful! Account pending verification.', 'success');
-      return { success: true };
+      return { success: true, user: data };
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
       showToast(msg, 'error');
