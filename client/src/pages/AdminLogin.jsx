@@ -6,7 +6,7 @@ import { ShieldAlert, Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
 export const AdminLogin = () => {
   const { login, showToast } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@engineeringmarket.com');
+  const [email, setEmail] = useState('admin@vignan.edu.in');
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
