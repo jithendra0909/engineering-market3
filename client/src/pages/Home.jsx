@@ -313,35 +313,6 @@ export const Home = () => {
         </section>
 
         {/* ╔══════════════════════════════════════╗
-            ║   NEWSLETTER                         ║
-            ╚══════════════════════════════════════╝ */}
-        <section className="bg-[#6C4EFF] rounded-[24px] p-6 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute -top-16 -left-16 w-[200px] h-[200px] bg-white/[0.06] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -right-16 w-[200px] h-[200px] bg-white/[0.06] rounded-full blur-3xl pointer-events-none" />
-
-          <div className="text-white z-10">
-            <h3 className="text-[20px] lg:text-[22px] font-bold">Stay Updated!</h3>
-            <p className="text-[12px] text-white/70 mt-1 max-w-[340px] leading-relaxed">
-              Subscribe to our newsletter and never miss out on new items, offers, and updates.
-            </p>
-          </div>
-
-          <div className="flex gap-3 w-full sm:w-auto z-10">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 sm:w-[240px] h-10 px-4 bg-white/10 border border-white/20 rounded-full text-[13px] text-white placeholder-white/50 focus:bg-white/15 focus:outline-none focus:border-white/40 transition-all"
-            />
-            <button
-              onClick={() => showToast('Subscribed successfully!', 'success')}
-              className="bg-white text-[#6C4EFF] text-[13px] font-bold px-5 h-10 rounded-full hover:bg-white/90 transition-all active:scale-[0.98] flex-shrink-0"
-            >
-              Subscribe
-            </button>
-          </div>
-        </section>
-
-        {/* ╔══════════════════════════════════════╗
             ║   FOOTER                             ║
             ╚══════════════════════════════════════╝ */}
         <footer className="border-t border-[#E9E6F8]/60 pt-10 lg:pt-14">
