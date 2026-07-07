@@ -54,6 +54,11 @@ const listingSchema = new mongoose.Schema({
     type: String,
     enum: ['available', 'sold', 'removed'],
     default: 'available'
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   }
 }, {
   timestamps: true

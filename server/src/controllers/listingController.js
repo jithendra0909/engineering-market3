@@ -6,18 +6,30 @@ import User from '../models/User.js';
 // @access  Private
 const getListings = async (req, res) => {
   try {
+    const now = new Date();
     let query = { status: 'available' };
     
-    // If authenticated admin, show everything; if student, show general + own college; if unauthenticated, show only general
+    // If authenticated admin, show everything; if student, show general + own college (filtered by expiration or owner); if unauthenticated, show general + college (strictly unexpired)
     if (req.user && req.user.role === 'admin') {
-      // Admin sees all listings
+      // Admin sees all available listings (including expired)
     } else if (req.user) {
-      query.$or = [
-        { marketType: 'general' },
-        { marketType: 'college', sellerCollege: req.user.college }
+      query.$and = [
+        {
+          $or: [
+            { marketType: 'general' },
+            { marketType: 'college', sellerCollege: req.user.college }
+          ]
+        },
+        {
+          $or: [
+            { expiresAt: { $gt: now } },
+            { seller: req.user._id }
+          ]
+        }
       ];
     } else {
-      // Unauthenticated: show all available listings (general + college)
+      // Unauthenticated: show all available listings that are not expired
+      query.expiresAt = { $gt: now };
     }
     
     const listings = await Listing.find(query)
@@ -35,7 +47,21 @@ const getListings = async (req, res) => {
 // @access  Private
 const getGeneralListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ marketType: 'general', status: 'available' })
+    const now = new Date();
+    let query = { marketType: 'general', status: 'available' };
+    
+    if (req.user && req.user.role === 'admin') {
+      // Admin sees everything
+    } else if (req.user) {
+      query.$or = [
+        { expiresAt: { $gt: now } },
+        { seller: req.user._id }
+      ];
+    } else {
+      query.expiresAt = { $gt: now };
+    }
+
+    const listings = await Listing.find(query)
       .populate('seller', 'fullName email profileImageUrl')
       .sort({ createdAt: -1 });
     res.json(listings);
@@ -49,11 +75,25 @@ const getGeneralListings = async (req, res) => {
 // @access  Private
 const getCollegeListings = async (req, res) => {
   try {
-    const listings = await Listing.find({ 
+    const now = new Date();
+    let query = { 
       marketType: 'college', 
       sellerCollege: req.user.college,
       status: 'available' 
-    })
+    };
+    
+    if (req.user && req.user.role === 'admin') {
+      // Admin sees everything
+    } else if (req.user) {
+      query.$or = [
+        { expiresAt: { $gt: now } },
+        { seller: req.user._id }
+      ];
+    } else {
+      query.expiresAt = { $gt: now };
+    }
+
+    const listings = await Listing.find(query)
       .populate('seller', 'fullName email profileImageUrl')
       .sort({ createdAt: -1 });
     res.json(listings);
@@ -238,6 +278,31 @@ const saveListing = async (req, res) => {
   }
 };
 
+// @desc    Renew listing for 30 more days
+// @route   POST /api/listings/:id/renew
+// @access  Private & Verified
+const renewListing = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    // Check ownership
+    if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(401).json({ message: 'User not authorized to renew this listing' });
+    }
+
+    // Extend expiresAt by 30 days
+    listing.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await listing.save();
+    res.json({ message: 'Listing renewed successfully!', expiresAt: listing.expiresAt });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error renewing listing', error: error.message });
+  }
+};
+
 export {
   getListings,
   getGeneralListings,
@@ -247,5 +312,6 @@ export {
   updateListing,
   deleteListing,
   contactListingSeller,
-  saveListing
+  saveListing,
+  renewListing
 };
