@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ChevronDown, Bell, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Logo } from './Logo';
 
 export const Navbar = () => {
   const { user, isLoggedIn, logout, isAdmin, showToast } = useAuth();
@@ -31,11 +32,8 @@ export const Navbar = () => {
         <div className="max-w-[1360px] mx-auto h-[64px] px-8 flex items-center justify-between gap-6">
           
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <div className="w-[34px] h-[34px] bg-[#111827] rounded-full flex items-center justify-center">
-              <span className="text-white text-[11px] font-extrabold tracking-tight leading-none">EM</span>
-            </div>
-            <span className="text-[15px] font-bold text-[#111827] tracking-[-0.01em]">Engineering Market</span>
+          <Link to="/" className="flex items-center flex-shrink-0">
+            <Logo size={34} showText={true} textClass="text-[15px] font-bold text-[#111827] tracking-[-0.01em]" />
           </Link>
 
           {/* Desktop Search */}
@@ -186,11 +184,8 @@ export const Navbar = () => {
       {!['/vendors', '/orders', '/profile'].includes(location.pathname) && (
       <header className="lg:hidden sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#E9E6F8]/40">
         <div className="px-5 h-[56px] flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-[30px] h-[30px] bg-[#111827] rounded-full flex items-center justify-center">
-              <span className="text-white text-[10px] font-extrabold tracking-tight leading-none">EM</span>
-            </div>
-            <span className="text-[14px] font-bold text-[#111827] tracking-[-0.01em]">Engineering Market</span>
+          <Link to="/">
+            <Logo size={30} showText={true} textClass="text-[14px] font-bold text-[#111827] tracking-[-0.01em]" />
           </Link>
 
           <div className="flex items-center gap-0.5">

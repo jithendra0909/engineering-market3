@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Logo } from '../components/Logo';
 import { User, Mail, Phone, Lock, Hash, BookOpen, Calendar, Camera, Upload, ArrowRight, Eye, EyeOff, GraduationCap } from 'lucide-react';
 
 const DEPARTMENTS = [
@@ -154,10 +155,8 @@ export const Signup = () => {
 
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-[#111827] rounded-full flex items-center justify-center">
-              <span className="text-white text-[13px] font-extrabold tracking-tight leading-none">EM</span>
-            </div>
+          <Link to="/">
+            <Logo size={40} showText={false} />
           </Link>
         </div>
 
@@ -189,7 +188,7 @@ export const Signup = () => {
             <label className={labelClass}>Email</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your.email@college.edu" className={inputClass} />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your.email@gmail.com" className={inputClass} />
             </div>
           </div>
 

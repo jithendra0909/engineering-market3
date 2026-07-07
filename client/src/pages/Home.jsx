@@ -11,6 +11,7 @@ import HeroCarousel from '../components/HeroCarousel';
 import ProductCard from '../components/ProductCard';
 import VerificationRequiredModal from '../components/VerificationRequiredModal';
 import api from '../api/axios';
+import { Logo } from '../components/Logo';
 
 /* ═══════════════════════════════════════════════
    HOME PAGE — Premium Apple-inspired layout
@@ -331,11 +332,8 @@ export const Home = () => {
 
             {/* Brand column */}
             <div className="col-span-2 lg:col-span-2 flex flex-col gap-4">
-              <Link to="/" className="flex items-center gap-2">
-                <div className="w-[30px] h-[30px] bg-[#111827] rounded-full flex items-center justify-center">
-                  <span className="text-white text-[10px] font-extrabold tracking-tight leading-none">EM</span>
-                </div>
-                <span className="text-[14px] font-bold text-[#111827]">Engineering Market</span>
+              <Link to="/">
+                <Logo size={30} showText={true} textClass="text-[14px] font-bold text-[#111827]" />
               </Link>
               <p className="text-[12px] text-[#9CA3AF] leading-relaxed max-w-[260px]">
                 The all-in-one marketplace for engineering students. Buy, sell, and donate with trust.

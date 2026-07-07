@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Logo } from '../components/Logo';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export const Login = () => {
@@ -44,10 +45,8 @@ export const Login = () => {
 
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-[#111827] rounded-full flex items-center justify-center">
-              <span className="text-white text-[13px] font-extrabold tracking-tight leading-none">EM</span>
-            </div>
+          <Link to="/">
+            <Logo size={40} showText={false} />
           </Link>
         </div>
 
@@ -68,7 +67,7 @@ export const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@college.edu"
+                placeholder="your.email@gmail.com"
                 className="w-full h-12 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
               />
             </div>
