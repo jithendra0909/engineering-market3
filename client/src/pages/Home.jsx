@@ -48,6 +48,11 @@ export const Home = () => {
     }
   };
 
+  const handleMockClick = (e, label) => {
+    e.preventDefault();
+    showToast(`"${label}" section is coming soon!`, 'info');
+  };
+
   /* ── Testimonials data ── */
   const testimonials = [
     {
@@ -245,7 +250,13 @@ export const Home = () => {
             <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827] mb-5">
               Top Vendors <span className="text-[12px] font-semibold text-[#9CA3AF]">(Coming Soon)</span>
             </h2>
-            <Link to="/vendors" className="block rounded-[20px] overflow-hidden h-[160px] lg:h-[180px] group">
+            <Link
+              to="/vendors"
+              onClick={(e) => {
+                showToast('Vendor dashboard is coming soon!', 'info');
+              }}
+              className="block rounded-[20px] overflow-hidden h-[160px] lg:h-[180px] group"
+            >
               <img
                 src="/images/file_0000000089387207ae3efbac0454e8bd.png"
                 alt="Vendor Section Coming Soon"
@@ -331,7 +342,11 @@ export const Home = () => {
               </p>
               <div className="flex gap-3 mt-1">
                 {[Facebook, Instagram, Twitter, Youtube, Linkedin].map((Icon, i) => (
-                  <button key={i} className="w-8 h-8 rounded-full bg-[#FAFAFF] border border-[#E9E6F8]/70 flex items-center justify-center text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30 transition-all">
+                  <button
+                    key={i}
+                    onClick={(e) => handleMockClick(e, 'Social Media')}
+                    className="w-8 h-8 rounded-full bg-[#FAFAFF] border border-[#E9E6F8]/70 flex items-center justify-center text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30 transition-all"
+                  >
                     <Icon className="w-3.5 h-3.5" />
                   </button>
                 ))}
@@ -349,9 +364,19 @@ export const Home = () => {
                 <h4 className="font-bold text-[13px] text-[#111827]">{col.title}</h4>
                 <div className="flex flex-col gap-2">
                   {col.links.map(([label, href]) => (
-                    <Link key={label} to={href} className="text-[12px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">
-                      {label}
-                    </Link>
+                    href === '#' ? (
+                      <button
+                        key={label}
+                        onClick={(e) => handleMockClick(e, label)}
+                        className="text-[12px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors text-left"
+                      >
+                        {label}
+                      </button>
+                    ) : (
+                      <Link key={label} to={href} className="text-[12px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">
+                        {label}
+                      </Link>
+                    )
                   ))}
                 </div>
               </div>
@@ -362,8 +387,8 @@ export const Home = () => {
           <div className="mt-10 pt-6 border-t border-[#E9E6F8]/60 flex flex-col sm:flex-row items-center justify-between gap-3 pb-4">
             <p className="text-[11px] text-[#9CA3AF]">© 2026 Engineering Market. All rights reserved.</p>
             <div className="flex gap-4">
-              <Link to="#" className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Privacy Policy</Link>
-              <Link to="#" className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Terms of Service</Link>
+              <button onClick={(e) => handleMockClick(e, 'Privacy Policy')} className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Privacy Policy</button>
+              <button onClick={(e) => handleMockClick(e, 'Terms of Service')} className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Terms of Service</button>
             </div>
           </div>
         </footer>

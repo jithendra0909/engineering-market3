@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Search, Bell } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Vendors = () => {
   const navigate = useNavigate();
+  const { showToast } = useAuth();
 
   return (
     <div className="flex flex-col bg-[#EEEAF8]" style={{ minHeight: 'calc(100vh - 64px)' }}>
@@ -20,10 +22,16 @@ export const Vendors = () => {
           <h1 className="text-[16px] font-bold text-[#111827]">Vendors</h1>
         </div>
         <div className="flex items-center gap-1">
-          <button className="w-9 h-9 flex items-center justify-center text-[#111827]">
+          <button
+            onClick={() => navigate('/general-market')}
+            className="w-9 h-9 flex items-center justify-center text-[#111827]"
+          >
             <Search className="w-[18px] h-[18px] stroke-[2]" />
           </button>
-          <button className="relative w-9 h-9 flex items-center justify-center text-[#111827]">
+          <button
+            onClick={() => showToast('You have no new notifications.', 'info')}
+            className="relative w-9 h-9 flex items-center justify-center text-[#111827]"
+          >
             <Bell className="w-[18px] h-[18px] stroke-[2]" />
             <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] bg-rose-500 rounded-full border border-white" />
           </button>

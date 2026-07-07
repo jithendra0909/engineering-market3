@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ChevronDown, Bell, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar = () => {
-  const { user, isLoggedIn, logout, isAdmin } = useAuth();
+  const { user, isLoggedIn, logout, isAdmin, showToast } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCatOpen, setIsCatOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
+  const searchInputRef = useRef(null);
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -42,6 +43,7 @@ export const Navbar = () => {
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search for items, services, or vendors..."
                 value={searchVal}
@@ -110,13 +112,19 @@ export const Navbar = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            <button className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827] transition-all">
+            <button
+              onClick={() => searchInputRef.current?.focus()}
+              className="w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827] transition-all"
+            >
               <Search className="w-[18px] h-[18px]" />
             </button>
 
             {isLoggedIn && user ? (
               <>
-                <button className="relative w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827] transition-all">
+                <button
+                  onClick={() => showToast('You have no new notifications.', 'info')}
+                  className="relative w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827] transition-all"
+                >
                   <Bell className="w-[18px] h-[18px]" />
                   <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />
                 </button>
@@ -189,10 +197,13 @@ export const Navbar = () => {
             <button onClick={() => navigate('/general-market')} className="w-9 h-9 rounded-full flex items-center justify-center text-[#6B7280] hover:text-[#111827] transition-colors">
               <Search className="w-[20px] h-[20px]" />
             </button>
-            <Link to={isLoggedIn ? '/profile' : '/login'} className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#6B7280] hover:text-[#111827] transition-colors">
+            <button
+              onClick={() => showToast('You have no new notifications.', 'info')}
+              className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#6B7280] hover:text-[#111827] transition-colors"
+            >
               <Bell className="w-[20px] h-[20px]" />
               {isLoggedIn && <span className="absolute top-[5px] right-[5px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />}
-            </Link>
+            </button>
             <Link to={isLoggedIn ? '/profile' : '/login'} className="w-9 h-9 rounded-full border border-[#E9E6F8] flex items-center justify-center text-[#6B7280] overflow-hidden bg-[#FAFAFF]">
               {user?.profileImageUrl ? (
                 <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />

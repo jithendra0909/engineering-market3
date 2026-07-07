@@ -12,6 +12,8 @@ export const CollegeMarket = () => {
   const [loading, setLoading] = useState(true);
   const [searchVal, setSearchVal] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [showSort, setShowSort] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -32,6 +34,10 @@ export const CollegeMarket = () => {
     const matchesSearch = !searchVal || item.title.toLowerCase().includes(searchVal.toLowerCase()) || item.description?.toLowerCase().includes(searchVal.toLowerCase());
     const matchesCat = activeCategory === 'All' || item.category === activeCategory;
     return matchesSearch && matchesCat;
+  }).sort((a, b) => {
+    if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
+    if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
   return (
@@ -62,9 +68,45 @@ export const CollegeMarket = () => {
             className="w-full h-11 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
           />
         </div>
-        <button className="w-11 h-11 rounded-full bg-[#FAFAFF] border border-[#E9E6F8] flex items-center justify-center text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30 transition-all flex-shrink-0">
-          <SlidersHorizontal className="w-[18px] h-[18px]" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowSort(!showSort)}
+            className={`w-11 h-11 rounded-full border flex items-center justify-center transition-all flex-shrink-0 ${
+              showSort || sortBy !== 'newest'
+                ? 'bg-[#F4F1FF] border-[#6C4EFF]/30 text-[#6C4EFF]'
+                : 'bg-[#FAFAFF] border-[#E9E6F8] text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30'
+            }`}
+          >
+            <SlidersHorizontal className="w-[18px] h-[18px]" />
+          </button>
+          {showSort && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E9E6F8] rounded-2xl shadow-lg py-1.5 z-50 animate-scaleIn origin-top-right">
+              <div className="px-3.5 py-2 border-b border-[#E9E6F8] mb-1">
+                <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Sort by</span>
+              </div>
+              {[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'price-asc', label: 'Price: Low to High' },
+                { value: 'price-desc', label: 'Price: High to Low' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setSortBy(opt.value);
+                    setShowSort(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 text-[12px] font-medium transition-colors ${
+                    sortBy === opt.value
+                      ? 'text-[#6C4EFF] bg-[#F4F1FF]'
+                      : 'text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Category pills */}
