@@ -13,8 +13,9 @@ export const Profile = () => {
   const navigate = useNavigate();
   const [myListings, setMyListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
-  const [activeTab, setActiveTab] = useState(null); // 'listings', 'saved', 'donations'
+  const [activeTab, setActiveTab] = useState(null); // 'listings', 'saved', 'donations', 'sold'
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
@@ -37,7 +38,9 @@ export const Profile = () => {
     if (user) fetchData();
   }, [user]);
 
-  const donationCount = myListings.filter(l => l.listingType === 'donate').length;
+  const activeItems = myListings.filter(l => l.status === 'available');
+  const soldItems = myListings.filter(l => l.status === 'sold');
+  const donationCount = myListings.filter(l => l.listingType === 'donate' && l.status === 'available').length;
 
   const handleRenew = async (id) => {
     try {
@@ -110,15 +113,15 @@ export const Profile = () => {
           <h1 className="text-[20px] font-bold text-[#111827]">My Listings</h1>
         </div>
 
-        {myListings.length === 0 ? (
+        {activeItems.length === 0 ? (
           <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
             <Tag className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
-            <p className="font-bold text-[#111827]">No listings yet</p>
-            <p className="text-[12px] text-[#9CA3AF] mt-1">Items you list for sale or donation will appear here.</p>
+            <p className="font-bold text-[#111827]">No active listings</p>
+            <p className="text-[12px] text-[#9CA3AF] mt-1">Your active listings for sale or donation will appear here.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {myListings.map((listing) => {
+            {activeItems.map((listing) => {
               const expired = listing.expiresAt && new Date(listing.expiresAt).getTime() <= Date.now();
               const diff = listing.expiresAt ? new Date(listing.expiresAt).getTime() - Date.now() : 0;
               const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -214,6 +217,70 @@ export const Profile = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (activeTab === 'sold') {
+    return (
+      <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
+        <div className="flex items-center gap-3 py-4 lg:py-6 border-b border-[#ECECEC] mb-5">
+          <button onClick={() => setActiveTab(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] transition-colors">
+            <ChevronLeft className="w-5 h-5 text-[#111827] stroke-[2.5]" />
+          </button>
+          <h1 className="text-[20px] font-bold text-[#111827]">Sold Items</h1>
+        </div>
+
+        {soldItems.length === 0 ? (
+          <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
+            <CheckCircle2 className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
+            <p className="font-bold text-[#111827]">No sold items yet</p>
+            <p className="text-[12px] text-[#9CA3AF] mt-1">Items you mark as sold will appear here.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {soldItems.map((listing) => (
+              <div key={listing._id} className="bg-white border border-[#ECECEC] rounded-[20px] p-4 flex gap-4">
+                <div 
+                  onClick={() => navigate(`/listing/${listing._id}`)}
+                  className="w-20 h-20 bg-[#FAFAFF] rounded-[14px] overflow-hidden border border-[#E9E6F8]/70 flex-shrink-0 cursor-pointer"
+                >
+                  <img
+                    src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div 
+                  onClick={() => navigate(`/listing/${listing._id}`)}
+                  className="flex-1 min-w-0 flex flex-col justify-between cursor-pointer"
+                >
+                  <div>
+                    <h4 className="font-bold text-[14px] text-[#111827] truncate">{listing.title}</h4>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      <span className="text-[12px] font-bold text-[#111827]">
+                        {listing.listingType === 'donate' ? 'Free' : `₹${listing.price}`}
+                      </span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider">
+                        Sold
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#9CA3AF] font-medium">Item marked as sold</p>
+                </div>
+                <div className="flex flex-col justify-between items-end flex-shrink-0">
+                  <button
+                    onClick={() => handleDelete(listing._id)}
+                    className="w-8 h-8 rounded-full border border-[#ECECEC] flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-colors"
+                    title="Delete Listing"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -389,7 +456,7 @@ export const Profile = () => {
           ═══════════════════════════════════════ */}
       <div className="grid grid-cols-3 border border-[#ECECEC] rounded-[20px] bg-white mb-5 divide-x divide-[#ECECEC]">
         {[
-          { icon: Package, value: myListings.length, label: 'Listings', color: 'text-[#6D4AFF]', key: 'listings' },
+          { icon: Package, value: activeItems.length, label: 'Listings', color: 'text-[#6D4AFF]', key: 'listings' },
           { icon: Heart, value: savedListings.length, label: 'Saved', color: 'text-[#6D4AFF]', key: 'saved' },
           { icon: Gift, value: donationCount, label: 'Donations', color: 'text-[#6D4AFF]', key: 'donations' },
         ].map((stat) => (
@@ -444,9 +511,18 @@ export const Profile = () => {
             iconBg: 'bg-[#EEF9F2]',
             iconColor: 'text-emerald-600',
             title: 'My Listings',
-            sub: 'Manage your active and sold items',
-            count: myListings.length,
+            sub: 'Manage your active items',
+            count: activeItems.length,
             key: 'listings',
+          },
+          {
+            icon: CheckCircle2,
+            iconBg: 'bg-[#F0FDF4]',
+            iconColor: 'text-emerald-500',
+            title: 'Sold Items',
+            sub: 'View items you have sold',
+            count: soldItems.length,
+            key: 'sold',
           },
           {
             icon: Heart,
