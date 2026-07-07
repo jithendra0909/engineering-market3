@@ -76,6 +76,7 @@ const getAllListingsAdmin = async (req, res) => {
   try {
     const listings = await Listing.find({})
       .populate('seller', 'fullName email')
+      .populate('reports.reporter', 'fullName email')
       .sort({ createdAt: -1 });
     res.json(listings);
   } catch (error) {
@@ -100,11 +101,32 @@ const deleteListingAdmin = async (req, res) => {
   }
 };
 
+// @desc    Dismiss all reports on a listing
+// @route   POST /api/admin/listings/:id/dismiss-reports
+// @access  Private & Admin
+const dismissReports = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    listing.reports = [];
+    listing.status = 'available'; // Restore to feed if it was auto-hidden
+
+    await listing.save();
+    res.json({ message: 'All reports dismissed successfully', listing });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error dismissing reports', error: error.message });
+  }
+};
+
 export {
   getUsersByStatus,
   getPendingUsers,
   approveUser,
   rejectUser,
   getAllListingsAdmin,
-  deleteListingAdmin
+  deleteListingAdmin,
+  dismissReports
 };

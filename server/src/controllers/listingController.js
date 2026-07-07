@@ -303,6 +303,51 @@ const renewListing = async (req, res) => {
   }
 };
 
+// @desc    Report a listing
+// @route   POST /api/listings/:id/report
+// @access  Private
+const reportListing = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason) {
+      return res.status(400).json({ message: 'Reason for report is required' });
+    }
+
+    const listing = await Listing.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    // Check if the user has already reported this listing
+    const alreadyReported = listing.reports.some(
+      (r) => r.reporter.toString() === req.user._id.toString()
+    );
+
+    if (alreadyReported) {
+      return res.status(400).json({ message: 'You have already reported this listing' });
+    }
+
+    listing.reports.push({
+      reporter: req.user._id,
+      reason
+    });
+
+    // Check threshold for auto-hiding: 3 or more reports
+    if (listing.reports.length >= 3) {
+      listing.status = 'removed'; // Excludes it from search feeds
+    }
+
+    await listing.save();
+    res.json({
+      message: 'Listing reported successfully',
+      reportsCount: listing.reports.length,
+      autoHidden: listing.reports.length >= 3
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error reporting listing', error: error.message });
+  }
+};
+
 export {
   getListings,
   getGeneralListings,
@@ -313,5 +358,6 @@ export {
   deleteListing,
   contactListingSeller,
   saveListing,
-  renewListing
+  renewListing,
+  reportListing
 };

@@ -5,7 +5,8 @@ import {
   approveUser,
   rejectUser,
   getAllListingsAdmin,
-  deleteListingAdmin
+  deleteListingAdmin,
+  dismissReports
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { adminOnly } from '../middleware/adminMiddleware.js';
@@ -19,5 +20,6 @@ router.post('/users/:id/reject', protect, adminOnly, rejectUser);
 
 router.get('/listings', protect, adminOnly, getAllListingsAdmin);
 router.delete('/listings/:id', protect, adminOnly, deleteListingAdmin);
+router.post('/listings/:id/dismiss-reports', protect, adminOnly, dismissReports);
 
 export default router;

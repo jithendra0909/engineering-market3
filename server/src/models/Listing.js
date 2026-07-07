@@ -59,7 +59,22 @@ const listingSchema = new mongoose.Schema({
     type: Date,
     required: true,
     default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  }
+  },
+  reports: [{
+    reporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    reason: {
+      type: String,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

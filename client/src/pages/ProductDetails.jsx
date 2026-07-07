@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Heart, MapPin, Tag, GraduationCap, Clock, ChevronLeft, Share2, MessageCircle } from 'lucide-react';
+import { Phone, Heart, MapPin, Tag, GraduationCap, Clock, ChevronLeft, Share2, MessageCircle, Flag } from 'lucide-react';
 import api from '../api/axios';
 import VerificationRequiredModal from '../components/VerificationRequiredModal';
 
@@ -15,6 +15,10 @@ export const ProductDetails = () => {
   const [selectedImg, setSelectedImg] = useState(0);
   const [isGateOpen, setIsGateOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Inappropriate Image');
+  const [reportNotes, setReportNotes] = useState('');
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -53,6 +57,33 @@ export const ProductDetails = () => {
       setIsSaved(data.saved);
       showToast(data.message, 'success');
     } catch { showToast('Failed to save', 'error'); }
+  };
+
+  const handleReport = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    setReporting(true);
+    try {
+      const reasonText = reportNotes.trim()
+        ? `${reportReason} - ${reportNotes.trim()}`
+        : reportReason;
+        
+      const { data } = await api.post(`/listings/${id}/report`, { reason: reasonText });
+      showToast(data.message, 'success');
+      setIsReportModalOpen(false);
+      setListing(prev => ({
+        ...prev,
+        reports: [...(prev.reports || []), { reporter: user._id, reason: reasonText }]
+      }));
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Failed to submit report';
+      showToast(errMsg, 'error');
+    } finally {
+      setReporting(false);
+    }
   };
 
   if (loading) {
@@ -223,10 +254,86 @@ export const ProductDetails = () => {
               <Share2 className="w-5 h-5 stroke-[2]" />
             </button>
           </div>
+
+          {isLoggedIn && user?._id !== listing.seller?._id && (
+            <div className="flex justify-center mt-5">
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                disabled={listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)}
+                className={`flex items-center gap-1.5 text-xs font-semibold hover:underline ${
+                  listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
+                    ? 'text-[#9CA3AF] cursor-default hover:no-underline'
+                    : 'text-rose-600 hover:text-rose-700'
+                }`}
+              >
+                <Flag className="w-3.5 h-3.5" />
+                {listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
+                  ? 'You have reported this item'
+                  : 'Report this listing'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       <VerificationRequiredModal isOpen={isGateOpen} onClose={() => setIsGateOpen(false)} />
+
+      {/* Report Listing Modal Overlay */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReportModalOpen(false)} />
+          <form onSubmit={handleReport} className="relative w-full max-w-[420px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
+            <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
+              <Flag className="w-5 h-5 text-rose-600" /> Report Inappropriate Listing
+            </h3>
+            <p className="text-xs text-[#6B7280]">
+              If this listing contains inappropriate images, offensive language, spam, or scams, please report it.
+            </p>
+            
+            <div>
+              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Reason</label>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all cursor-pointer"
+              >
+                <option value="Inappropriate Image">Inappropriate Image</option>
+                <option value="Scam or Fraud">Scam or Fraud</option>
+                <option value="Incorrect Information">Incorrect Information</option>
+                <option value="Other">Other (Describe below)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Additional Details (Optional)</label>
+              <textarea
+                value={reportNotes}
+                onChange={(e) => setReportNotes(e.target.value)}
+                placeholder="Provide details about why you are reporting this listing..."
+                rows={3}
+                className="w-full p-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(false)}
+                className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={reporting}
+                className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center disabled:opacity-60"
+              >
+                {reporting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

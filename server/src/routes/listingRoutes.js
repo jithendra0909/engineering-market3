@@ -9,7 +9,8 @@ import {
   deleteListing,
   contactListingSeller,
   saveListing,
-  renewListing
+  renewListing,
+  reportListing
 } from '../controllers/listingController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { verifiedOnly } from '../middleware/verifiedMiddleware.js';
@@ -31,6 +32,9 @@ router.post('/:id/contact', protect, verifiedOnly, contactListingSeller);
 
 // Saving listing only requires login
 router.post('/:id/save', protect, saveListing);
+
+// Reporting listing only requires login
+router.post('/:id/report', protect, reportListing);
 
 // Renewing listing requires verification
 router.post('/:id/renew', protect, verifiedOnly, renewListing);

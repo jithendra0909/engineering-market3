@@ -58,6 +58,22 @@ const saveLocally = (fileBuffer, originalName) => {
   return `/uploads/${filename}`;
 };
 
+// Check file signature magic bytes
+const checkMagicBytes = (buffer) => {
+  if (!buffer || buffer.length < 4) return false;
+  const hex = buffer.toString('hex', 0, 4);
+  // JPEG: ffd8ff
+  if (hex.startsWith('ffd8ff')) return true;
+  // PNG: 89504e47
+  if (hex === '89504e47') return true;
+  // WebP/RIFF: 52494646
+  if (hex === '52494646') {
+    const webpHex = buffer.toString('hex', 8, 12);
+    if (webpHex === '57454250') return true;
+  }
+  return false;
+};
+
 // Middleware handler for single file upload
 const handleSingleUpload = (fieldName) => {
   const uploadMiddleware = upload.single(fieldName);
@@ -70,6 +86,11 @@ const handleSingleUpload = (fieldName) => {
       
       if (!req.file) {
         return next();
+      }
+
+      // Strict file signature check (magic bytes guard)
+      if (!checkMagicBytes(req.file.buffer)) {
+        return res.status(400).json({ message: 'Invalid file signature. Only actual image files (JPG, PNG, WebP) are allowed!' });
       }
       
       try {
@@ -107,6 +128,12 @@ const handleMultipleUpload = (fieldName, maxCount = 5) => {
       if (!req.files || req.files.length === 0) {
         req.uploadedPaths = [];
         return next();
+      }
+
+      // Check signature for all files
+      const invalidFile = req.files.find(file => !checkMagicBytes(file.buffer));
+      if (invalidFile) {
+        return res.status(400).json({ message: `Invalid file signature for ${invalidFile.originalname}. Only actual image files (JPG, PNG, WebP) are allowed!` });
       }
       
       try {

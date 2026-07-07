@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle } from 'lucide-react';
 import api from '../api/axios';
 
 export const AdminDashboard = () => {
@@ -73,6 +73,20 @@ export const AdminDashboard = () => {
       fetchData();
     } catch (err) {
       showToast('Failed to remove listing', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDismissReports = async (id) => {
+    if (!window.confirm('Are you sure you want to dismiss all reports for this listing?')) return;
+    setActionLoading(true);
+    try {
+      await api.post(`/admin/listings/${id}/dismiss-reports`);
+      showToast('All reports dismissed successfully!', 'success');
+      fetchData();
+    } catch (err) {
+      showToast('Failed to dismiss reports', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -172,6 +186,15 @@ export const AdminDashboard = () => {
             }`}
           >
             All Listings ({totalListings})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reported')}
+            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
+              activeTab === 'reported' ? 'border-[#6C4EFF] text-[#6C4EFF]' : 'border-transparent text-[#6B7280]'
+            }`}
+          >
+            Reported Listings ({listings.filter(l => l.reports && l.reports.length > 0).length})
           </button>
         </div>
 
@@ -391,6 +414,90 @@ export const AdminDashboard = () => {
                       <tr>
                         <td colSpan="5" className="px-6 py-12 text-center text-[#6B7280]">
                           No listings in the marketplace.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === 'reported' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                      <th className="px-6 py-4">Product Info</th>
+                      <th className="px-6 py-4">Seller Details</th>
+                      <th className="px-6 py-4">Reports & Reasons</th>
+                      <th className="px-6 py-4">Status / Price</th>
+                      <th className="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                    {listings.filter(l => l.reports && l.reports.length > 0).length > 0 ? (
+                      listings.filter(l => l.reports && l.reports.length > 0).map((lst) => (
+                        <tr key={lst._id} className="hover:bg-[#FAFAFF]/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <p className="font-bold text-[#111827]">{lst.title}</p>
+                            <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[240px]">
+                              {lst.description}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 text-xs font-medium">
+                            <p className="font-bold">{lst.seller?.fullName || 'Anonymous'}</p>
+                            <p className="text-[#6B7280] mt-0.5">{lst.sellerCollege}</p>
+                          </td>
+                          <td className="px-6 py-4 text-xs">
+                            <div className="flex flex-col gap-1.5 max-w-[320px]">
+                              <span className="inline-flex items-center gap-1 font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md w-fit">
+                                <AlertTriangle className="w-3.5 h-3.5 animate-pulse" /> {lst.reports.length} report(s)
+                              </span>
+                              <div className="flex flex-col gap-1 font-medium text-[#6B7280] pl-1 border-l-2 border-[#E9E6F8]">
+                                {lst.reports.map((r, i) => (
+                                  <p key={i} className="text-[11px] leading-tight">
+                                    • <span className="font-bold text-[#111827]">{r.reporter?.fullName || 'Student'}:</span> {r.reason}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 font-black">
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full w-fit uppercase ${
+                                lst.status === 'removed' ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+                              }`}>
+                                {lst.status === 'removed' ? 'Auto-Hidden' : lst.status}
+                              </span>
+                              <span>{lst.listingType === 'donate' ? 'Free' : `₹${lst.price}`}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleDismissReports(lst._id)}
+                                disabled={actionLoading}
+                                className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-colors"
+                                title="Dismiss Reports & Restore"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteListing(lst._id)}
+                                disabled={actionLoading}
+                                className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
+                                title="Delete Listing Permanently"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-12 text-center text-[#6B7280]">
+                          No reported listings found.
                         </td>
                       </tr>
                     )}
