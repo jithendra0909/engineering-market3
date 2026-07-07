@@ -110,13 +110,6 @@ export const Login = () => {
           </button>
         </form>
 
-        {/* Admin hint */}
-        <div className="mt-6 p-3.5 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px]">
-          <p className="text-[11px] text-[#9CA3AF] text-center">
-            <strong className="text-[#6B7280]">Demo:</strong> Use <code className="bg-white px-1.5 py-0.5 rounded text-[#6C4EFF] text-[10px] border border-[#E9E6F8]">admin@engineeringmarket.com</code> / <code className="bg-white px-1.5 py-0.5 rounded text-[#6C4EFF] text-[10px] border border-[#E9E6F8]">admin123</code>
-          </p>
-        </div>
-
         {/* Sign up link */}
         <p className="text-center text-[13px] text-[#9CA3AF] mt-6">
           Don't have an account?{' '}
