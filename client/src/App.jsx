@@ -14,6 +14,8 @@ import VerifiedOnly from './components/VerifiedOnly';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import GeneralMarket from './pages/GeneralMarket';
 import CollegeMarket from './pages/CollegeMarket';
 import ProductDetails from './pages/ProductDetails';
@@ -84,6 +86,8 @@ function App() {
             {/* Auth Flows */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route 
               path="/profile" 
               element={

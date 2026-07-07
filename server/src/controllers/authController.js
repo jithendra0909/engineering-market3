@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 
@@ -116,4 +118,127 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-export { registerStudent, loginUser, getUserProfile };
+// @desc    Request password reset link
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'No account is registered with this email address' });
+    }
+
+    // Generate secure token
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Set token and expires on user
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save();
+
+    // Determine host (production or localhost)
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    let resetUrl = `${protocol}://${host}/reset-password/${token}`;
+    if (process.env.NODE_ENV === 'production') {
+      const origin = req.get('origin');
+      if (origin) {
+        resetUrl = `${origin}/reset-password/${token}`;
+      } else {
+        resetUrl = `https://engineering-market.vercel.app/reset-password/${token}`;
+      }
+    } else {
+      resetUrl = `http://localhost:5173/reset-password/${token}`;
+    }
+
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    if (smtpUser && smtpPass) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: smtpUser,
+          pass: smtpPass
+        }
+      });
+
+      const mailOptions = {
+        from: `"Engineering Market" <${smtpUser}>`,
+        to: user.email,
+        subject: 'Reset Your Password - Engineering Market',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ECECEC; border-radius: 20px;">
+            <h2 style="color: #6C4EFF;">Engineering Market</h2>
+            <p>Hi ${user.fullName},</p>
+            <p>We received a request to reset your password. Click the button below to set a new password. This link is only valid for 15 minutes.</p>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${resetUrl}" style="background-color: #6C4EFF; color: white; padding: 12px 24px; text-decoration: none; border-radius: 9999px; font-weight: bold; display: inline-block;">Reset Password</a>
+            </div>
+            <p>If the button doesn't work, copy and paste this URL into your browser:</p>
+            <p style="word-break: break-all; color: #6B7280; font-size: 13px;">${resetUrl}</p>
+            <p>If you did not request a password reset, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #ECECEC; margin: 20px 0;" />
+            <p style="font-size: 11px; color: #9CA3AF;">This is an automated email from Vignan's University Student Marketplace.</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      return res.status(200).json({ message: 'A secure reset link has been sent to your email address.' });
+    } else {
+      console.log('\n======================================================');
+      console.log(`[PASSWORD RESET LINK FOR ${user.email.toUpperCase()}]:`);
+      console.log(resetUrl);
+      console.log('======================================================\n');
+      return res.status(200).json({ 
+        message: 'A secure reset link has been generated. Since email service is in offline/test mode, the link has been logged to the terminal console.',
+        debugUrl: resetUrl
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Failed to initiate password reset', error: error.message });
+  }
+};
+
+// @desc    Reset password using token
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: 'New password is required' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired' });
+    }
+
+    // Update password (pre-save hook will hash it)
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: 'Your password has been successfully reset. You can now log in.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Failed to reset password', error: error.message });
+  }
+};
+
+export { registerStudent, loginUser, getUserProfile, forgotPassword, resetPassword };

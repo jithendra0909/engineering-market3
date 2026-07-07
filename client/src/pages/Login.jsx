@@ -75,7 +75,12 @@ export const Login = () => {
 
           {/* Password */}
           <div>
-            <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Password</label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="text-[12px] font-semibold text-[#6B7280] block">Password</label>
+              <Link to="/forgot-password" className="text-[11px] font-semibold text-[#6C4EFF] hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
               <input
