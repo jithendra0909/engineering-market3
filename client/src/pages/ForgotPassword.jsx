@@ -32,7 +32,8 @@ export const ForgotPassword = () => {
         setDebugUrl(url);
       }
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to request password reset', 'error');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to request password reset';
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }

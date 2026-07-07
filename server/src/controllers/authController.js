@@ -160,11 +160,12 @@ const forgotPassword = async (req, res) => {
     const smtpPass = process.env.SMTP_PASS;
 
     if (smtpUser && smtpPass) {
+      const cleanPass = smtpPass.replace(/\s+/g, '');
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: smtpUser,
-          pass: smtpPass
+          pass: cleanPass
         }
       });
 
