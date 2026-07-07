@@ -163,7 +163,7 @@ export const Home = () => {
                 </div>
                 <h3 className="font-bold text-[15px] text-[#111827]">General Market</h3>
                 <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">
-                  Discover items and services from verified local vendors.
+                  Discover items listed by verified students across different colleges.
                 </p>
               </div>
               <Link
