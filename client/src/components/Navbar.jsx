@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ChevronDown, Bell, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +12,23 @@ export const Navbar = () => {
   const [isCatOpen, setIsCatOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
   const searchInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const catDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+      if (catDropdownRef.current && !catDropdownRef.current.contains(event.target)) {
+        setIsCatOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -63,10 +80,9 @@ export const Navbar = () => {
             </Link>
 
             {/* Categories Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={catDropdownRef}>
               <button
                 onClick={() => setIsCatOpen(!isCatOpen)}
-                onBlur={() => setTimeout(() => setIsCatOpen(false), 200)}
                 className={`px-3.5 py-[7px] rounded-full text-[13px] font-semibold transition-all flex items-center gap-1 ${
                   isActive('/general-market') || isActive('/college-market')
                     ? 'text-[#6C4EFF] bg-[#F4F1FF]'
@@ -79,10 +95,10 @@ export const Navbar = () => {
 
               {isCatOpen && (
                 <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-[#E9E6F8] rounded-2xl shadow-lg py-1.5 z-50 animate-scaleIn origin-top-left">
-                  <Link to="/college-market" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors rounded-xl mx-1.5">
+                  <Link to="/college-market" onClick={() => setIsCatOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors rounded-xl mx-1.5">
                     College Market
                   </Link>
-                  <Link to="/general-market" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors rounded-xl mx-1.5">
+                  <Link to="/general-market" onClick={() => setIsCatOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors rounded-xl mx-1.5">
                     General Market
                   </Link>
                 </div>
@@ -128,10 +144,9 @@ export const Navbar = () => {
                 </button>
 
                 {/* Profile dropdown */}
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
                     className="w-[34px] h-[34px] rounded-full overflow-hidden border border-[#E9E6F8] hover:border-[#6C4EFF]/30 transition-all flex items-center justify-center bg-[#FAFAFF]"
                   >
                     {user.profileImageUrl ? (
@@ -147,16 +162,19 @@ export const Navbar = () => {
                         <p className="font-bold text-[13px] text-[#111827] truncate">{user.fullName}</p>
                         <p className="text-[11px] text-[#9CA3AF] truncate mt-0.5">{user.email}</p>
                       </div>
-                      <Link to="/profile" className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors">
+                      <Link to="/profile" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors">
                         <UserIcon className="w-4 h-4" /> My Profile
                       </Link>
                       {isAdmin && (
-                        <Link to="/admin/dashboard" className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors">
+                        <Link to="/admin/dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#6C4EFF] transition-colors">
                           <LayoutDashboard className="w-4 h-4" /> Admin Dashboard
                         </Link>
                       )}
                       <button
-                        onClick={logout}
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          logout();
+                        }}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-rose-600 hover:bg-rose-50 transition-colors border-t border-[#E9E6F8] mt-1"
                       >
                         <LogOut className="w-4 h-4" /> Log Out
