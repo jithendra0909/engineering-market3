@@ -18,6 +18,7 @@ export const AdminDashboard = () => {
   
   // ID Preview Overlay
   const [previewIdUrl, setPreviewIdUrl] = useState(null);
+  const [previewTitle, setPreviewTitle] = useState('Image Preview');
 
   const fetchData = async () => {
     setLoading(true);
@@ -231,7 +232,7 @@ export const AdminDashboard = () => {
                           </td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => setPreviewIdUrl(st.idCardImageUrl)}
+                              onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle('Student ID Card Preview'); }}
                               className="inline-flex items-center gap-1 text-xs font-bold text-[#6C4EFF] hover:underline"
                             >
                               <Eye className="w-4 h-4" /> View ID Card
@@ -319,7 +320,7 @@ export const AdminDashboard = () => {
                             </td>
                             <td className="px-6 py-4">
                               <button
-                                onClick={() => setPreviewIdUrl(st.idCardImageUrl)}
+                                onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle('Student ID Card Preview'); }}
                                 className="inline-flex items-center gap-1 text-xs font-bold text-[#6C4EFF] hover:underline"
                               >
                                 <Eye className="w-4 h-4" /> View ID Card
@@ -439,10 +440,31 @@ export const AdminDashboard = () => {
                       listings.filter(l => l.reports && l.reports.length > 0).map((lst) => (
                         <tr key={lst._id} className="hover:bg-[#FAFAFF]/50 transition-colors">
                           <td className="px-6 py-4">
-                            <p className="font-bold text-[#111827]">{lst.title}</p>
-                            <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[240px]">
-                              {lst.description}
-                            </p>
+                            <div className="flex items-center gap-3">
+                              {lst.images && lst.images.length > 0 ? (
+                                <div
+                                  onClick={() => { setPreviewIdUrl(lst.images[0]); setPreviewTitle('Listing Image Preview'); }}
+                                  className="w-12 h-12 rounded-lg bg-slate-100 border border-[#E9E6F8] overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-85 transition-opacity"
+                                  title="Click to preview image"
+                                >
+                                  <img
+                                    src={lst.images[0]}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-slate-50 border border-[#E9E6F8] flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
+                                  No Img
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-bold text-[#111827]">{lst.title}</p>
+                                <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[200px]">
+                                  {lst.description}
+                                </p>
+                              </div>
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-xs font-medium">
                             <p className="font-bold">{lst.seller?.fullName || 'Anonymous'}</p>
@@ -515,7 +537,7 @@ export const AdminDashboard = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setPreviewIdUrl(null)} />
           <div className="relative w-full max-w-[640px] max-h-[85vh] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8]">
             <div className="flex justify-between items-center border-b border-[#E9E6F8] pb-3">
-              <h3 className="font-bold text-sm text-[#111827]">Student ID Card Preview</h3>
+              <h3 className="font-bold text-sm text-[#111827]">{previewTitle}</h3>
               <button
                 onClick={() => setPreviewIdUrl(null)}
                 className="w-8 h-8 rounded-full bg-[#FAFAFF] hover:bg-[#F4F1FF] flex items-center justify-center text-[#6B7280]"
