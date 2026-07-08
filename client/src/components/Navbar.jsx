@@ -15,6 +15,7 @@ export const Navbar = () => {
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   useEffect(() => {
