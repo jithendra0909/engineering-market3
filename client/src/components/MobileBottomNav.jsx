@@ -1,10 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Store, Plus, X, Package, User } from 'lucide-react';
+import { Home, MessageSquare, Plus, X, Package, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoggedIn } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get('/chats/unread/count');
+        setUnreadCount(data.count);
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 12000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, location.pathname]);
 
   const handleTabClick = (path) => {
     setIsCreateOpen(false);
@@ -17,7 +41,7 @@ export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
   };
 
   const tabClass = (path) =>
-    `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all ${
+    `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all relative ${
       isActive(path) ? 'text-[#6C4EFF]' : 'text-[#9CA3AF]'
     }`;
 
@@ -32,10 +56,13 @@ export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
           <span className="text-[10px] font-semibold">Home</span>
         </button>
 
-        {/* Vendors */}
-        <button onClick={() => handleTabClick('/vendors')} className={tabClass('/vendors')}>
-          <Store className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Vendors</span>
+        {/* Chat */}
+        <button onClick={() => handleTabClick('/chat')} className={tabClass('/chat')}>
+          <MessageSquare className="w-[22px] h-[22px] stroke-[1.8]" />
+          <span className="text-[10px] font-semibold">Chat</span>
+          {unreadCount > 0 && (
+            <span className="absolute top-2.5 right-6 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+          )}
         </button>
 
         {/* Center FAB — raised purple circle */}

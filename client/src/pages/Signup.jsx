@@ -29,7 +29,7 @@ export const Signup = () => {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [department, setDepartment] = useState('');
   const [year, setYear] = useState('1st Year');
-  const [college, setCollege] = useState('Vignan Institute of Information Technology');
+  const [college, setCollege] = useState("Vignan's Institute of Information Technology (VIIT)");
   const [idCardFile, setIdCardFile] = useState(null);
   const [idCardPreview, setIdCardPreview] = useState('');
   const [error, setError] = useState('');
@@ -51,6 +51,11 @@ export const Signup = () => {
 
     if (!fullName || !email || !whatsappNumber || !password || !registrationNumber || !department || !year || !college) {
       setError('Please fill in all fields.');
+      return;
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must be at least 8 characters long and include:\n✓ At least 1 uppercase letter (A-Z)\n✓ At least 1 lowercase letter (a-z)\n✓ At least 1 numeric digit (0-9)');
       return;
     }
     if (!idCardFile) {
@@ -257,7 +262,8 @@ export const Signup = () => {
             <div className="relative">
               <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] z-10" />
               <select value={college} onChange={(e) => setCollege(e.target.value)} className={selectClass}>
-                <option value="Vignan Institute of Information Technology">Vignan Institute of Information Technology</option>
+                <option value="Vignan's Institute of Information Technology (VIIT)">Vignan's Institute of Information Technology (VIIT)</option>
+                <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
               </select>
             </div>
           </div>

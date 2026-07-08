@@ -10,12 +10,16 @@ export const seedData = async () => {
     await Listing.deleteMany({});
     console.log('Cleared existing collections.');
 
-    // 1. Seed College
-    const college = await College.create({
-      name: 'Vignan Institute of Information Technology',
+    // 1. Seed Colleges
+    const viit = await College.create({
+      name: "Vignan's Institute of Information Technology (VIIT)",
       isActive: true
     });
-    console.log('College seeded successfully.');
+    const view = await College.create({
+      name: "Vignan's Institute of Engineering for Women (VIEW)",
+      isActive: true
+    });
+    console.log('Colleges seeded successfully.');
 
     // 2. Seed Users
     // Admin user
@@ -27,7 +31,7 @@ export const seedData = async () => {
       registrationNumber: 'ADMIN-001',
       department: 'Administration',
       year: '4th Year',
-      college: college.name,
+      college: viit.name,
       idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
       role: 'admin',
       verificationStatus: 'approved'
@@ -42,7 +46,7 @@ export const seedData = async () => {
       registrationNumber: '21F31A0512',
       department: 'Computer Science Engineering',
       year: '3rd Year',
-      college: college.name,
+      college: viit.name,
       idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
       role: 'student',
       verificationStatus: 'approved'
@@ -57,7 +61,7 @@ export const seedData = async () => {
       registrationNumber: '21F31A0545',
       department: 'Computer Science Engineering',
       year: '3rd Year',
-      college: college.name,
+      college: viit.name,
       idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
       role: 'student',
       verificationStatus: 'pending'
@@ -77,7 +81,7 @@ export const seedData = async () => {
         listingType: 'sell',
         marketType: 'college',
         seller: arjun._id,
-        sellerCollege: college.name,
+        sellerCollege: viit.name,
         sellerWhatsappNumber: arjun.whatsappNumber,
         status: 'available'
       },
@@ -91,7 +95,7 @@ export const seedData = async () => {
         listingType: 'sell',
         marketType: 'college',
         seller: arjun._id,
-        sellerCollege: college.name,
+        sellerCollege: viit.name,
         sellerWhatsappNumber: arjun.whatsappNumber,
         status: 'available'
       },
@@ -105,7 +109,7 @@ export const seedData = async () => {
         listingType: 'sell',
         marketType: 'college',
         seller: arjun._id,
-        sellerCollege: college.name,
+        sellerCollege: viit.name,
         sellerWhatsappNumber: arjun.whatsappNumber,
         status: 'available'
       },
@@ -119,7 +123,7 @@ export const seedData = async () => {
         listingType: 'sell',
         marketType: 'college',
         seller: arjun._id,
-        sellerCollege: college.name,
+        sellerCollege: viit.name,
         sellerWhatsappNumber: arjun.whatsappNumber,
         status: 'available'
       }

@@ -22,8 +22,9 @@ export const ResetPassword = () => {
       showToast('Please fill in both fields', 'error');
       return;
     }
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters long', 'error');
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      showToast('Password must be at least 8 characters long and include: at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit.', 'error');
       return;
     }
     if (password !== confirmPassword) {

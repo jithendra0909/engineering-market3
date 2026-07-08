@@ -41,12 +41,19 @@ export const ProductDetails = () => {
       setIsGateOpen(true);
       return;
     }
+    
+    const sellerId = listing.seller?._id || listing.seller;
+    if (user?._id === sellerId) {
+      showToast('This is your listing!', 'info');
+      return;
+    }
+
     try {
-      const { data } = await api.post(`/listings/${id}/contact`);
-      const whatsappUrl = `https://wa.me/${data.sellerWhatsappNumber}?text=${encodeURIComponent(`Hi! I'm interested in your "${listing.title}" listed on Engineering Market. ${data.message}`)}`;
-      window.open(whatsappUrl, '_blank');
+      const { data } = await api.post('/chats', { listingId: listing._id });
+      navigate(`/chat?conversationId=${data._id}`);
     } catch (err) {
-      showToast('Failed to contact seller', 'error');
+      const errMsg = err.response?.data?.message || 'Failed to contact seller';
+      showToast(errMsg, 'error');
     }
   };
 
@@ -228,12 +235,21 @@ export const ProductDetails = () => {
 
           {/* Action buttons */}
           <div className="flex gap-3 mt-auto">
-            <button
-              onClick={handleContact}
-              className="flex-1 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] py-3.5 rounded-full shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="w-5 h-5" /> Contact Seller
-            </button>
+            {isLoggedIn && user?._id === (listing.seller?._id || listing.seller) ? (
+              <button
+                disabled
+                className="flex-1 bg-[#E9E6F8] text-[#9CA3AF] font-semibold text-[14px] py-3.5 rounded-full flex items-center justify-center gap-2 cursor-not-allowed"
+              >
+                <MessageCircle className="w-5 h-5" /> Your Listing
+              </button>
+            ) : (
+              <button
+                onClick={handleContact}
+                className="flex-1 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] py-3.5 rounded-full shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" /> Chat with Seller
+              </button>
+            )}
             <button
               onClick={handleSave}
               className={`w-[52px] h-[52px] rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${

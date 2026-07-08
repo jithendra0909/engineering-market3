@@ -80,7 +80,7 @@ export const ProductCard = ({ product }) => {
         <div className="flex items-center gap-1 text-[#9CA3AF] mt-0.5">
           <MapPin className="w-3 h-3 flex-shrink-0" />
           <span className="text-[11px] font-medium truncate">
-            {product.sellerCollege === 'Vignan Institute of Information Technology' ? 'Your College' : product.sellerCollege}
+            {user && product.sellerCollege === user.college ? 'Your College' : product.sellerCollege}
           </span>
         </div>
       </div>

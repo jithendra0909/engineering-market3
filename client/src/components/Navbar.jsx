@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ChevronDown, Bell, User as UserIcon, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from './Logo';
+import api from '../api/axios';
 
 export const Navbar = () => {
   const { user, isLoggedIn, logout, isAdmin, showToast } = useAuth();
@@ -14,6 +15,27 @@ export const Navbar = () => {
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const fetchUnreadCount = async () => {
+      try {
+        const { data } = await api.get('/chats/unread/count');
+        setUnreadCount(data.count);
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 12000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -122,6 +144,20 @@ export const Navbar = () => {
             >
               Orders
             </Link>
+
+            {isLoggedIn && (
+              <Link
+                to="/chat"
+                className={`px-3.5 py-[7px] rounded-full text-[13px] font-semibold transition-all flex items-center gap-1.5 ${
+                  isActive('/chat') ? 'text-[#6C4EFF] bg-[#F4F1FF]' : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#FAFAFF]'
+                }`}
+              >
+                Messages
+                {unreadCount > 0 && (
+                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                )}
+              </Link>
+            )}
           </nav>
 
           {/* Right Actions */}

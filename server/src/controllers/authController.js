@@ -3,6 +3,14 @@ import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 
+const validatePasswordComplexity = (password) => {
+  if (!password || password.length < 8) return false;
+  if (!/[A-Z]/.test(password)) return false;
+  if (!/[a-z]/.test(password)) return false;
+  if (!/[0-9]/.test(password)) return false;
+  return true;
+};
+
 // @desc    Register a new student
 // @route   POST /api/auth/signup
 // @access  Public (Accepts multipart/form-data for ID Card image)
@@ -23,6 +31,13 @@ const registerStudent = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    // Enforce password complexity rules
+    if (!validatePasswordComplexity(password)) {
+      return res.status(400).json({ 
+        message: 'Password must be at least 8 characters long and include: at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit.' 
+      });
     }
 
     // Verify file upload for ID card image
@@ -216,8 +231,10 @@ const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({ message: 'New password is required' });
+    if (!password || !validatePasswordComplexity(password)) {
+      return res.status(400).json({ 
+        message: 'Password must be at least 8 characters long and include: at least 1 uppercase letter, 1 lowercase letter, and 1 numeric digit.' 
+      });
     }
 
     const user = await User.findOne({
