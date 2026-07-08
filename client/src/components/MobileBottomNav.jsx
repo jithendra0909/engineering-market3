@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, MessageSquare, Plus, X, Package, User } from 'lucide-react';
+import { Home, MessageSquare, Plus, X, Store, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
@@ -79,10 +79,10 @@ export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
           </button>
         </div>
 
-        {/* Orders */}
-        <button onClick={() => handleTabClick('/orders')} className={tabClass('/orders')}>
-          <Package className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Orders</span>
+        {/* Vendors */}
+        <button onClick={() => handleTabClick('/vendors')} className={tabClass('/vendors')}>
+          <Store className="w-[22px] h-[22px] stroke-[1.8]" />
+          <span className="text-[10px] font-semibold">Vendors</span>
         </button>
 
         {/* Profile */}

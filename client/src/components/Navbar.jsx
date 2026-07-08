@@ -136,14 +136,6 @@ export const Navbar = () => {
               Vendors
             </Link>
 
-            <Link
-              to="/orders"
-              className={`px-3.5 py-[7px] rounded-full text-[13px] font-semibold transition-all ${
-                isActive('/orders') ? 'text-[#6C4EFF] bg-[#F4F1FF]' : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#FAFAFF]'
-              }`}
-            >
-              Orders
-            </Link>
 
             {isLoggedIn && (
               <Link

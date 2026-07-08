@@ -175,7 +175,7 @@ export const Chat = () => {
   });
 
   return (
-    <div className="flex bg-[#EEEAF8] overflow-hidden" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="flex bg-[#EEEAF8] overflow-hidden w-full h-[calc(100vh-56px)] h-[calc(100dvh-56px)] lg:h-[calc(100vh-64px)]">
       {/* ─── LEFT SIDEBAR (CONVERSATIONS LIST) ─── */}
       <div className={`w-full lg:w-[380px] bg-white border-r border-[#E9E6F8] flex flex-col flex-shrink-0 ${activeChat && conversationIdParam ? 'hidden lg:flex' : 'flex'}`}>
         

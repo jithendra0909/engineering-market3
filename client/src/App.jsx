@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 
 // Components
@@ -30,6 +30,11 @@ import Chat from './pages/Chat';
 // Layout wrapper to inject Navbar & BottomNav
 const AppLayout = ({ children }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const location = useLocation();
+
+  // Check if we are currently inside an active chat thread on mobile
+  const searchParams = new URLSearchParams(location.search);
+  const isChatActive = location.pathname.startsWith('/chat') && searchParams.get('conversationId');
 
   return (
     <div className="min-h-screen bg-white flex flex-col antialiased">
@@ -41,8 +46,10 @@ const AppLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Mobile Floating Bottom Bar */}
-      <MobileBottomNav isCreateOpen={isCreateOpen} setIsCreateOpen={setIsCreateOpen} />
+      {/* Mobile Floating Bottom Bar - Hide inside active chat thread */}
+      {!isChatActive && (
+        <MobileBottomNav isCreateOpen={isCreateOpen} setIsCreateOpen={setIsCreateOpen} />
+      )}
 
       {/* Global Center Modal */}
       <CreateNewModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
