@@ -1,6 +1,7 @@
 import College from '../models/College.js';
 import User from '../models/User.js';
 import Listing from '../models/Listing.js';
+import Notification from '../models/Notification.js';
 
 export const seedData = async () => {
   try {
@@ -8,6 +9,7 @@ export const seedData = async () => {
     await College.deleteMany({});
     await User.deleteMany({});
     await Listing.deleteMany({});
+    await Notification.deleteMany({});
     console.log('Cleared existing collections.');
 
     // 1. Seed Colleges
@@ -131,6 +133,25 @@ export const seedData = async () => {
 
     await Listing.insertMany(sampleListings);
     console.log('Sample listings seeded successfully.');
+
+    // 4. Seed Notifications
+    await Notification.insertMany([
+      {
+        recipient: arjun._id,
+        title: 'Account Verified! 🎉',
+        message: "Congratulations Arjun! Your student identity has been verified. You can now post books/items and chat with buyers.",
+        type: 'verification',
+        isRead: false
+      },
+      {
+        recipient: pavan._id,
+        title: 'Complete Verification 🎓',
+        message: "Welcome to Vignan's Marketplace! Please upload a clear image of your student identity card to unlock full features like posting listings and messaging.",
+        type: 'system',
+        isRead: false
+      }
+    ]);
+    console.log('Sample notifications seeded successfully.');
   } catch (error) {
     console.error('Error during seeding data:', error);
     throw error;

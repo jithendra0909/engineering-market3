@@ -288,7 +288,7 @@ export const Chat = () => {
       </div>
 
       {/* ─── RIGHT MAIN CHAT AREA ─── */}
-      <div className={`flex-1 flex flex-col bg-[#F6F5FB] ${!activeChat || !conversationIdParam ? 'hidden lg:flex' : 'flex'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col bg-[#F6F5FB] ${!activeChat || !conversationIdParam ? 'hidden lg:flex' : 'flex'}`}>
         {activeChat ? (
           <>
             {/* Header info bar */}
@@ -423,12 +423,12 @@ export const Chat = () => {
                   value={newMessageText}
                   onChange={(e) => setNewMessageText(e.target.value)}
                   disabled={sending}
-                  className="flex-1 h-[46px] px-5 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 transition-colors placeholder-[#9CA3AF]"
+                  className="flex-1 min-w-0 h-[46px] px-5 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 transition-colors placeholder-[#9CA3AF]"
                 />
                 <button
                   type="submit"
                   disabled={!newMessageText.trim() || sending}
-                  className="w-[46px] h-[46px] bg-[#6C4EFF] hover:bg-[#5739E6] text-white rounded-full flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
+                  className="w-[46px] h-[46px] flex-shrink-0 bg-[#6C4EFF] hover:bg-[#5739E6] text-white rounded-full flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
                 >
                   <Send className="w-4.5 h-4.5 stroke-[2.2] transform rotate-0" />
                 </button>

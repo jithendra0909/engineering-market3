@@ -26,6 +26,7 @@ import Orders from './pages/Orders';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
+import Notifications from './pages/Notifications';
 
 // Layout wrapper to inject Navbar & BottomNav
 const AppLayout = ({ children }) => {
@@ -109,6 +110,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Chat />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               } 
             />

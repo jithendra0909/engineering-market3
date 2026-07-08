@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import College from '../models/College.js';
 import Listing from '../models/Listing.js';
+import Notification from '../models/Notification.js';
 
 let mongoServer;
 let isConnected = false;
@@ -178,6 +179,18 @@ const seedIfEmpty = async () => {
       ];
 
       await Listing.insertMany(sampleListings);
+
+      // 5. Create sample notifications
+      await Notification.create([
+        {
+          recipient: arjun._id,
+          title: 'Account Verified! 🎉',
+          message: "Congratulations Arjun! Your student identity has been verified. You can now post books/items and chat with buyers.",
+          type: 'verification',
+          isRead: false
+        }
+      ]);
+
       console.log('Seeding completed successfully.');
     }
   } catch (error) {

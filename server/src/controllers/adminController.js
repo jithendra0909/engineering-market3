@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Listing from '../models/Listing.js';
+import Notification from '../models/Notification.js';
 
 // @desc    Get users by verification status
 // @route   GET /api/admin/users
@@ -45,6 +46,15 @@ const approveUser = async (req, res) => {
     
     user.verificationStatus = 'approved';
     await user.save();
+    
+    // Create verification approval notification
+    await Notification.create({
+      recipient: user._id,
+      title: 'Account Verified! 🎉',
+      message: 'Congratulations! Your student identity card has been verified. You can now post listings and chat with sellers/buyers.',
+      type: 'verification'
+    });
+    
     res.json({ message: `User ${user.fullName} is now approved`, user });
   } catch (error) {
     res.status(500).json({ message: 'Server error approving user', error: error.message });
@@ -63,6 +73,15 @@ const rejectUser = async (req, res) => {
     
     user.verificationStatus = 'rejected';
     await user.save();
+    
+    // Create verification rejection notification
+    await Notification.create({
+      recipient: user._id,
+      title: 'Verification Rejected ⚠️',
+      message: 'Unfortunately, your student identity verification was rejected. Please re-upload a clear image of your college ID card.',
+      type: 'verification'
+    });
+    
     res.json({ message: `User ${user.fullName} has been rejected`, user });
   } catch (error) {
     res.status(500).json({ message: 'Server error rejecting user', error: error.message });

@@ -15,7 +15,7 @@ export const Navbar = () => {
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -35,6 +35,33 @@ export const Navbar = () => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 12000);
     return () => clearInterval(interval);
+  }, [isLoggedIn, location.pathname]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUnreadNotificationsCount(0);
+      return;
+    }
+
+    const fetchUnreadNotificationsCount = async () => {
+      try {
+        const { data } = await api.get('/notifications/unread/count');
+        setUnreadNotificationsCount(data.count);
+      } catch (err) {
+        console.error('Error fetching notifications count:', err);
+      }
+    };
+
+    fetchUnreadNotificationsCount();
+    
+    // Listen for custom trigger to update immediately
+    window.addEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+    
+    const interval = setInterval(fetchUnreadNotificationsCount, 15000);
+    return () => {
+      window.removeEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+      clearInterval(interval);
+    };
   }, [isLoggedIn, location.pathname]);
 
   useEffect(() => {
@@ -164,11 +191,13 @@ export const Navbar = () => {
             {isLoggedIn && user ? (
               <>
                 <button
-                  onClick={() => showToast('You have no new notifications.', 'info')}
+                  onClick={() => navigate('/notifications')}
                   className="relative w-[34px] h-[34px] rounded-full flex items-center justify-center text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827] transition-all"
                 >
                   <Bell className="w-[18px] h-[18px]" />
-                  <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />
+                  )}
                 </button>
 
                 {/* Profile dropdown */}
@@ -239,11 +268,13 @@ export const Navbar = () => {
               <Search className="w-[20px] h-[20px]" />
             </button>
             <button
-              onClick={() => showToast('You have no new notifications.', 'info')}
+              onClick={() => navigate('/notifications')}
               className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#6B7280] hover:text-[#111827] transition-colors"
             >
               <Bell className="w-[20px] h-[20px]" />
-              {isLoggedIn && <span className="absolute top-[5px] right-[5px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />}
+              {isLoggedIn && unreadNotificationsCount > 0 && (
+                <span className="absolute top-[5px] right-[5px] w-[7px] h-[7px] bg-[#E5484D] rounded-full ring-2 ring-white" />
+              )}
             </button>
             <Link to={isLoggedIn ? '/profile' : '/login'} className="w-9 h-9 rounded-full border border-[#E9E6F8] flex items-center justify-center text-[#6B7280] overflow-hidden bg-[#FAFAFF]">
               {user?.profileImageUrl ? (
