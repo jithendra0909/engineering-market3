@@ -16,9 +16,16 @@ export const ProductDetails = () => {
   const [isGateOpen, setIsGateOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState('Inappropriate Image');
   const [reportNotes, setReportNotes] = useState('');
   const [reporting, setReporting] = useState(false);
+
+  const WhatsAppIcon = (props) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 0 0 1.333 4.982L2 22l5.233-1.371a9.994 9.994 0 0 0 4.779 1.21c5.507 0 9.99-4.479 9.991-9.985-.002-5.507-4.483-9.985-9.992-9.985zM6.83 16.967l-.318-.506a8.217 8.217 0 0 1-1.258-4.478c.001-4.529 3.69-8.214 8.222-8.214 4.53 0 8.217 3.687 8.219 8.217 0 4.53-3.69 8.215-8.222 8.215a8.204 8.204 0 0 1-4.183-1.139l-.3-.179-3.11.815.832-3.032zM15.485 13.6c-.282-.141-1.664-.82-1.921-.912-.257-.094-.443-.141-.63.141-.186.28-.724.912-.887 1.096-.164.183-.328.206-.61.064a7.81 7.81 0 0 1-2.274-1.402 8.602 8.602 0 0 1-1.573-1.956c-.163-.282-.017-.434.124-.575.127-.127.282-.328.423-.492a1.9 1.9 0 0 0 .282-.47c.093-.188.047-.352-.024-.493-.07-.141-.63-1.517-.863-2.079-.226-.546-.453-.47-.63-.478-.162-.008-.35-.01-.539-.01-.19 0-.498.07-.757.352-.26.282-.99.967-.99 2.359 0 1.391 1.012 2.735 1.153 2.923.142.188 1.993 3.044 4.829 4.265 2.836 1.22 2.836.814 3.344.767.509-.047 1.664-.678 1.899-1.334.234-.656.234-1.219.164-1.334-.07-.116-.257-.209-.539-.35z"/>
+    </svg>
+  );
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -269,6 +276,13 @@ export const ProductDetails = () => {
             >
               <Share2 className="w-5 h-5 stroke-[2]" />
             </button>
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="w-[52px] h-[52px] rounded-full border border-emerald-200 bg-[#E8F8F0] text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-all flex-shrink-0 flex items-center justify-center"
+              title="Share to WhatsApp Group"
+            >
+              <WhatsAppIcon className="w-5 h-5" />
+            </button>
           </div>
 
           {isLoggedIn && user?._id !== listing.seller?._id && (
@@ -293,6 +307,66 @@ export const ProductDetails = () => {
       </div>
 
       <VerificationRequiredModal isOpen={isGateOpen} onClose={() => setIsGateOpen(false)} />
+
+      {/* WhatsApp Share Preview Modal */}
+      {isShareModalOpen && (() => {
+        const shareText = `📢 *Engineering Market Listing*
+
+*Product:* ${listing.title}
+*Price:* ${listing.listingType === 'donate' ? 'Free / Donation' : `₹${listing.price}`}
+*Condition:* ${listing.condition}
+*College:* ${listing.sellerCollege}
+
+*Description:* ${listing.description.slice(0, 150)}${listing.description.length > 150 ? '...' : ''}
+
+🔗 *View details here:* ${window.location.href}`;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
+            <div className="relative w-full max-w-[440px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
+              <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
+                <WhatsAppIcon className="w-5 h-5 text-emerald-600" /> WhatsApp Group Quick-Share
+              </h3>
+              <p className="text-xs text-[#6B7280]">
+                Here is the clean, formatted message for your college groups. Copy it or share directly to WhatsApp.
+              </p>
+              
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 font-mono text-[11px] text-[#374151] leading-relaxed whitespace-pre-wrap select-all max-h-[220px] overflow-y-auto">
+                {shareText}
+              </div>
+
+              <div className="flex gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsShareModalOpen(false)}
+                  className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(shareText);
+                    showToast('Message copied to clipboard!', 'success');
+                  }}
+                  className="flex-1 h-11 border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-[13px] rounded-full transition-colors flex items-center justify-center gap-1.5"
+                >
+                  Copy Message
+                </button>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center gap-1.5"
+                >
+                  Send
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Report Listing Modal Overlay */}
       {isReportModalOpen && (

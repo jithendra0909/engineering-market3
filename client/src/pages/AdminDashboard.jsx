@@ -114,42 +114,20 @@ export const AdminDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Pending Verification */}
-        <div className="bg-amber-50 border border-amber-200 p-5 rounded-[24px] flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-white border border-amber-100 flex items-center justify-center text-amber-600 shadow-sm flex-shrink-0">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-2xl font-black text-[#111827]">{pendingCount}</p>
-            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Pending Students</p>
-          </div>
-        </div>
-
-        {/* Approved Verification */}
-        <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-[24px] flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-white border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm flex-shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+        {/* Total Active Users */}
+        <div className="bg-gradient-to-br from-emerald-50/50 to-white/40 backdrop-blur-md border border-emerald-100/60 p-5 rounded-[24px] flex items-start gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all hover:scale-[1.01]">
+          <div className="w-10 h-10 rounded-xl bg-white border border-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm flex-shrink-0">
+            <Users className="w-5 h-5" />
           </div>
           <div>
             <p className="text-2xl font-black text-[#111827]">{approvedCount}</p>
-            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Approved Students</p>
-          </div>
-        </div>
-
-        {/* Rejected Verification */}
-        <div className="bg-rose-50 border border-rose-200 p-5 rounded-[24px] flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-white border border-rose-100 flex items-center justify-center text-rose-600 shadow-sm flex-shrink-0">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-2xl font-black text-[#111827]">{rejectedCount}</p>
-            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Rejected Students</p>
+            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Active Users</p>
           </div>
         </div>
 
         {/* Total Listings */}
-        <div className="bg-[#FAFAFF] border border-[#E9E6F8] p-5 rounded-[24px] flex items-start gap-4 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-white border border-[#E9E6F8] flex items-center justify-center text-[#6C4EFF] shadow-sm flex-shrink-0">
+        <div className="bg-gradient-to-br from-[#F7F4FF]/70 to-white/40 backdrop-blur-md border border-[#E9E6F8]/60 p-5 rounded-[24px] flex items-start gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all hover:scale-[1.01]">
+          <div className="w-10 h-10 rounded-xl bg-white border border-[#E9E6F8]/50 flex items-center justify-center text-[#6C4EFF] shadow-sm flex-shrink-0">
             <Grid className="w-5 h-5" />
           </div>
           <div>
@@ -157,45 +135,75 @@ export const AdminDashboard = () => {
             <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Total Listings</p>
           </div>
         </div>
+
+        {/* Pending Approvals */}
+        <div className="bg-gradient-to-br from-amber-50/60 to-white/40 backdrop-blur-md border border-amber-100/60 p-5 rounded-[24px] flex items-start gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all hover:scale-[1.01]">
+          <div className="w-10 h-10 rounded-xl bg-white border border-amber-50 flex items-center justify-center text-amber-600 shadow-sm flex-shrink-0">
+            <ShieldAlert className="w-5 h-5 animate-pulse" />
+          </div>
+          <div>
+            <p className="text-2xl font-black text-[#111827]">{pendingCount}</p>
+            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Pending Approvals</p>
+          </div>
+        </div>
+
+        {/* Reported Listings */}
+        <div className="bg-gradient-to-br from-rose-50/50 to-white/40 backdrop-blur-md border border-rose-100/60 p-5 rounded-[24px] flex items-start gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all hover:scale-[1.01]">
+          <div className="w-10 h-10 rounded-xl bg-white border border-rose-50 flex items-center justify-center text-rose-600 shadow-sm flex-shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-2xl font-black text-[#111827]">{listings.filter(l => l.reports && l.reports.length > 0).length}</p>
+            <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mt-0.5">Reported Posts</p>
+          </div>
+        </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs Header */}
       <div className="flex flex-col gap-6">
-        <div className="flex border-b border-[#E9E6F8] gap-6 text-sm font-semibold">
+        <div className="bg-[#F4F1FF]/30 border border-[#E9E6F8] p-1.5 rounded-2xl flex flex-wrap gap-2 text-xs font-bold w-fit shadow-[0_2px_8px_rgba(108,78,255,0.02)] backdrop-blur-md">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === 'pending' ? 'border-[#6C4EFF] text-[#6C4EFF]' : 'border-transparent text-[#6B7280]'
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'pending'
+                ? 'bg-white text-[#6C4EFF] shadow-sm border border-[#E9E6F8]'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
             }`}
           >
-            Pending Verifications ({pendingCount})
+            <ShieldAlert className="w-4 h-4" /> Pending Approvals ({pendingCount})
           </button>
           
           <button
             onClick={() => setActiveTab('students')}
-            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === 'students' ? 'border-[#6C4EFF] text-[#6C4EFF]' : 'border-transparent text-[#6B7280]'
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'students'
+                ? 'bg-white text-[#6C4EFF] shadow-sm border border-[#E9E6F8]'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
             }`}
           >
-            All Students
+            <Users className="w-4 h-4" /> All Students
           </button>
 
           <button
             onClick={() => setActiveTab('listings')}
-            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === 'listings' ? 'border-[#6C4EFF] text-[#6C4EFF]' : 'border-transparent text-[#6B7280]'
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'listings'
+                ? 'bg-white text-[#6C4EFF] shadow-sm border border-[#E9E6F8]'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
             }`}
           >
-            All Listings ({totalListings})
+            <Grid className="w-4 h-4" /> Marketplace Listings ({totalListings})
           </button>
 
           <button
             onClick={() => setActiveTab('reported')}
-            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
-              activeTab === 'reported' ? 'border-[#6C4EFF] text-[#6C4EFF]' : 'border-transparent text-[#6B7280]'
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'reported'
+                ? 'bg-white text-rose-600 shadow-sm border border-rose-100'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
             }`}
           >
-            Reported Listings ({listings.filter(l => l.reports && l.reports.length > 0).length})
+            <AlertTriangle className={`w-4 h-4 ${listings.filter(l => l.reports && l.reports.length > 0).length > 0 ? 'text-rose-500 animate-pulse' : ''}`} /> Moderation Log ({listings.filter(l => l.reports && l.reports.length > 0).length})
           </button>
         </div>
 
@@ -375,9 +383,16 @@ export const AdminDashboard = () => {
                   <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
                     {listings.length > 0 ? (
                       listings.map((lst) => (
-                        <tr key={lst._id} className="hover:bg-[#FAFAFF]/50 transition-colors">
+                        <tr key={lst._id} className={`transition-colors ${lst.reports && lst.reports.length > 0 ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[#FAFAFF]/50'}`}>
                           <td className="px-6 py-4">
-                            <p className="font-bold text-[#111827]">{lst.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-[#111827]">{lst.title}</p>
+                              {lst.reports && lst.reports.length > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                                  <AlertTriangle className="w-2.5 h-2.5" /> Flagged
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[280px]">
                               {lst.description}
                             </p>
