@@ -68,9 +68,9 @@ export const Profile = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(edu\.in|com)$/i;
     if (!emailRegex.test(editEmail)) {
-      setEditError('Email must end with .com or .edu.');
+      setEditError('Email must end with .edu.in or .com.');
       return;
     }
 

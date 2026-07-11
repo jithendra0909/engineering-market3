@@ -28,10 +28,10 @@ const registerStudent = async (req, res) => {
       college
     } = req.body;
 
-    // Enforce email validation rule (.com or .edu only)
-    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    // Enforce email validation rule (.com or .edu.in only)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(edu\.in|com)$/i;
     if (!email || !emailRegex.test(email)) {
-      return res.status(400).json({ message: 'Email must be a valid address ending with .com or .edu' });
+      return res.status(400).json({ message: 'Email must be a valid address ending with .edu.in or .com' });
     }
 
     // Enforce Indian phone validation rule (+91 followed by 10 digits starting with 6-9)
@@ -292,9 +292,9 @@ const updateUserProfile = async (req, res) => {
     } = req.body;
 
     if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.(edu\.in|com)$/i;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: 'Email must be a valid address ending with .com or .edu' });
+        return res.status(400).json({ message: 'Email must be a valid address ending with .edu.in or .com' });
       }
       
       // Ensure email uniqueness if it changed

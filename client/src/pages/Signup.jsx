@@ -53,9 +53,9 @@ export const Signup = () => {
       setError('Please fill in all fields.');
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(edu\.in|com)$/i;
     if (!emailRegex.test(email)) {
-      setError('Email must be a valid address ending with .com or .edu (e.g., user@domain.com or user@domain.edu).');
+      setError('Email must be a valid address ending with .edu.in or .com (e.g., user@domain.edu.in or user@domain.com).');
       return;
     }
     if (whatsappNumber.length !== 10) {
