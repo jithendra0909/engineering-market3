@@ -194,3 +194,51 @@ export const getUnreadCount = async (req, res) => {
     res.status(500).json({ message: 'Server error fetching unread count', error: error.message });
   }
 };
+
+// @desc    Report a conversation
+// @route   POST /api/chats/:id/report
+// @access  Private
+export const reportConversation = async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+    const { reason } = req.body;
+    const reporterId = req.user._id;
+
+    if (!reason) {
+      return res.status(400).json({ message: 'Reason is required for reporting a conversation' });
+    }
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    // Verify user is participant in conversation
+    if (
+      conversation.buyer.toString() !== reporterId.toString() &&
+      conversation.seller.toString() !== reporterId.toString()
+    ) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Check if reporter has already reported this conversation
+    const alreadyReported = conversation.reports?.some(
+      (r) => r.reporter.toString() === reporterId.toString()
+    );
+
+    if (alreadyReported) {
+      return res.status(400).json({ message: 'You have already reported this conversation' });
+    }
+
+    conversation.reports.push({
+      reporter: reporterId,
+      reason
+    });
+
+    await conversation.save();
+
+    res.json({ message: 'Conversation reported successfully', conversation });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error reporting conversation', error: error.message });
+  }
+};

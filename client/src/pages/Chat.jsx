@@ -12,7 +12,9 @@ import {
   GraduationCap,
   Sparkles,
   Inbox,
-  AlertCircle
+  AlertCircle,
+  Flag,
+  AlertTriangle
 } from 'lucide-react';
 import api from '../api/axios';
 
@@ -34,6 +36,41 @@ export const Chat = () => {
 
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
+
+  // Chat Reporting states
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Abusive Language');
+  const [reportNotes, setReportNotes] = useState('');
+  const [reporting, setReporting] = useState(false);
+
+  const handleReportConversation = async (e) => {
+    e.preventDefault();
+    if (!activeChat || reporting) return;
+
+    setReporting(true);
+    try {
+      const reasonText = reportNotes.trim()
+        ? `${reportReason} - ${reportNotes.trim()}`
+        : reportReason;
+
+      await api.post(`/chats/${activeChat._id}/report`, { reason: reasonText });
+      showToast('Conversation reported successfully!', 'success');
+      
+      // Update activeChat locally to show reported status
+      setActiveChat(prev => ({
+        ...prev,
+        reports: [...(prev.reports || []), { reporter: user._id, reason: reasonText }]
+      }));
+      
+      setIsReportModalOpen(false);
+      setReportNotes('');
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Failed to submit report';
+      showToast(errMsg, 'error');
+    } finally {
+      setReporting(false);
+    }
+  };
 
   // Quick replies list
   const quickReplies = [
@@ -335,26 +372,41 @@ export const Chat = () => {
                 </div>
               </div>
 
-              {/* Listing Card Header */}
-              {activeChat.listing && activeChat.listing.status !== 'removed' && (
-                <Link
-                  to={`/listing/${activeChat.listing._id}`}
-                  className="flex items-center gap-2.5 p-1.5 px-3 bg-[#F4F1FF]/60 hover:bg-[#F4F1FF] rounded-xl border border-[#E9E6F8]/60 transition-colors max-w-[200px] lg:max-w-[320px] text-left"
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Listing Card Header */}
+                {activeChat.listing && activeChat.listing.status !== 'removed' && (
+                  <Link
+                    to={`/listing/${activeChat.listing._id}`}
+                    className="flex items-center gap-2.5 p-1.5 px-3 bg-[#F4F1FF]/60 hover:bg-[#F4F1FF] rounded-xl border border-[#E9E6F8]/60 transition-colors max-w-[160px] lg:max-w-[280px] text-left"
+                  >
+                    {activeChat.listing.images?.[0] && (
+                      <img
+                        src={activeChat.listing.images[0]}
+                        alt=""
+                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0 leading-tight">
+                      <p className="text-[11px] font-bold text-[#111827] truncate">{activeChat.listing.title}</p>
+                      <p className="text-[11px] font-extrabold text-[#10B981] mt-0.5">₹{activeChat.listing.price}</p>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#6C4EFF] flex-shrink-0 ml-1" />
+                  </Link>
+                )}
+
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  disabled={activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)}
+                  className={`p-2 rounded-full border transition-all ${
+                    activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
+                      ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-default'
+                      : 'bg-rose-50 border-rose-100/50 text-rose-600 hover:bg-rose-100/70 hover:border-rose-200'
+                  }`}
+                  title={activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id) ? "You reported this chat" : "Report conversation"}
                 >
-                  {activeChat.listing.images?.[0] && (
-                    <img
-                      src={activeChat.listing.images[0]}
-                      alt=""
-                      className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                    />
-                  )}
-                  <div className="min-w-0 leading-tight">
-                    <p className="text-[11px] font-bold text-[#111827] truncate">{activeChat.listing.title}</p>
-                    <p className="text-[11px] font-extrabold text-[#10B981] mt-0.5">₹{activeChat.listing.price}</p>
-                  </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#6C4EFF] flex-shrink-0 ml-1" />
-                </Link>
-              )}
+                  <Flag className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages box */}
@@ -452,6 +504,64 @@ export const Chat = () => {
           </div>
         )}
       </div>
+
+      {/* Report Chat Modal Overlay */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReportModalOpen(false)} />
+          <form onSubmit={handleReportConversation} className="relative w-full max-w-[420px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
+            <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
+              <Flag className="w-5 h-5 text-rose-600" /> Report Abusive Chat
+            </h3>
+            <p className="text-xs text-[#6B7280]">
+              If this conversation contains harassment, abusive language, scams, or spam, please report it to our administration.
+            </p>
+            
+            <div>
+              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Reason</label>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all cursor-pointer"
+              >
+                <option value="Abusive Language">Abusive Language</option>
+                <option value="Scam or Fraud">Scam or Fraud</option>
+                <option value="Harassment">Harassment</option>
+                <option value="Inappropriate Behavior">Inappropriate Behavior</option>
+                <option value="Other">Other (Describe below)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Additional Details (Optional)</label>
+              <textarea
+                value={reportNotes}
+                onChange={(e) => setReportNotes(e.target.value)}
+                placeholder="Provide details about why you are reporting this conversation..."
+                rows={3}
+                className="w-full p-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(false)}
+                className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={reporting}
+                className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center disabled:opacity-60"
+              >
+                {reporting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

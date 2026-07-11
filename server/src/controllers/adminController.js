@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Listing from '../models/Listing.js';
 import Notification from '../models/Notification.js';
+import Conversation from '../models/Conversation.js';
 
 // @desc    Get users by verification status
 // @route   GET /api/admin/users
@@ -140,6 +141,43 @@ const dismissReports = async (req, res) => {
   }
 };
 
+// @desc    Get all reported conversations
+// @route   GET /api/admin/chats
+// @access  Private & Admin
+const getReportedConversations = async (req, res) => {
+  try {
+    const conversations = await Conversation.find({ reports: { $exists: true, $not: { $size: 0 } } })
+      .populate('listing', 'title price images status')
+      .populate('buyer', 'fullName email profileImageUrl department year')
+      .populate('seller', 'fullName email profileImageUrl department year')
+      .populate('reports.reporter', 'fullName email')
+      .sort({ updatedAt: -1 });
+
+    res.json(conversations);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error retrieving reported chats', error: error.message });
+  }
+};
+
+// @desc    Dismiss all reports on a conversation
+// @route   POST /api/admin/chats/:id/dismiss-reports
+// @access  Private & Admin
+const dismissConversationReports = async (req, res) => {
+  try {
+    const conversation = await Conversation.findById(req.params.id);
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    conversation.reports = [];
+    await conversation.save();
+
+    res.json({ message: 'All reports on conversation dismissed successfully', conversation });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error dismissing conversation reports', error: error.message });
+  }
+};
+
 export {
   getUsersByStatus,
   getPendingUsers,
@@ -147,5 +185,7 @@ export {
   rejectUser,
   getAllListingsAdmin,
   deleteListingAdmin,
-  dismissReports
+  dismissReports,
+  getReportedConversations,
+  dismissConversationReports
 };

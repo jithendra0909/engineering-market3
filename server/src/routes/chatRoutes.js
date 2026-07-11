@@ -4,7 +4,8 @@ import {
   getMessages,
   createConversation,
   sendMessage,
-  getUnreadCount
+  getUnreadCount,
+  reportConversation
 } from '../controllers/chatController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { verifiedOnly } from '../middleware/verifiedMiddleware.js';
@@ -20,6 +21,8 @@ router.route('/')
   .post(createConversation);
 
 router.get('/unread/count', getUnreadCount);
+
+router.post('/:id/report', reportConversation);
 
 router.route('/:id/messages')
   .get(getMessages)

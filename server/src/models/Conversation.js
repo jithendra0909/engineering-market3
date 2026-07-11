@@ -33,6 +33,21 @@ const conversationSchema = new mongoose.Schema({
   unreadFor: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  }],
+  reports: [{
+    reporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    reason: {
+      type: String,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   }]
 }, {
   timestamps: true
