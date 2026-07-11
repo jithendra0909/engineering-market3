@@ -51,6 +51,8 @@ export const Chat = () => {
       setConversations(data);
 
       // Handle query param selection or auto-selection
+      if (silent) return;
+
       if (data.length > 0) {
         let selected = null;
         if (conversationIdParam) {
@@ -60,9 +62,12 @@ export const Chat = () => {
         if (selected) {
           setActiveChat(selected);
         } else if (!activeChat && !conversationIdParam) {
-          // If no query param and no active chat, select first chat
-          setActiveChat(data[0]);
-          setSearchParams({ conversationId: data[0]._id }, { replace: true });
+          // If no query param and no active chat, select first chat (Desktop only)
+          const isDesktop = window.innerWidth >= 1024;
+          if (isDesktop) {
+            setActiveChat(data[0]);
+            setSearchParams({ conversationId: data[0]._id }, { replace: true });
+          }
         }
       }
     } catch (err) {
