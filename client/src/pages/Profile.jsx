@@ -8,14 +8,152 @@ import {
 } from 'lucide-react';
 import api from '../api/axios';
 
+const DEPARTMENTS = [
+  'Computer Science and Engineering',
+  'Electronics and Communication Engineering',
+  'Electrical Engineering',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Information Technology',
+  'Chemical Engineering',
+  'Other'
+];
+
+const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
 export const Profile = () => {
-  const { user, logout, isVerified, showToast } = useAuth();
+  const { user, logout, isVerified, showToast, unreadNotificationsCount, colleges, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [myListings, setMyListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
   const [activeTab, setActiveTab] = useState(null); // 'listings', 'saved', 'donations', 'sold'
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Profile Form States
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editWhatsapp, setEditWhatsapp] = useState('');
+  const [editRegNo, setEditRegNo] = useState('');
+  const [editDept, setEditDept] = useState('');
+  const [editYear, setEditYear] = useState('1st Year');
+  const [editCollege, setEditCollege] = useState('');
+  const [editIdCardFile, setEditIdCardFile] = useState(null);
+  const [editIdCardPreview, setEditIdCardPreview] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  useEffect(() => {
+    if (showInfoModal && user) {
+      setEditName(user.fullName || '');
+      setEditEmail(user.email || '');
+      const digitsOnly = user.whatsappNumber?.replace(/^\+91\s?/, '') || '';
+      setEditWhatsapp(digitsOnly);
+      setEditRegNo(user.registrationNumber || '');
+      setEditDept(user.department || '');
+      setEditYear(user.year || '1st Year');
+      setEditCollege(user.college || '');
+      setEditIdCardPreview(user.idCardImageUrl || '');
+      setEditIdCardFile(null);
+      setEditError('');
+    }
+  }, [showInfoModal, user]);
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setEditError('');
+
+    if (!editName || !editEmail || !editWhatsapp || !editRegNo || !editDept || !editYear || !editCollege) {
+      setEditError('Please fill in all fields.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    if (!emailRegex.test(editEmail)) {
+      setEditError('Email must end with .com or .edu.');
+      return;
+    }
+
+    if (editWhatsapp.length !== 10) {
+      setEditError('WhatsApp number must be exactly 10 digits.');
+      return;
+    }
+
+    setSaveLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('fullName', editName);
+      formData.append('email', editEmail);
+      formData.append('whatsappNumber', '+91' + editWhatsapp);
+      formData.append('registrationNumber', editRegNo);
+      formData.append('department', editDept);
+      formData.append('year', editYear);
+      formData.append('college', editCollege);
+
+      if (editIdCardFile) {
+        // Compress ID image
+        const compressImage = (file) => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+              const img = new Image();
+              img.src = event.target.result;
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200;
+                const MAX_HEIGHT = 1200;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                  if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                  }
+                } else {
+                  if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                  }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                  const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                  });
+                  resolve(compressedFile);
+                }, 'image/jpeg', 0.7);
+              };
+            };
+          });
+        };
+
+        const compressed = await compressImage(editIdCardFile);
+        formData.append('idCardImage', compressed);
+      }
+
+      const { data } = await api.put('/auth/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      updateProfile(data);
+      showToast('Profile updated successfully!', 'success');
+      setShowInfoModal(false);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setEditError(err.response?.data?.message || 'Failed to update profile.');
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -393,11 +531,13 @@ export const Profile = () => {
             <Settings className="w-[20px] h-[20px] stroke-[1.8]" />
           </button>
           <button 
-            onClick={() => showToast('You have no new notifications.', 'info')}
+            onClick={() => navigate('/notifications')}
             className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#111827] hover:bg-[#F7F4FF] transition-colors"
           >
             <Bell className="w-[20px] h-[20px] stroke-[1.8]" />
-            <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-rose-500 rounded-full border-[1.5px] border-white" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-rose-500 rounded-full border-[1.5px] border-white" />
+            )}
           </button>
         </div>
       </div>
@@ -598,11 +738,11 @@ export const Profile = () => {
           PERSONAL INFO MODAL
           ═══════════════════════════════════════ */}
       {showInfoModal && (
-        <div className="fixed inset-0 bg-[#111827]/40 backdrop-blur-sm flex items-center justify-center z-50 p-5">
-          <div className="bg-white rounded-[28px] border border-[#ECECEC] w-full max-w-[400px] overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-[#111827]/40 backdrop-blur-sm flex items-center justify-center z-50 p-5 overflow-y-auto">
+          <div className="bg-white rounded-[28px] border border-[#ECECEC] w-full max-w-[420px] overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200 my-8">
             {/* Header */}
             <div className="px-6 py-5 border-b border-[#ECECEC] flex items-center justify-between">
-              <h3 className="font-bold text-[16px] text-[#111827]">Personal Information</h3>
+              <h3 className="font-bold text-[16px] text-[#111827]">Edit Profile Details</h3>
               <button 
                 onClick={() => setShowInfoModal(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] text-[#9CA3AF] hover:text-[#111827] transition-colors"
@@ -611,32 +751,163 @@ export const Profile = () => {
               </button>
             </div>
             
-            {/* Body */}
-            <div className="p-6 flex flex-col gap-4">
-              {[
-                { label: 'Full Name', value: user?.fullName },
-                { label: 'Email Address', value: user?.email },
-                { label: 'Registration Number', value: user?.registrationNumber },
-                { label: 'WhatsApp Number', value: user?.whatsappNumber },
-                { label: 'Department / Year', value: `${user?.department} / ${user?.year}` },
-                { label: 'College Campus', value: user?.college },
-              ].map((item) => (
-                <div key={item.label}>
-                  <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-0.5">{item.label}</span>
-                  <span className="text-[13px] font-semibold text-[#111827] block leading-normal">{item.value || 'N/A'}</span>
+            {/* Form */}
+            <form onSubmit={handleSaveProfile}>
+              {/* Body */}
+              <div className="p-6 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                {editError && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-[12px] text-rose-600 text-[12px] font-medium">
+                    {editError}
+                  </div>
+                )}
+
+                {/* Full Name */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                  />
                 </div>
-              ))}
-            </div>
-            
-            {/* Footer */}
-            <div className="px-6 py-4 bg-[#FAFAFF] border-t border-[#ECECEC] flex justify-end">
-              <button 
-                onClick={() => setShowInfoModal(false)}
-                className="px-5 py-2 bg-[#6D4AFF] hover:bg-[#5939D5] text-white font-bold text-[12px] rounded-full transition-colors"
-              >
-                Close
-              </button>
-            </div>
+
+                {/* Email Address */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="user@domain.com"
+                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* WhatsApp Number */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">WhatsApp Number</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#111827]">+91</span>
+                    <input
+                      type="tel"
+                      value={editWhatsapp}
+                      onChange={(e) => setEditWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="9876543210"
+                      className="w-full h-11 pl-14 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Registration Number */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Registration Number</label>
+                  <input
+                    type="text"
+                    value={editRegNo}
+                    onChange={(e) => setEditRegNo(e.target.value)}
+                    placeholder="21BCE0001"
+                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* Department + Year */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Department</label>
+                    <select
+                      value={editDept}
+                      onChange={(e) => setEditDept(e.target.value)}
+                      className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Select</option>
+                      {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Year</label>
+                    <select
+                      value={editYear}
+                      onChange={(e) => setEditYear(e.target.value)}
+                      className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* College Campus */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">College Campus</label>
+                  <select
+                    value={editCollege}
+                    onChange={(e) => setEditCollege(e.target.value)}
+                    className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">Select your college</option>
+                    {colleges && colleges.length > 0 ? (
+                      colleges.map((c) => <option key={c._id || c.name} value={c.name}>{c.name}</option>)
+                    ) : (
+                      <>
+                        <option value="Vignan's Institute of Information Technology (VIIT)">Vignan's Institute of Information Technology (VIIT)</option>
+                        <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                {/* ID Card Re-upload */}
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">
+                    College ID Card (Upload new image for verification)
+                  </label>
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#E9E6F8] rounded-[16px] p-4 cursor-pointer hover:border-[#6D4AFF]/30 hover:bg-[#FAFAFF] transition-all">
+                    {editIdCardPreview ? (
+                      <img src={editIdCardPreview} alt="ID Preview" className="max-h-[120px] object-contain rounded-[10px]" />
+                    ) : (
+                      <div className="text-center py-4 text-[#9CA3AF]">
+                        <Camera className="w-6 h-6 mx-auto mb-1.5" />
+                        <p className="text-[11px] font-semibold">Upload ID card</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setEditIdCardFile(file);
+                          const reader = new FileReader();
+                          reader.onloadend = () => setEditIdCardPreview(reader.result);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="px-6 py-4 bg-[#FAFAFF] border-t border-[#ECECEC] flex justify-end gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowInfoModal(false)}
+                  className="px-4 py-2 border border-[#ECECEC] hover:bg-[#F7F4FF] text-[#111827] font-semibold text-[12px] rounded-full transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={saveLoading}
+                  className="px-5 py-2 bg-[#6D4AFF] hover:bg-[#5939D5] text-white font-bold text-[12px] rounded-full transition-colors flex items-center gap-1.5 disabled:opacity-60"
+                >
+                  {saveLoading && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                  {user?.verificationStatus === 'rejected' ? 'Save & Re-verify' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

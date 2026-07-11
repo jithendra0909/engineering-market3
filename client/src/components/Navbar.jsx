@@ -6,7 +6,7 @@ import { Logo } from './Logo';
 import api from '../api/axios';
 
 export const Navbar = () => {
-  const { user, isLoggedIn, logout, isAdmin, showToast } = useAuth();
+  const { user, isLoggedIn, logout, isAdmin, showToast, unreadNotificationsCount } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -16,7 +16,6 @@ export const Navbar = () => {
   const dropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -36,33 +35,6 @@ export const Navbar = () => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 12000);
     return () => clearInterval(interval);
-  }, [isLoggedIn, location.pathname]);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setUnreadNotificationsCount(0);
-      return;
-    }
-
-    const fetchUnreadNotificationsCount = async () => {
-      try {
-        const { data } = await api.get('/notifications/unread/count');
-        setUnreadNotificationsCount(data.count);
-      } catch (err) {
-        console.error('Error fetching notifications count:', err);
-      }
-    };
-
-    fetchUnreadNotificationsCount();
-    
-    // Listen for custom trigger to update immediately
-    window.addEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
-    
-    const interval = setInterval(fetchUnreadNotificationsCount, 15000);
-    return () => {
-      window.removeEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
-      clearInterval(interval);
-    };
   }, [isLoggedIn, location.pathname]);
 
   useEffect(() => {

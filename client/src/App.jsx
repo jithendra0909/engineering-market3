@@ -78,12 +78,23 @@ function App() {
           <Routes>
             {/* Market Browse Pages */}
             <Route path="/" element={<Home />} />
-            <Route path="/general-market" element={<GeneralMarket />} />
+            <Route 
+              path="/general-market" 
+              element={
+                <ProtectedRoute>
+                  <VerifiedOnly>
+                    <GeneralMarket />
+                  </VerifiedOnly>
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/college-market" 
               element={
                 <ProtectedRoute>
-                  <CollegeMarket />
+                  <VerifiedOnly>
+                    <CollegeMarket />
+                  </VerifiedOnly>
                 </ProtectedRoute>
               } 
             />

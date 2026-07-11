@@ -148,12 +148,12 @@ export const Home = () => {
                   Buy, sell, or donate within your college community.
                 </p>
               </div>
-              <Link
-                to="/college-market"
-                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all"
+              <button
+                onClick={() => handleGatedAction('/college-market')}
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
               >
                 Explore College <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              </button>
             </div>
 
             {/* General Market */}
@@ -167,12 +167,12 @@ export const Home = () => {
                   Discover items listed by verified students across different colleges.
                 </p>
               </div>
-              <Link
-                to="/general-market"
-                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all"
+              <button
+                onClick={() => handleGatedAction('/general-market')}
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
               >
                 Explore General <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -180,9 +180,12 @@ export const Home = () => {
           <div className="flex-1 flex flex-col gap-5">
             <div className="flex items-end justify-between">
               <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">Trending Items</h2>
-              <Link to="/general-market" className="text-[12px] font-bold text-[#6C4EFF] flex items-center gap-0.5 hover:gap-1.5 transition-all">
+              <button
+                onClick={() => handleGatedAction('/general-market')}
+                className="text-[12px] font-bold text-[#6C4EFF] flex items-center gap-0.5 hover:gap-1.5 transition-all text-left"
+              >
                 View All <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              </button>
             </div>
 
             {/* Mobile: horizontal scroll · Desktop: 4-col grid */}

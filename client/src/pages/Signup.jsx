@@ -18,7 +18,7 @@ const DEPARTMENTS = [
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 export const Signup = () => {
-  const { signup, loading, showToast } = useAuth();
+  const { signup, loading, showToast, colleges } = useAuth();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
@@ -29,7 +29,7 @@ export const Signup = () => {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [department, setDepartment] = useState('');
   const [year, setYear] = useState('1st Year');
-  const [college, setCollege] = useState("Vignan's Institute of Information Technology (VIIT)");
+  const [college, setCollege] = useState('');
   const [idCardFile, setIdCardFile] = useState(null);
   const [idCardPreview, setIdCardPreview] = useState('');
   const [error, setError] = useState('');
@@ -53,6 +53,15 @@ export const Signup = () => {
       setError('Please fill in all fields.');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    if (!emailRegex.test(email)) {
+      setError('Email must be a valid address ending with .com or .edu (e.g., user@domain.com or user@domain.edu).');
+      return;
+    }
+    if (whatsappNumber.length !== 10) {
+      setError('WhatsApp number must be exactly 10 digits.');
+      return;
+    }
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
       setError('Password must be at least 8 characters long and include:\n✓ At least 1 uppercase letter (A-Z)\n✓ At least 1 lowercase letter (a-z)\n✓ At least 1 numeric digit (0-9)');
@@ -66,7 +75,7 @@ export const Signup = () => {
     const formData = new FormData();
     formData.append('fullName', fullName);
     formData.append('email', email);
-    formData.append('whatsappNumber', whatsappNumber);
+    formData.append('whatsappNumber', '+91' + whatsappNumber);
     formData.append('password', password);
     formData.append('registrationNumber', registrationNumber);
     formData.append('department', department);
@@ -201,8 +210,14 @@ export const Signup = () => {
           <div>
             <label className={labelClass}>WhatsApp Number</label>
             <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
-              <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+91 9876543210" className={inputClass} />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#111827]">+91</span>
+              <input
+                type="tel"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="9876543210"
+                className="w-full h-12 pl-14 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+              />
             </div>
           </div>
 
@@ -262,8 +277,19 @@ export const Signup = () => {
             <div className="relative">
               <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] z-10" />
               <select value={college} onChange={(e) => setCollege(e.target.value)} className={selectClass}>
-                <option value="Vignan's Institute of Information Technology (VIIT)">Vignan's Institute of Information Technology (VIIT)</option>
-                <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
+                <option value="">Select your college</option>
+                {colleges && colleges.length > 0 ? (
+                  colleges.map((c) => (
+                    <option key={c._id || c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Vignan's Institute of Information Technology (VIIT)">Vignan's Institute of Information Technology (VIIT)</option>
+                    <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
+                  </>
+                )}
               </select>
             </div>
           </div>

@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
+import Notification from '../models/Notification.js';
 
 const validatePasswordComplexity = (password) => {
   if (!password || password.length < 8) return false;
@@ -26,6 +27,17 @@ const registerStudent = async (req, res) => {
       year,
       college
     } = req.body;
+
+    // Enforce email validation rule (.com or .edu only)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Email must be a valid address ending with .com or .edu' });
+    }
+
+    // Enforce Indian phone validation rule (+91 followed by 10 digits starting with 6-9)
+    if (!whatsappNumber || !/^\+91[6-9]\d{9}$/.test(whatsappNumber)) {
+      return res.status(400).json({ message: 'WhatsApp number must be a valid 10-digit Indian mobile number prefixed with +91' });
+    }
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -259,4 +271,92 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export { registerStudent, loginUser, getUserProfile, forgotPassword, resetPassword };
+// @desc    Update user profile details & submit for re-verification
+// @route   PUT /api/auth/profile
+// @access  Private (Accepts multipart/form-data for ID Card image)
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const {
+      fullName,
+      email,
+      whatsappNumber,
+      registrationNumber,
+      department,
+      year,
+      college
+    } = req.body;
+
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.(com|edu)$/i;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Email must be a valid address ending with .com or .edu' });
+      }
+      
+      // Ensure email uniqueness if it changed
+      if (email !== user.email) {
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
+          return res.status(400).json({ message: 'User with this email already exists' });
+        }
+        user.email = email;
+      }
+    }
+
+    if (whatsappNumber) {
+      if (!/^\+91[6-9]\d{9}$/.test(whatsappNumber)) {
+        return res.status(400).json({ message: 'WhatsApp number must be a valid 10-digit Indian mobile number prefixed with +91' });
+      }
+      user.whatsappNumber = whatsappNumber;
+    }
+
+    if (fullName) user.fullName = fullName;
+    if (registrationNumber) user.registrationNumber = registrationNumber;
+    if (department) user.department = department;
+    if (year) user.year = year;
+    if (college) user.college = college;
+
+    if (req.file) {
+      user.idCardImageUrl = req.file.path;
+    }
+
+    // If the student was rejected or uploads a new ID card, reset status to pending for review
+    if (user.verificationStatus === 'rejected' || req.file) {
+      user.verificationStatus = 'pending';
+      
+      // Create notification about re-verification
+      await Notification.create({
+        recipient: user._id,
+        title: 'Verification Resubmitted ⏳',
+        message: 'Your profile updates and ID card have been submitted. An admin will review them shortly.',
+        type: 'verification'
+      });
+    }
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      whatsappNumber: user.whatsappNumber,
+      registrationNumber: user.registrationNumber,
+      department: user.department,
+      year: user.year,
+      college: user.college,
+      idCardImageUrl: user.idCardImageUrl,
+      profileImageUrl: user.profileImageUrl,
+      role: user.role,
+      verificationStatus: user.verificationStatus
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Profile update failed on server.', error: error.message });
+  }
+};
+
+export { registerStudent, loginUser, getUserProfile, forgotPassword, resetPassword, updateUserProfile };

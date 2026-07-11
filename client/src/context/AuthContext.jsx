@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [colleges, setColleges] = useState([]);
   const [toast, setToast] = useState(null);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -39,6 +40,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchUnreadNotificationsCount = async () => {
+    if (!token) return;
+    try {
+      const { data } = await api.get('/notifications/unread/count');
+      setUnreadNotificationsCount(data.count);
+    } catch (err) {
+      console.error('Error fetching notifications count:', err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       localStorage.setItem('em_token', token);
@@ -49,6 +60,24 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
     fetchColleges();
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      setUnreadNotificationsCount(0);
+      return;
+    }
+
+    fetchUnreadNotificationsCount();
+    
+    // Listen for custom trigger to update immediately
+    window.addEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+    
+    const interval = setInterval(fetchUnreadNotificationsCount, 15000);
+    return () => {
+      window.removeEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+      clearInterval(interval);
+    };
   }, [token]);
 
   const login = async (email, password) => {
@@ -115,12 +144,14 @@ export const AuthProvider = ({ children }) => {
         isLoggedIn,
         isAdmin,
         isVerified,
+        unreadNotificationsCount,
         login,
         signup,
         logout,
         showToast,
         updateProfile,
-        loadUser
+        loadUser,
+        fetchUnreadNotificationsCount
       }}
     >
       {children}

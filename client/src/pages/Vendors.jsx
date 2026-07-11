@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const Vendors = () => {
   const navigate = useNavigate();
-  const { showToast } = useAuth();
+  const { showToast, unreadNotificationsCount } = useAuth();
 
   return (
     <div className="flex flex-col bg-[#EEEAF8]" style={{ minHeight: 'calc(100vh - 64px)' }}>
@@ -29,11 +29,13 @@ export const Vendors = () => {
             <Search className="w-[18px] h-[18px] stroke-[2]" />
           </button>
           <button
-            onClick={() => showToast('You have no new notifications.', 'info')}
+            onClick={() => navigate('/notifications')}
             className="relative w-9 h-9 flex items-center justify-center text-[#111827]"
           >
             <Bell className="w-[18px] h-[18px] stroke-[2]" />
-            <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] bg-rose-500 rounded-full border border-white" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] bg-rose-500 rounded-full border border-white" />
+            )}
           </button>
         </div>
       </div>
