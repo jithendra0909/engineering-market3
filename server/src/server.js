@@ -11,6 +11,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import collegeRoutes from './routes/collegeRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
 // Load .env file (no-op on Vercel where env vars are injected)
 dotenv.config();
@@ -49,6 +50,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/colleges', collegeRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

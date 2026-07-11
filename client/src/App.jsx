@@ -10,6 +10,7 @@ import Toast from './components/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import VerifiedOnly from './components/VerifiedOnly';
 import IntroSplash from './components/IntroSplash';
+import FeedbackWidget from './components/FeedbackWidget';
 
 // Pages
 import Home from './pages/Home';
@@ -28,6 +29,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
+import FeedbackRoadmap from './pages/FeedbackRoadmap';
 
 // Layout wrapper to inject Navbar & BottomNav
 const AppLayout = ({ children }) => {
@@ -61,6 +63,9 @@ const AppLayout = ({ children }) => {
       
       {/* Toast Notification overlay */}
       <Toast />
+
+      {/* Floating feedback button & drawer widget */}
+      <FeedbackWidget />
     </div>
   );
 };
@@ -122,6 +127,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Notifications />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/feedback-roadmap" 
+              element={
+                <ProtectedRoute>
+                  <FeedbackRoadmap />
                 </ProtectedRoute>
               } 
             />

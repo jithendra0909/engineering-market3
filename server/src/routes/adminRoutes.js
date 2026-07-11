@@ -8,7 +8,9 @@ import {
   deleteListingAdmin,
   dismissReports,
   getReportedConversations,
-  dismissConversationReports
+  dismissConversationReports,
+  updateFeedbackStatus,
+  deleteFeedbackAdmin
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { adminOnly } from '../middleware/adminMiddleware.js';
@@ -26,5 +28,8 @@ router.post('/listings/:id/dismiss-reports', protect, adminOnly, dismissReports)
 
 router.get('/chats', protect, adminOnly, getReportedConversations);
 router.post('/chats/:id/dismiss-reports', protect, adminOnly, dismissConversationReports);
+
+router.post('/feedback/:id/status', protect, adminOnly, updateFeedbackStatus);
+router.delete('/feedback/:id', protect, adminOnly, deleteFeedbackAdmin);
 
 export default router;

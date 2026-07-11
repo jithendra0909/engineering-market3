@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare } from 'lucide-react';
 import api from '../api/axios';
 
 export const AdminDashboard = () => {
@@ -15,6 +15,7 @@ export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [listings, setListings] = useState([]);
   const [reportedChats, setReportedChats] = useState([]);
+  const [feedbackList, setFeedbackList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   
@@ -28,9 +29,11 @@ export const AdminDashboard = () => {
       const usersRes = await api.get('/admin/users');
       const listingsRes = await api.get('/admin/listings');
       const chatsRes = await api.get('/admin/chats');
+      const feedbackRes = await api.get('/feedback');
       setUsers(usersRes.data);
       setListings(listingsRes.data);
       setReportedChats(chatsRes.data);
+      setFeedbackList(feedbackRes.data);
     } catch (err) {
       console.error('Error fetching admin dashboard data:', err);
       showToast('Failed to fetch admin data.', 'error');
@@ -106,6 +109,33 @@ export const AdminDashboard = () => {
       fetchData();
     } catch (err) {
       showToast('Failed to dismiss chat reports', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this feedback/feature request?')) return;
+    setActionLoading(true);
+    try {
+      await api.delete(`/admin/feedback/${id}`);
+      showToast('Feedback deleted successfully', 'success');
+      fetchData();
+    } catch (err) {
+      showToast('Failed to delete feedback', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateFeedbackStatus = async (id, status) => {
+    setActionLoading(true);
+    try {
+      await api.post(`/admin/feedback/${id}/status`, { status });
+      showToast(`Feedback marked as ${status} successfully!`, 'success');
+      fetchData();
+    } catch (err) {
+      showToast('Failed to update feedback status', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -222,6 +252,17 @@ export const AdminDashboard = () => {
             }`}
           >
             <AlertTriangle className={`w-4 h-4 ${(listings.filter(l => l.reports && l.reports.length > 0).length > 0 || reportedChats.length > 0) ? 'text-rose-500 animate-pulse' : ''}`} /> Moderation Log ({listings.filter(l => l.reports && l.reports.length > 0).length + reportedChats.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'feedback'
+                ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" /> Feedback Logs ({feedbackList.length})
           </button>
         </div>
 
@@ -703,6 +744,81 @@ export const AdminDashboard = () => {
                     </table>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'feedback' && (
+              <div className="overflow-x-auto text-left animate-fadeIn">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                      <th className="px-6 py-4">Student</th>
+                      <th className="px-6 py-4">Feedback / Issue</th>
+                      <th className="px-6 py-4">Category</th>
+                      <th className="px-6 py-4">Votes</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                    {feedbackList.length > 0 ? (
+                      feedbackList.map((item) => (
+                        <tr key={item._id} className="hover:bg-[#FAFAFF]/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <p className="font-bold text-xs">{item.user?.fullName || 'Student'}</p>
+                            <p className="text-[10px] text-gray-400">{item.user?.department} • {item.user?.year} yr</p>
+                          </td>
+                          <td className="px-6 py-4 max-w-[280px]">
+                            <p className="font-bold text-xs text-[#111827]">{item.title}</p>
+                            <p className="text-[11px] text-[#6B7280] mt-0.5 leading-relaxed break-words">{item.description}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border ${
+                              item.category === 'feature'
+                                ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
+                                : item.category === 'bug'
+                                ? 'bg-rose-50 border-rose-100 text-rose-600'
+                                : 'bg-slate-50 border-slate-100 text-slate-600'
+                            }`}>
+                              {item.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-xs">
+                            ⭐ {item.upvotes?.length || 0} upvotes
+                          </td>
+                          <td className="px-6 py-4">
+                            <select
+                              value={item.status}
+                              onChange={(e) => handleUpdateFeedbackStatus(item._id, e.target.value)}
+                              className="bg-[#FAFAFF] border border-[#E9E6F8] text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none focus:border-[#6C4EFF]/40 cursor-pointer"
+                            >
+                              <option value="pending">Review Pending</option>
+                              <option value="reviewing">In Review</option>
+                              <option value="planned">Planned</option>
+                              <option value="completed">Completed</option>
+                              <option value="dismissed">Dismissed</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleDeleteFeedback(item._id)}
+                              className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors mx-auto"
+                              title="Delete Feedback"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center text-[#6B7280]">
+                          No feedback submitted by students yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

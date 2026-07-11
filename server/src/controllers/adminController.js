@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Listing from '../models/Listing.js';
 import Notification from '../models/Notification.js';
 import Conversation from '../models/Conversation.js';
+import Feedback from '../models/Feedback.js';
 
 // @desc    Get users by verification status
 // @route   GET /api/admin/users
@@ -178,6 +179,49 @@ const dismissConversationReports = async (req, res) => {
   }
 };
 
+// @desc    Update status of a feedback request
+// @route   POST /api/admin/feedback/:id/status
+// @access  Private & Admin
+const updateFeedbackStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ message: 'Status is required' });
+    }
+
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback request not found' });
+    }
+
+    feedback.status = status;
+    await feedback.save();
+
+    const updatedFeedback = await Feedback.findById(feedback._id)
+      .populate('user', 'fullName profileImageUrl department year');
+
+    res.json({ message: 'Feedback status updated successfully', feedback: updatedFeedback });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error updating feedback status', error: error.message });
+  }
+};
+
+// @desc    Delete feedback item
+// @route   DELETE /api/admin/feedback/:id
+// @access  Private & Admin
+const deleteFeedbackAdmin = async (req, res) => {
+  try {
+    const feedback = await Feedback.findByIdAndDelete(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ message: 'Feedback request not found' });
+    }
+
+    res.json({ message: 'Feedback request deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error deleting feedback', error: error.message });
+  }
+};
+
 export {
   getUsersByStatus,
   getPendingUsers,
@@ -187,5 +231,7 @@ export {
   deleteListingAdmin,
   dismissReports,
   getReportedConversations,
-  dismissConversationReports
+  dismissConversationReports,
+  updateFeedbackStatus,
+  deleteFeedbackAdmin
 };
