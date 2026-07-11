@@ -239,12 +239,17 @@ export const AdminDashboard = () => {
                             {st.department} • {st.year}
                           </td>
                           <td className="px-6 py-4">
-                            <button
-                              onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle('Student ID Card Preview'); }}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-[#6C4EFF] hover:underline"
-                            >
-                              <Eye className="w-4 h-4" /> View ID Card
-                            </button>
+                            {st.idCardImageUrl ? (
+                              <div
+                                onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle(`${st.fullName} ID Card Preview`); }}
+                                className="w-12 h-12 rounded-lg bg-slate-100 border border-[#E9E6F8] overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-85 transition-opacity"
+                                title="Click to view ID card"
+                              >
+                                <img src={st.idCardImageUrl} alt="ID Card" className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <span className="text-xs text-gray-400 font-medium">No Image</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-center">
                             <div className="inline-flex gap-2">
@@ -327,12 +332,17 @@ export const AdminDashboard = () => {
                               {st.department} • {st.year}
                             </td>
                             <td className="px-6 py-4">
-                              <button
-                                onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle('Student ID Card Preview'); }}
-                                className="inline-flex items-center gap-1 text-xs font-bold text-[#6C4EFF] hover:underline"
-                              >
-                                <Eye className="w-4 h-4" /> View ID Card
-                              </button>
+                              {st.idCardImageUrl ? (
+                                <div
+                                  onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle(`${st.fullName} ID Card Preview`); }}
+                                  className="w-12 h-12 rounded-lg bg-slate-100 border border-[#E9E6F8] overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-85 transition-opacity"
+                                  title="Click to view ID card"
+                                >
+                                  <img src={st.idCardImageUrl} alt="ID Card" className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400 font-medium">No Image</span>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-center">
                               {subStatus === 'approved' ? (
@@ -385,17 +395,38 @@ export const AdminDashboard = () => {
                       listings.map((lst) => (
                         <tr key={lst._id} className={`transition-colors ${lst.reports && lst.reports.length > 0 ? 'bg-rose-50/30 hover:bg-rose-50/50' : 'hover:bg-[#FAFAFF]/50'}`}>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-[#111827]">{lst.title}</p>
-                              {lst.reports && lst.reports.length > 0 && (
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                                  <AlertTriangle className="w-2.5 h-2.5" /> Flagged
-                                </span>
+                            <div className="flex items-center gap-3">
+                              {lst.images && lst.images.length > 0 ? (
+                                <div
+                                  onClick={() => { setPreviewIdUrl(lst.images[0]); setPreviewTitle('Listing Image Preview'); }}
+                                  className="w-12 h-12 rounded-lg bg-slate-100 border border-[#E9E6F8] overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-85 transition-opacity"
+                                  title="Click to preview image"
+                                >
+                                  <img
+                                    src={lst.images[0]}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-slate-50 border border-[#E9E6F8] flex items-center justify-center text-xs text-gray-400 flex-shrink-0">
+                                  No Img
+                                </div>
                               )}
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold text-[#111827]">{lst.title}</p>
+                                  {lst.reports && lst.reports.length > 0 && (
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                                      <AlertTriangle className="w-2.5 h-2.5" /> Flagged
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[200px]">
+                                  {lst.description}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs text-[#6B7280] mt-0.5 truncate max-w-[280px]">
-                              {lst.description}
-                            </p>
                           </td>
                           <td className="px-6 py-4 text-xs font-medium">
                             <p className="font-bold">{lst.seller?.fullName || 'Anonymous'}</p>

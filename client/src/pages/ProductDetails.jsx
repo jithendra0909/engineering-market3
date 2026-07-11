@@ -268,15 +268,6 @@ export const ProductDetails = () => {
               <Heart className={`w-5 h-5 stroke-[2] ${isSaved ? 'fill-[#6C4EFF]' : ''}`} />
             </button>
             <button
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href);
-                showToast('Link copied!', 'success');
-              }}
-              className="w-[52px] h-[52px] rounded-full border border-[#E9E6F8] bg-white flex items-center justify-center text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30 transition-all flex-shrink-0"
-            >
-              <Share2 className="w-5 h-5 stroke-[2]" />
-            </button>
-            <button
               onClick={() => setIsShareModalOpen(true)}
               className="w-[52px] h-[52px] rounded-full border border-emerald-200 bg-[#E8F8F0] text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-all flex-shrink-0 flex items-center justify-center"
               title="Share to WhatsApp Group"
