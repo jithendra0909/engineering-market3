@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const IntroSplash = () => {
-  const videoRef = useRef(null);
-  
   // Synchronous check on initial render to prevent home screen flash/flicker
   const checkInitialSplash = () => {
     if (typeof window !== 'undefined') {
@@ -15,7 +13,6 @@ const IntroSplash = () => {
 
   const [showSplash, setShowSplash] = useState(checkInitialSplash);
   const [fadeOut, setFadeOut] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (showSplash) {
@@ -26,22 +23,7 @@ const IntroSplash = () => {
         handleCloseSplash();
       }, 5000);
 
-      // Listen for touch/click to unmute song/audio safely
-      const handleDocClick = () => {
-        if (videoRef.current) {
-          videoRef.current.muted = false;
-          setIsMuted(false);
-        }
-      };
-
-      document.addEventListener('click', handleDocClick);
-      document.addEventListener('touchstart', handleDocClick);
-
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener('click', handleDocClick);
-        document.removeEventListener('touchstart', handleDocClick);
-      };
+      return () => clearTimeout(timer);
     }
   }, [showSplash]);
 
@@ -63,22 +45,14 @@ const IntroSplash = () => {
       }`}
     >
       <video
-        ref={videoRef}
         src="/intro.mp4"
         autoPlay
-        muted={isMuted}
+        muted
         playsInline
         controls={false}
         onEnded={handleCloseSplash}
         className="w-full h-full object-cover pointer-events-none"
       />
-
-      {/* Floating sound notification overlay if muted */}
-      {isMuted && (
-        <div className="absolute bottom-10 bg-black/50 border border-white/10 backdrop-blur-md px-4 py-2 rounded-full text-white text-[11px] font-bold tracking-wide animate-pulse pointer-events-none flex items-center gap-1.5 shadow-lg">
-          <span>🔊 Tap anywhere for sound</span>
-        </div>
-      )}
     </div>
   );
 };
