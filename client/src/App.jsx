@@ -9,6 +9,7 @@ import CreateNewModal from './components/CreateNewModal';
 import Toast from './components/Toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import VerifiedOnly from './components/VerifiedOnly';
+import IntroSplash from './components/IntroSplash';
 
 // Pages
 import Home from './pages/Home';
@@ -39,6 +40,9 @@ const AppLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col antialiased">
+      {/* Intro video splash screen overlay (Mobile Only) */}
+      <IntroSplash />
+
       {/* Desktop + Mobile Header */}
       <Navbar />
 
