@@ -28,7 +28,8 @@ const getListings = async (req, res) => {
         }
       ];
     } else {
-      // Unauthenticated: show all available listings that are not expired
+      // Unauthenticated: show only general listings that are not expired
+      query.marketType = 'general';
       query.expiresAt = { $gt: now };
     }
     
@@ -114,9 +115,14 @@ const getListingById = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
     
-    // Authorization check: if college market and user is authenticated, verify same college or admin
-    if (req.user && req.user.role !== 'admin' && listing.marketType === 'college' && listing.sellerCollege !== req.user.college) {
-      return res.status(403).json({ message: 'Access denied. This listing is only visible to students of ' + listing.sellerCollege });
+    // Authorization check: if college market, user must be logged in and belong to the same college (or admin)
+    if (listing.marketType === 'college') {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Access denied. Please log in to view college listings.' });
+      }
+      if (req.user.role !== 'admin' && listing.sellerCollege !== req.user.college) {
+        return res.status(403).json({ message: 'Access denied. This listing is only visible to students of ' + listing.sellerCollege });
+      }
     }
     
     res.json(listing);

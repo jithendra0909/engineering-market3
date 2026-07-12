@@ -12,17 +12,17 @@ import {
   renewListing,
   reportListing
 } from '../controllers/listingController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { verifiedOnly } from '../middleware/verifiedMiddleware.js';
 import { handleMultipleUpload } from '../middleware/uploadMiddleware.js';
 import { checkListingLimit } from '../middleware/rateLimitMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', getListings);
-router.get('/general', getGeneralListings);
+router.get('/', optionalProtect, getListings);
+router.get('/general', optionalProtect, getGeneralListings);
 router.get('/college', protect, getCollegeListings);
-router.get('/:id', getListingById);
+router.get('/:id', optionalProtect, getListingById);
 
 // Creation, edits, and contact actions require verification
 router.post('/', protect, verifiedOnly, checkListingLimit, handleMultipleUpload('images', 5), createListing);

@@ -5,11 +5,13 @@ import College from '../models/College.js';
 // @access  Public
 const getColleges = async (req, res) => {
   try {
-    // Ensure both college records exist in database
+    // Ensure Vignan's Institute of Engineering for Women exists in database
     const collegesList = [
-      "Vignan's Institute of Information Technology (VIIT)",
       "Vignan's Institute of Engineering for Women (VIEW)"
     ];
+
+    // Remove VIIT if it exists
+    await College.deleteOne({ name: "Vignan's Institute of Information Technology (VIIT)" });
 
     for (const name of collegesList) {
       const exists = await College.findOne({ name });

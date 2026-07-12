@@ -286,7 +286,6 @@ export const Signup = () => {
                   ))
                 ) : (
                   <>
-                    <option value="Vignan's Institute of Information Technology (VIIT)">Vignan's Institute of Information Technology (VIIT)</option>
                     <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
                   </>
                 )}

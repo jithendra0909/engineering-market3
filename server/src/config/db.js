@@ -107,10 +107,6 @@ const seedIfEmpty = async () => {
       console.log('Database is empty. Seeding initial admin and college data safely...');
       
       // 1. Create Colleges
-      const viit = await College.create({
-        name: "Vignan's Institute of Information Technology (VIIT)",
-        isActive: true
-      });
       const view = await College.create({
         name: "Vignan's Institute of Engineering for Women (VIEW)",
         isActive: true
@@ -125,7 +121,7 @@ const seedIfEmpty = async () => {
         registrationNumber: 'ADMIN-001',
         department: 'Administration',
         year: '4th Year',
-        college: viit.name,
+        college: view.name,
         idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
         role: 'admin',
         verificationStatus: 'approved'
@@ -140,7 +136,7 @@ const seedIfEmpty = async () => {
         registrationNumber: '21F31A0512',
         department: 'Computer Science Engineering',
         year: '3rd Year',
-        college: viit.name,
+        college: view.name,
         idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
         role: 'student',
         verificationStatus: 'approved'
@@ -156,9 +152,9 @@ const seedIfEmpty = async () => {
           category: 'Books',
           condition: 'Good',
           listingType: 'sell',
-          marketType: 'college',
+          marketType: 'general',
           seller: arjun._id,
-          sellerCollege: viit.name,
+          sellerCollege: view.name,
           sellerWhatsappNumber: arjun.whatsappNumber,
           status: 'available'
         },
@@ -172,7 +168,7 @@ const seedIfEmpty = async () => {
           listingType: 'sell',
           marketType: 'college',
           seller: arjun._id,
-          sellerCollege: viit.name,
+          sellerCollege: view.name,
           sellerWhatsappNumber: arjun.whatsappNumber,
           status: 'available'
         }
