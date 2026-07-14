@@ -111,6 +111,10 @@ const seedIfEmpty = async () => {
         name: "Vignan's Institute of Engineering for Women (VIEW)",
         isActive: true
       });
+      await College.create({
+        name: "Vignan's Institute of Information Technology (VIIT)",
+        isActive: true
+      });
       
       // 2. Create Admin
       await User.create({

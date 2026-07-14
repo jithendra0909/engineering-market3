@@ -9,21 +9,9 @@ const getColleges = async (req, res) => {
   try {
     // Ensure Vignan's Institute of Engineering for Women exists in database
     const collegesList = [
-      "Vignan's Institute of Engineering for Women (VIEW)"
+      "Vignan's Institute of Engineering for Women (VIEW)",
+      "Vignan's Institute of Information Technology (VIIT)"
     ];
-
-    const oldColleges = [
-      "Vignan's Institute of Information Technology (VIIT)",
-      "Vignan Institute of Information Technology"
-    ];
-
-    // Clean up all variations of VIIT from the database
-    await College.deleteMany({ name: { $in: oldColleges } });
-
-    // Migrate any users or listings referencing VIIT to VIEW
-    const targetCollege = "Vignan's Institute of Engineering for Women (VIEW)";
-    await User.updateMany({ college: { $in: oldColleges } }, { college: targetCollege });
-    await Listing.updateMany({ sellerCollege: { $in: oldColleges } }, { sellerCollege: targetCollege });
 
     for (const name of collegesList) {
       const exists = await College.findOne({ name });

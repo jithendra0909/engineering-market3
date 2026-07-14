@@ -80,21 +80,13 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route 
               path="/general-market" 
-              element={
-                <ProtectedRoute>
-                  <VerifiedOnly>
-                    <GeneralMarket />
-                  </VerifiedOnly>
-                </ProtectedRoute>
-              } 
+              element={<GeneralMarket />} 
             />
             <Route 
               path="/college-market" 
               element={
                 <ProtectedRoute>
-                  <VerifiedOnly>
-                    <CollegeMarket />
-                  </VerifiedOnly>
+                  <CollegeMarket />
                 </ProtectedRoute>
               } 
             />
@@ -129,7 +121,9 @@ function App() {
               path="/chat" 
               element={
                 <ProtectedRoute>
-                  <Chat />
+                  <VerifiedOnly>
+                    <Chat />
+                  </VerifiedOnly>
                 </ProtectedRoute>
               } 
             />

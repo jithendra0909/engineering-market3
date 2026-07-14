@@ -149,7 +149,13 @@ export const Home = () => {
                 </p>
               </div>
               <button
-                onClick={() => handleGatedAction('/college-market')}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    setIsGateOpen(true);
+                  } else {
+                    navigate('/college-market');
+                  }
+                }}
                 className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
               >
                 Explore College <ChevronRight className="w-3.5 h-3.5" />
@@ -168,7 +174,7 @@ export const Home = () => {
                 </p>
               </div>
               <button
-                onClick={() => handleGatedAction('/general-market')}
+                onClick={() => navigate('/general-market')}
                 className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
               >
                 Explore General <ChevronRight className="w-3.5 h-3.5" />
@@ -181,7 +187,7 @@ export const Home = () => {
             <div className="flex items-end justify-between">
               <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">Trending Items</h2>
               <button
-                onClick={() => handleGatedAction('/general-market')}
+                onClick={() => navigate('/general-market')}
                 className="text-[12px] font-bold text-[#6C4EFF] flex items-center gap-0.5 hover:gap-1.5 transition-all text-left"
               >
                 View All <ArrowRight className="w-3.5 h-3.5" />
