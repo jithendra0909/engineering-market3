@@ -859,15 +859,21 @@ export const Profile = () => {
                 {/* ID Card Re-upload */}
                 <div>
                   <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">
-                    College ID Card (Upload new image for verification)
+                    {editYear === '1st Year' 
+                      ? 'College ID Card or Admission Fee Receipt / Allotment Order' 
+                      : 'College ID Card (Upload new image for verification)'}
                   </label>
                   <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#E9E6F8] rounded-[16px] p-4 cursor-pointer hover:border-[#6D4AFF]/30 hover:bg-[#FAFAFF] transition-all">
                     {editIdCardPreview ? (
                       <img src={editIdCardPreview} alt="ID Preview" className="max-h-[120px] object-contain rounded-[10px]" />
                     ) : (
-                      <div className="text-center py-4 text-[#9CA3AF]">
+                      <div className="text-center py-4 text-[#9CA3AF] px-4">
                         <Camera className="w-6 h-6 mx-auto mb-1.5" />
-                        <p className="text-[11px] font-semibold">Upload ID card</p>
+                        <p className="text-[11px] font-semibold">
+                          {editYear === '1st Year'
+                            ? 'Upload ID, fee receipt, or allotment order'
+                            : 'Upload ID card'}
+                        </p>
                       </div>
                     )}
                     <input

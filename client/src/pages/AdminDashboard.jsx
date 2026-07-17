@@ -295,7 +295,16 @@ export const AdminDashboard = () => {
                           </td>
                           <td className="px-6 py-4 font-mono text-xs">{st.registrationNumber}</td>
                           <td className="px-6 py-4 font-medium text-xs">
-                            {st.department} • {st.year}
+                             <div className="font-semibold text-slate-700">{st.department}</div>
+                             <div className="mt-1">
+                               {st.year === '1st Year' ? (
+                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 font-bold text-[10px]" title="First year students don't have ID cards yet. Fee receipt or Allotment letter is accepted.">
+                                   {st.year} (Receipt Allowed)
+                                 </span>
+                               ) : (
+                                 <span className="text-[#6B7280]">{st.year}</span>
+                               )}
+                             </div>
                           </td>
                           <td className="px-6 py-4">
                             {st.idCardImageUrl ? (
@@ -388,7 +397,16 @@ export const AdminDashboard = () => {
                             </td>
                             <td className="px-6 py-4 font-mono text-xs">{st.registrationNumber}</td>
                             <td className="px-6 py-4 font-medium text-xs">
-                              {st.department} • {st.year}
+                             <div className="font-semibold text-slate-700">{st.department}</div>
+                             <div className="mt-1">
+                               {st.year === '1st Year' ? (
+                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100 font-bold text-[10px]" title="First year students don't have ID cards yet. Fee receipt or Allotment letter is accepted.">
+                                   {st.year} (Receipt Allowed)
+                                 </span>
+                               ) : (
+                                 <span className="text-[#6B7280]">{st.year}</span>
+                               )}
+                             </div>
                             </td>
                             <td className="px-6 py-4">
                               {st.idCardImageUrl ? (

@@ -296,7 +296,9 @@ export const Signup = () => {
 
           {/* ID Card Upload */}
           <div>
-            <label className={labelClass}>College ID Card</label>
+            <label className={labelClass}>
+              {year === '1st Year' ? 'College ID Card or Admission Fee Receipt / Allotment Order' : 'College ID Card'}
+            </label>
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#E9E6F8] rounded-[16px] p-5 cursor-pointer hover:border-[#6C4EFF]/30 hover:bg-[#FAFAFF] transition-all">
               {idCardPreview ? (
                 <img src={idCardPreview} alt="ID Preview" className="w-full max-h-[150px] object-contain rounded-[10px]" />
@@ -305,7 +307,11 @@ export const Signup = () => {
                   <div className="w-12 h-12 bg-[#F4F1FF] rounded-full flex items-center justify-center mb-2">
                     <Camera className="w-5 h-5 text-[#6C4EFF]" />
                   </div>
-                  <p className="text-[12px] font-semibold text-[#6B7280]">Upload your college ID card</p>
+                  <p className="text-[12px] font-semibold text-[#6B7280] text-center px-4">
+                    {year === '1st Year' 
+                      ? 'Upload college ID, admission fee receipt, or allotment order' 
+                      : 'Upload your college ID card'}
+                  </p>
                   <p className="text-[10px] text-[#9CA3AF] mt-0.5">JPG, PNG up to 5MB</p>
                 </>
               )}
