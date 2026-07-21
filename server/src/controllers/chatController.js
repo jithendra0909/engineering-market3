@@ -1,6 +1,8 @@
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import Listing from '../models/Listing.js';
+import User from '../models/User.js';
+import { sendWhatsAppNotification } from '../utils/whatsappNotification.js';
 
 // @desc    Get all conversations for logged-in user
 // @route   GET /api/chats
@@ -170,6 +172,22 @@ export const sendMessage = async (req, res) => {
     );
 
     await conversation.save();
+
+    // Asynchronously send WhatsApp notification to recipient without blocking response
+    User.findById(recipientId).select('whatsappNumber fullName').then((recipient) => {
+      if (recipient && recipient.whatsappNumber) {
+        Listing.findById(conversation.listing).select('title').then((listing) => {
+          const clientBaseUrl = process.env.CLIENT_URL || 'https://engineeringmarket.vercel.app';
+          sendWhatsAppNotification({
+            recipientPhone: recipient.whatsappNumber,
+            recipientName: recipient.fullName,
+            itemTitle: listing?.title || 'an item on Engineering Market',
+            chatUrl: `${clientBaseUrl}/chat?conversationId=${conversation._id}`,
+            customMessage: text.trim()
+          });
+        }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
+      }
+    }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
 
     res.status(201).json(message);
   } catch (error) {
