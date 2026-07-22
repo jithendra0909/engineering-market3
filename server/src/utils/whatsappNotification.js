@@ -49,7 +49,7 @@ export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, 
           parameters: [
             { type: 'text', text: recipientName || 'Seller' },
             { type: 'text', text: itemTitle || 'your listing' },
-            { type: 'text', text: chatUrl || 'https://engineeringmarket.vercel.app/chat' }
+            { type: 'text', text: chatUrl || 'https://engineering-market.vercel.app/chat' }
           ]
         }
       ];

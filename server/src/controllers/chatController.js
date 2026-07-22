@@ -177,7 +177,7 @@ export const sendMessage = async (req, res) => {
     User.findById(recipientId).select('whatsappNumber fullName').then((recipient) => {
       if (recipient && recipient.whatsappNumber) {
         Listing.findById(conversation.listing).select('title').then((listing) => {
-          const clientBaseUrl = process.env.CLIENT_URL || 'https://engineeringmarket.vercel.app';
+          const clientBaseUrl = process.env.CLIENT_URL || 'https://engineering-market.vercel.app';
           sendWhatsAppNotification({
             recipientPhone: recipient.whatsappNumber,
             recipientName: recipient.fullName,
