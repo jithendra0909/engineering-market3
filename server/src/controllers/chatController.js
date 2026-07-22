@@ -182,7 +182,7 @@ export const sendMessage = async (req, res) => {
             recipientPhone: recipient.whatsappNumber,
             recipientName: recipient.fullName,
             itemTitle: listing?.title || 'an item on Engineering Market',
-            chatUrl: `${clientBaseUrl}/chat?conversationId=${conversation._id}`,
+            chatUrl: clientBaseUrl,
             customMessage: text.trim()
           });
         }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
