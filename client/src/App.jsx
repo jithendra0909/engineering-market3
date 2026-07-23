@@ -55,8 +55,8 @@ const AppLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Mobile Floating Bottom Bar - Hide inside active chat thread and vendors page */}
-      {!isChatActive && location.pathname !== '/vendors' && (
+      {/* Mobile Floating Bottom Bar - Hide inside active chat thread */}
+      {!isChatActive && (
         <MobileBottomNav isCreateOpen={isCreateOpen} setIsCreateOpen={setIsCreateOpen} />
       )}
 
