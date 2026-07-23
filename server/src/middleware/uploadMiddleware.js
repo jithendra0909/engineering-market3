@@ -179,6 +179,54 @@ const pdfUpload = multer({
   fileFilter: pdfFileFilter
 });
 
+const fastGetPdfPageCount = (buffer) => {
+  if (!buffer || buffer.length === 0) return null;
+
+  const searchSlice = (sliceText) => {
+    const dictRegex = /<<([^>]+)>>/g;
+    let match;
+    let maxCount = 0;
+    while ((match = dictRegex.exec(sliceText)) !== null) {
+      const dictContent = match[1];
+      if (/\/Type\s*\/Pages/.test(dictContent)) {
+        const countMatch = dictContent.match(/\/Count\s+(\d+)/);
+        if (countMatch) {
+          const count = parseInt(countMatch[1], 10);
+          if (count > maxCount) {
+            maxCount = count;
+          }
+        }
+      }
+    }
+    return maxCount;
+  };
+
+  const headerSize = Math.min(buffer.length, 256 * 1024);
+  const headerText = buffer.toString('binary', 0, headerSize);
+  let count = searchSlice(headerText);
+  if (count > 0) return count;
+
+  if (buffer.length > 256 * 1024) {
+    const trailerStart = Math.max(0, buffer.length - 1024 * 1024);
+    const trailerText = buffer.toString('binary', trailerStart);
+    count = searchSlice(trailerText);
+    if (count > 0) return count;
+  }
+
+  const lastSegmentStart = Math.max(0, buffer.length - 1024 * 1024);
+  const lastSegmentText = buffer.toString('binary', lastSegmentStart);
+  const countMatches = lastSegmentText.match(/\/Count\s+(\d+)/g);
+  if (countMatches) {
+    const lastMatch = countMatches[countMatches.length - 1];
+    const numMatch = lastMatch.match(/\d+/);
+    if (numMatch) {
+      return parseInt(numMatch[0], 10);
+    }
+  }
+
+  return null;
+};
+
 const checkPdfMagicBytes = (buffer) => {
   if (!buffer || buffer.length < 4) return false;
   const hex = buffer.toString('hex', 0, 4);
@@ -204,42 +252,44 @@ const handlePdfUpload = (fieldName) => {
         return res.status(400).json({ message: 'Invalid file signature. Only actual PDF files are allowed!' });
       }
       
-      // Count PDF pages on server using pdfParse.PDFParse with fallback
+      // Count PDF pages on server using fast check, with full pdfParse fallback
       let pagesCount = 1;
-      let parser;
       let parseSuccess = false;
+
+      // 1. Fast, non-blocking check on sliced buffer first
       try {
-        parser = new pdfParse.PDFParse({ data: req.file.buffer });
-        const doc = await parser.load();
-        pagesCount = doc.numPages || 1;
-        parseSuccess = true;
-        await parser.destroy();
-      } catch (parseErr) {
-        console.error('Failed to parse PDF pages on server:', parseErr);
-        if (parser) {
-          try {
-            await parser.destroy();
-          } catch (_) {}
+        const fastCount = fastGetPdfPageCount(req.file.buffer);
+        if (fastCount && fastCount > 0) {
+          pagesCount = fastCount;
+          parseSuccess = true;
         }
-        
-        // Strict Rejections: password protected
-        const errMessage = parseErr.message || '';
-        const errName = parseErr.name || '';
-        if (errMessage.includes('password') || errName === 'PasswordException' || errMessage.includes('Password')) {
-          return res.status(400).json({ message: 'The PDF is password protected. Please remove the password and try again.' });
-        }
-        
-        // Try fallback regex
+      } catch (fastErr) {
+        console.error('Fast PDF page counting failed:', fastErr);
+      }
+
+      // 2. Fallback to full pdf-parse ONLY if fast check failed
+      if (!parseSuccess) {
+        let parser;
         try {
-          const text = req.file.buffer.toString('binary');
-          const matches = text.match(/\/Count\s+(\d+)/g);
-          if (matches) {
-            const lastMatch = matches[matches.length - 1];
-            pagesCount = parseInt(lastMatch.match(/\d+/)[0], 10) || 1;
-            parseSuccess = true;
+          parser = new pdfParse.PDFParse({ data: req.file.buffer });
+          const doc = await parser.load();
+          pagesCount = doc.numPages || 1;
+          parseSuccess = true;
+          await parser.destroy();
+        } catch (parseErr) {
+          console.error('Failed to parse PDF pages on server:', parseErr);
+          if (parser) {
+            try {
+              await parser.destroy();
+            } catch (_) {}
           }
-        } catch (regexErr) {
-          console.error('Fallback PDF regex parsing failed:', regexErr);
+          
+          // Strict Rejections: password protected
+          const errMessage = parseErr.message || '';
+          const errName = parseErr.name || '';
+          if (errMessage.includes('password') || errName === 'PasswordException' || errMessage.includes('Password')) {
+            return res.status(400).json({ message: 'The PDF is password protected. Please remove the password and try again.' });
+          }
         }
       }
 
