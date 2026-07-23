@@ -1,0 +1,189 @@
+import PrintOrder from '../models/PrintOrder.js';
+import User from '../models/User.js';
+import UploadedFile from '../models/UploadedFile.js';
+
+// @desc    Place a print order
+// @route   POST /api/print/order
+// @access  Private
+export const createPrintOrder = async (req, res) => {
+  try {
+    const {
+      studentName,
+      registrationNumber,
+      contactNumber,
+      section,
+      department,
+      files, // Array of files: { pdfFileUrl, fileName, pagesCount, layout, colorType, binding, sets, instructions, subtotal }
+      paymentScreenshotUrl,
+      upiReference,
+      deliveryDate,
+      totalPrice
+    } = req.body;
+
+    // Verify user is from VIIT
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.college !== "Vignan's Institute of Information Technology (VIIT)") {
+      return res.status(400).json({
+        message: "Printing service is only available for Vignan's Institute of Information Technology (VIIT) students. Non-VIIT students, please contact 9391461855."
+      });
+    }
+
+    // Validate parameters
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ message: 'At least one print file configuration is required.' });
+    }
+
+    if (!paymentScreenshotUrl) {
+      return res.status(400).json({ message: 'Payment screenshot proof is required.' });
+    }
+
+    if (!upiReference) {
+      return res.status(400).json({ message: 'UPI transaction reference code is required.' });
+    }
+
+    // Recalculate cost math securely on the backend using database uploads
+    let calculatedTotal = 0;
+    const verifiedFiles = [];
+
+    for (const file of files) {
+      const dbFile = await UploadedFile.findOne({ url: file.pdfFileUrl });
+      if (!dbFile) {
+        return res.status(400).json({ message: `Secure metadata check failed for file ${file.fileName}. Please upload it again.` });
+      }
+
+      // Check if file belongs to the requesting user
+      if (dbFile.student.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: `Access denied. File ${file.fileName} does not belong to your account.` });
+      }
+
+      let sheets = dbFile.pagesCount;
+      if (file.layout === 'both-side') {
+        sheets = Math.ceil(dbFile.pagesCount / 2);
+      } else if (file.layout === 'four-pages') {
+        sheets = Math.ceil(dbFile.pagesCount / 4);
+      }
+
+      const perPaperRate = file.colorType === 'bw' ? 1.3 : 3.5;
+      const bindingCost = file.binding === 'spiral' ? 30 : 0;
+      const calculatedSubtotal = parseFloat(((sheets * perPaperRate * file.sets) + (bindingCost * file.sets)).toFixed(2));
+
+      calculatedTotal += calculatedSubtotal;
+      
+      verifiedFiles.push({
+        pdfFileUrl: file.pdfFileUrl,
+        fileName: file.fileName,
+        pagesCount: dbFile.pagesCount,
+        layout: file.layout,
+        colorType: file.colorType,
+        binding: file.binding,
+        sets: file.sets,
+        instructions: file.instructions || '',
+        subtotal: calculatedSubtotal
+      });
+    }
+
+    calculatedTotal = parseFloat(calculatedTotal.toFixed(2));
+
+    // Verify sent price matches server calculation
+    if (Math.abs(calculatedTotal - Number(totalPrice)) > 0.05) {
+      return res.status(400).json({
+        message: `Order cost verification failed. Calculated: ₹${calculatedTotal}, Sent: ₹${totalPrice}`
+      });
+    }
+
+    // Verify delivery date is at least 24 hours in the future
+    const dateRequired = new Date(deliveryDate);
+    const presentTime = new Date();
+    const diffTime = dateRequired.getTime() - presentTime.getTime();
+    const diffHours = diffTime / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
+      return res.status(400).json({
+        message: 'Delivery date must be at least 24 hours in the future. For urgent prints, contact 9391461855.'
+      });
+    }
+
+    // Create the order
+    const printOrder = new PrintOrder({
+      student: req.user._id,
+      studentName,
+      registrationNumber,
+      contactNumber,
+      section,
+      department,
+      files: verifiedFiles,
+      paymentScreenshotUrl,
+      upiReference,
+      deliveryDate: dateRequired,
+      totalPrice: calculatedTotal,
+      status: 'pending'
+    });
+
+    await printOrder.save();
+
+    res.status(201).json({
+      message: 'Print order placed successfully!',
+      order: printOrder
+    });
+  } catch (error) {
+    console.error('Error placing print order:', error);
+    res.status(500).json({ message: 'Server error placing print order', error: error.message });
+  }
+};
+
+// @desc    Get student's own print orders
+// @route   GET /api/print/my-orders
+// @access  Private
+export const getMyPrintOrders = async (req, res) => {
+  try {
+    const orders = await PrintOrder.find({ student: req.user._id }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error retrieving print orders', error: error.message });
+  }
+};
+
+// @desc    Get all print orders (Admin/Vendor only)
+// @route   GET /api/print/all-orders
+// @access  Private/Admin
+export const getAllPrintOrders = async (req, res) => {
+  try {
+    const orders = await PrintOrder.find().populate('student', 'fullName email whatsappNumber department year').sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error retrieving all print orders', error: error.message });
+  }
+};
+
+// @desc    Update print order status (Admin/Vendor only)
+// @route   PUT /api/print/orders/:id/status
+// @access  Private/Admin
+export const updatePrintOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['pending', 'printing', 'out-for-delivery', 'delivered', 'cancelled'];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const order = await PrintOrder.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Print order not found' });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({
+      message: 'Print order status updated successfully',
+      order
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error updating print order status', error: error.message });
+  }
+};

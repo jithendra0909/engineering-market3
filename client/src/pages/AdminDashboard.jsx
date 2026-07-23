@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText } from 'lucide-react';
 import api from '../api/axios';
 
 export const AdminDashboard = () => {
   const { showToast } = useAuth();
+  const navigate = useNavigate();
   
   // Tab states
   const [activeTab, setActiveTab] = useState('pending'); // pending, listings, students, reported
@@ -158,6 +160,13 @@ export const AdminDashboard = () => {
           </h1>
           <p className="text-xs text-[#6B7280] mt-1 font-medium">Verify students and manage marketplace listings</p>
         </div>
+        <button 
+          onClick={() => navigate('/vendors/print-dashboard')}
+          className="h-10 px-4 bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold text-[13px] rounded-xl flex items-center gap-1.5 transition-all shadow-sm shadow-[#6D5DF6]/15"
+        >
+          <FileText className="w-4 h-4" />
+          Print Shop Dashboard
+        </button>
       </div>
 
       {/* Stats Cards */}

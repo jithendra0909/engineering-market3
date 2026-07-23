@@ -7,19 +7,6 @@ import Listing from '../models/Listing.js';
 // @access  Public
 const getColleges = async (req, res) => {
   try {
-    // Ensure Vignan's Institute of Engineering for Women exists in database
-    const collegesList = [
-      "Vignan's Institute of Engineering for Women (VIEW)",
-      "Vignan's Institute of Information Technology (VIIT)"
-    ];
-
-    for (const name of collegesList) {
-      const exists = await College.findOne({ name });
-      if (!exists) {
-        await College.create({ name, isActive: true });
-      }
-    }
-
     const colleges = await College.find({ isActive: true }).select('name');
     res.json(colleges);
   } catch (error) {

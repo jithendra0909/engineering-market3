@@ -24,7 +24,9 @@ import ProductDetails from './pages/ProductDetails';
 import CreateListing from './pages/CreateListing';
 import Profile from './pages/Profile';
 import Vendors from './pages/Vendors';
+import PrintStudio from './pages/PrintStudio';
 import Orders from './pages/Orders';
+import PrintDashboard from './pages/PrintDashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
@@ -53,8 +55,8 @@ const AppLayout = ({ children }) => {
         {children}
       </main>
 
-      {/* Mobile Floating Bottom Bar - Hide inside active chat thread */}
-      {!isChatActive && (
+      {/* Mobile Floating Bottom Bar - Hide inside active chat thread and vendors page */}
+      {!isChatActive && location.pathname !== '/vendors' && (
         <MobileBottomNav isCreateOpen={isCreateOpen} setIsCreateOpen={setIsCreateOpen} />
       )}
 
@@ -146,7 +148,23 @@ function App() {
 
             {/* Stubs / Coming Soon */}
             <Route path="/vendors" element={<Vendors />} />
+            <Route 
+              path="/vendors/print-studio" 
+              element={
+                <ProtectedRoute>
+                  <PrintStudio />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/orders" element={<Orders />} />
+            <Route 
+              path="/vendors/print-dashboard" 
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <PrintDashboard />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Admin Management */}
             <Route path="/dev/admin-simulator" element={<AdminLogin />} />

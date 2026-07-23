@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   User as UserIcon, ShieldCheck, ShieldAlert, Camera, MapPin,
   Tag, Heart, Gift, LogOut, ChevronRight, ChevronLeft, Clock, XCircle,
-  Package, Settings, Bell, Pen, BadgeCheck, Trash2, CheckCircle2, RefreshCw
+  Package, Settings, Bell, Pen, BadgeCheck, Trash2, CheckCircle2, RefreshCw,
+  ClipboardList, LayoutDashboard
 } from 'lucide-react';
 import api from '../api/axios';
 
@@ -22,7 +23,7 @@ const DEPARTMENTS = [
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 export const Profile = () => {
-  const { user, logout, isVerified, showToast, unreadNotificationsCount, colleges, updateProfile } = useAuth();
+  const { user, logout, isVerified, showToast, unreadNotificationsCount, colleges, updateProfile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [myListings, setMyListings] = useState([]);
   const [savedListings, setSavedListings] = useState([]);
@@ -647,6 +648,14 @@ export const Profile = () => {
       <div className="bg-white border border-[#ECECEC] rounded-[20px] overflow-hidden mb-6 divide-y divide-[#ECECEC]">
         {[
           {
+            icon: ClipboardList,
+            iconBg: 'bg-[#F3EFFF]',
+            iconColor: 'text-[#6C4EFF]',
+            title: 'My Orders',
+            sub: 'Track and view your print requests',
+            action: () => navigate('/orders'),
+          },
+          {
             icon: Tag,
             iconBg: 'bg-[#EEF9F2]',
             iconColor: 'text-emerald-600',
@@ -685,7 +694,13 @@ export const Profile = () => {
         ].map((item) => (
           <button
             key={item.title}
-            onClick={() => setActiveTab(item.key)}
+            onClick={() => {
+              if (item.action) {
+                item.action();
+              } else {
+                setActiveTab(item.key);
+              }
+            }}
             className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
           >
             <div className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
@@ -699,6 +714,44 @@ export const Profile = () => {
           </button>
         ))}
       </div>
+
+      {/* ═══════════════════════════════════════
+          ADMIN CONTROLS
+          ═══════════════════════════════════════ */}
+      {(isAdmin || user?.role === 'admin') && (
+        <>
+          <h3 className="text-[15px] font-bold text-[#111827] mb-3">Admin Controls</h3>
+          <div className="bg-white border border-[#ECECEC] rounded-[20px] overflow-hidden mb-6 divide-y divide-[#ECECEC]">
+            <button 
+              onClick={() => navigate('/admin/dashboard')}
+              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+            >
+              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6C4EFF]/15 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <LayoutDashboard className="w-[18px] h-[18px] text-[#6C4EFF] stroke-[1.8]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-[#111827]">System Admin Dashboard</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">Verify users, manage listings & view logs</p>
+              </div>
+              <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+            </button>
+
+            <button 
+              onClick={() => navigate('/vendors/print-dashboard')}
+              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+            >
+              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6D5DF6]/15 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <ClipboardList className="w-[18px] h-[18px] text-[#6D5DF6] stroke-[1.8]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-[#111827]">Print Shop Dashboard</p>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">Verify payments, download prints & checkouts</p>
+              </div>
+              <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+            </button>
+          </div>
+        </>
+      )}
 
       {/* ═══════════════════════════════════════
           ACCOUNT

@@ -79,5 +79,9 @@ const listingSchema = new mongoose.Schema({
   timestamps: true
 });
 
+listingSchema.index({ sellerCollege: 1, status: 1 });
+listingSchema.index({ marketType: 1, expiresAt: 1 });
+listingSchema.index({ createdAt: -1 });
+
 const Listing = mongoose.model('Listing', listingSchema);
 export default Listing;

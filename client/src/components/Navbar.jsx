@@ -67,6 +67,7 @@ export const Navbar = () => {
   return (
     <>
       {/* ══════════ DESKTOP NAVBAR ══════════ */}
+      {!['/vendors'].includes(location.pathname) && (
       <header className="hidden lg:block sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#E9E6F8]/60">
         <div className="max-w-[1360px] mx-auto h-[64px] px-8 flex items-center justify-between gap-6">
           
@@ -226,6 +227,7 @@ export const Navbar = () => {
           </div>
         </div>
       </header>
+      )}
 
       {/* ══════════ MOBILE HEADER ══════════ */}
       {/* Hidden on /vendors, /orders, /profile — those pages render their own headers */}
