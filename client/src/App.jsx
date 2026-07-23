@@ -44,7 +44,7 @@ const AppLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col antialiased">
-      {/* Intro video splash screen overlay (Mobile Only) */}
+      {/* Animated intro splash screen overlay */}
       <IntroSplash />
 
       {/* Desktop + Mobile Header */}
