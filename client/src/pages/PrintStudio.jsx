@@ -192,7 +192,8 @@ export const PrintStudio = () => {
         formData.append('pdf', file);
         
         const response = await api.post('/print/upload-pdf', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': undefined },
+          timeout: 5 * 60 * 1000 // 5 minutes for large PDFs
         });
 
         setFiles(prev => prev.map(f => f.id === tempId ? { 
@@ -266,7 +267,8 @@ export const PrintStudio = () => {
       formData.append('screenshot', file);
       
       const response = await api.post('/print/upload-screenshot', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': undefined },
+        timeout: 60 * 1000 // 1 minute for screenshots
       });
       setPaymentScreenshot(response.data.url);
     } catch (err) {

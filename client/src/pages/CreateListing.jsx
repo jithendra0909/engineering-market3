@@ -116,7 +116,7 @@ export const CreateListing = () => {
       compressedImages.forEach(img => formData.append('images', img));
 
       await api.post('/listings', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': undefined },
       });
 
       showToast('Listing created successfully!', 'success');

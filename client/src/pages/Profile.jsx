@@ -141,7 +141,7 @@ export const Profile = () => {
 
       const { data } = await api.put('/auth/profile', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': undefined
         }
       });
 

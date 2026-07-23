@@ -164,10 +164,10 @@ const handleMultipleUpload = (fieldName, maxCount = 5) => {
 
 // PDF file filter
 const pdfFileFilter = (req, file, cb) => {
-  const isPdf = file.mimetype === 'application/pdf';
+  const isPdf = file.mimetype === 'application/pdf' || file.mimetype === 'application/x-pdf' || file.mimetype === '';
   const isExtPdf = path.extname(file.originalname).toLowerCase() === '.pdf';
 
-  if (isPdf && isExtPdf) {
+  if (isPdf || isExtPdf) {
     return cb(null, true);
   }
   cb(new Error('Only PDF files (.pdf) are allowed!'));
@@ -229,9 +229,10 @@ const fastGetPdfPageCount = (buffer) => {
 
 const checkPdfMagicBytes = (buffer) => {
   if (!buffer || buffer.length < 4) return false;
-  const hex = buffer.toString('hex', 0, 4);
-  // PDF magic bytes start with '%PDF-' (hex: 25504446)
-  return hex === '25504446';
+  // Scan the first 1024 bytes to locate the standard '%PDF-' magic bytes header
+  const searchLimit = Math.min(buffer.length, 1024);
+  const leadingBytes = buffer.toString('binary', 0, searchLimit);
+  return leadingBytes.includes('%PDF-');
 };
 
 const handlePdfUpload = (fieldName) => {

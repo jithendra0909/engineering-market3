@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await api.post('/auth/signup', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': undefined
         }
       });
       setToken(data.token);
