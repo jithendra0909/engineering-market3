@@ -3,9 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import { isCloudinaryConfigured } from '../config/cloudinary.js';
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
 import UploadedFile from '../models/UploadedFile.js';
 
 // Setup memory storage for Multer
@@ -253,50 +250,19 @@ const handlePdfUpload = (fieldName) => {
         return res.status(400).json({ message: 'Invalid file signature. Only actual PDF files are allowed!' });
       }
       
-      // Count PDF pages on server using fast check, with full pdfParse fallback
+      // Count PDF pages on server using fast binary scan only (never blocks)
       let pagesCount = 1;
-      let parseSuccess = false;
 
-      // 1. Fast, non-blocking check on sliced buffer first
       try {
         const fastCount = fastGetPdfPageCount(req.file.buffer);
         if (fastCount && fastCount > 0) {
           pagesCount = fastCount;
-          parseSuccess = true;
         }
       } catch (fastErr) {
         console.error('Fast PDF page counting failed:', fastErr);
       }
-
-      // 2. Fallback to full pdf-parse ONLY if fast check failed
-      if (!parseSuccess) {
-        let parser;
-        try {
-          parser = new pdfParse.PDFParse({ data: req.file.buffer });
-          const doc = await parser.load();
-          pagesCount = doc.numPages || 1;
-          parseSuccess = true;
-          await parser.destroy();
-        } catch (parseErr) {
-          console.error('Failed to parse PDF pages on server:', parseErr);
-          if (parser) {
-            try {
-              await parser.destroy();
-            } catch (_) {}
-          }
-          
-          // Strict Rejections: password protected
-          const errMessage = parseErr.message || '';
-          const errName = parseErr.name || '';
-          if (errMessage.includes('password') || errName === 'PasswordException' || errMessage.includes('Password')) {
-            return res.status(400).json({ message: 'The PDF is password protected. Please remove the password and try again.' });
-          }
-        }
-      }
-
-      if (!parseSuccess) {
-        return res.status(400).json({ message: 'The PDF file appears to be corrupted, invalid, or password protected. Please check the file and try again.' });
-      }
+      // If fast scan couldn't find page count, default to 1.
+      // User can manually correct the count in the UI.
 
       req.file.pagesCount = pagesCount;
       
