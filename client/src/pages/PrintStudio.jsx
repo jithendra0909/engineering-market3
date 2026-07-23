@@ -328,32 +328,32 @@ export const PrintStudio = () => {
     <div className="min-h-screen bg-[#FAFAFA] font-sans antialiased text-gray-700 pb-24">
       
       {/* ── HEADER ── */}
-      <header className="h-[80px] border-b border-[#EBEBEB] bg-white sticky top-0 z-40">
-        <div className="max-w-[1280px] h-full mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
+      <header className="h-[64px] md:h-[80px] border-b border-[#EBEBEB] bg-white sticky top-0 z-40">
+        <div className="max-w-[1280px] h-full mx-auto px-4 md:px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 md:gap-3.5">
             <button 
               onClick={() => navigate('/vendors')}
-              className="w-10 h-10 rounded-full border border-[#EBEBEB] flex items-center justify-center hover:bg-[#FAFAFA] transition-colors"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[#EBEBEB] flex items-center justify-center hover:bg-[#FAFAFA] transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-750 stroke-[2]" />
+              <ArrowLeft className="w-4.5 h-4.5 md:w-5 md:h-5 text-gray-750 stroke-[2]" />
             </button>
             <div className="text-left">
-              <h1 className="text-[17.5px] font-bold text-gray-800 tracking-tight leading-tight">EM Printf Hub</h1>
-              <p className="text-[11.5px] text-[#6D5DF6] font-bold mt-0.5">Print Studio</p>
+              <h1 className="text-[15px] md:text-[17.5px] font-bold text-gray-800 tracking-tight leading-tight">EM Printf Hub</h1>
+              <p className="text-[10.5px] md:text-[11.5px] text-[#6D5DF6] font-bold mt-0.5">Print Studio</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4.5">
-            <a href="tel:9391461855" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-gray-650 hover:text-[#6D5DF6] transition-all">
-              <Headset className="w-4.5 h-4.5 text-gray-500" /> Help
+          <div className="flex items-center gap-2 md:gap-4.5">
+            <a href="tel:9391461855" className="flex items-center gap-1.5 text-[12px] md:text-[13.5px] font-semibold text-gray-650 hover:text-[#6D5DF6] transition-all">
+              <Headset className="w-4 h-4 md:w-4.5 md:h-4.5 text-gray-500" /> Help
             </a>
             
-            {/* WhatsApp Contact pill card */}
+            {/* WhatsApp Contact pill card — hidden on small mobile */}
             <a 
               href="https://wa.me/9391461855" 
               target="_blank" 
               rel="noreferrer"
-              className="h-11 px-4 rounded-2xl border border-[#EBEBEB] bg-white text-gray-750 flex items-center gap-3 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98]"
+              className="hidden sm:flex h-11 px-4 rounded-2xl border border-[#EBEBEB] bg-white text-gray-750 items-center gap-3 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98]"
             >
               <svg className="w-[18px] h-[18px] text-emerald-500 fill-current" viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.067.002-2.69-1.04-5.218-2.93-7.108C16.66 1.54 14.135.495 11.454.495c-5.553 0-10.07 4.515-10.074 10.069-.001 1.73.454 3.42 1.316 4.921l-.974 3.56 3.652-.958zm13.11-6.177c-.3-.15-1.782-.88-2.057-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.495-1.78-1.67-2.08-.175-.3-.02-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.588-.492-.51-.675-.52-.172-.007-.37-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.782-.728 2.032-1.43.25-.702.25-1.303.175-1.43-.075-.127-.275-.202-.575-.352z"/>
@@ -363,11 +363,23 @@ export const PrintStudio = () => {
                 <span className="text-[13px] text-gray-700 font-bold mt-1">9391461855</span>
               </div>
             </a>
+
+            {/* WhatsApp circle icon — shown only on small mobile */}
+            <a 
+              href="https://wa.me/9391461855" 
+              target="_blank" 
+              rel="noreferrer"
+              className="sm:hidden w-9 h-9 rounded-full border border-[#EBEBEB] bg-white flex items-center justify-center hover:bg-gray-50 transition-all"
+            >
+              <svg className="w-[18px] h-[18px] text-emerald-500 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.067.002-2.69-1.04-5.218-2.93-7.108C16.66 1.54 14.135.495 11.454.495c-5.553 0-10.07 4.515-10.074 10.069-.001 1.73.454 3.42 1.316 4.921l-.974 3.56 3.652-.958zm13.11-6.177c-.3-.15-1.782-.88-2.057-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.495-1.78-1.67-2.08-.175-.3-.02-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.588-.492-.51-.675-.52-.172-.007-.37-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.782-.728 2.032-1.43.25-.702.25-1.303.175-1.43-.075-.127-.275-.202-.575-.352z"/>
+              </svg>
+            </a>
           </div>
         </div>
       </header>
 
-      <main className="max-w-[1280px] mx-auto px-6 mt-8 space-y-6">
+      <main className="max-w-[1280px] mx-auto px-4 md:px-6 mt-6 md:mt-8 space-y-5 md:space-y-6">
         
         {/* ── HERO BANNER ── */}
         <div className="w-full">
@@ -382,7 +394,7 @@ export const PrintStudio = () => {
         </div>
 
         {/* ── ALERT BAR ── */}
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4.5 flex items-center gap-3.5 shadow-sm text-left">
+        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3.5 md:p-4.5 flex items-start md:items-center gap-2.5 md:gap-3.5 shadow-sm text-left">
           <XCircle className="w-5.5 h-5.5 text-rose-500 shrink-0" />
           <p className="text-[13px] text-rose-700 leading-relaxed font-semibold">
             Outside VIIT? Please contact us on <span className="font-extrabold text-rose-900 underline">9391461855</span> for manual checkout. We will assist you personally!
@@ -409,7 +421,7 @@ export const PrintStudio = () => {
           <div className="space-y-6">
             
             {/* ── SECTION: YOUR DETAILS ── */}
-            <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
+            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
               <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
                 <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
@@ -495,7 +507,7 @@ export const PrintStudio = () => {
             </div>
 
             {/* ── SECTION: DELIVERY DETAILS ── */}
-            <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
+            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
               <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
                 <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
                   <svg className="w-4.5 h-4.5 stroke-[2.2] text-white fill-none" viewBox="0 0 24 24">
@@ -564,7 +576,7 @@ export const PrintStudio = () => {
             </div>
 
             {/* ── SECTION: UPLOAD PDF FILES ── */}
-            <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
+            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
               <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
                 <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
                   <svg className="w-4.5 h-4.5 stroke-[2.2] text-white fill-none" viewBox="0 0 24 24">
@@ -576,7 +588,7 @@ export const PrintStudio = () => {
 
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#6D5DF6]/30 hover:border-[#6D5DF6] rounded-[20px] p-8 text-center bg-[#FAF9FF] relative hover:bg-[#F3EFFF] transition-all group cursor-pointer"
+                className="border-2 border-dashed border-[#6D5DF6]/30 hover:border-[#6D5DF6] rounded-[16px] md:rounded-[20px] p-5 md:p-8 text-center bg-[#FAF9FF] relative hover:bg-[#F3EFFF] transition-all group cursor-pointer"
               >
                 <input 
                   type="file" 
@@ -597,7 +609,7 @@ export const PrintStudio = () => {
               {/* Uploaded Files Cards Stack */}
               <div className="mt-6 space-y-5">
                 {files.map((fileItem) => (
-                  <div key={fileItem.id} className="border border-[#EBEBEB] rounded-[24px] p-5.5 bg-white flex flex-col gap-5 shadow-sm relative text-left">
+                  <div key={fileItem.id} className="border border-[#EBEBEB] rounded-[18px] md:rounded-[24px] p-4 md:p-5.5 bg-white flex flex-col gap-4 md:gap-5 shadow-sm relative text-left">
                     
                     {/* Header: file details */}
                     <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-4 gap-3">
@@ -790,10 +802,10 @@ export const PrintStudio = () => {
             </div>
 
             {/* ── BOTTOM SECTIONS GRID ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 items-start text-left">
               
               {/* Order Summary Receipt */}
-              <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
+              <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
                 <div className="flex items-center gap-2 border-b border-[#F5F5F5] pb-4 mb-4">
                   <FileText className="w-5 h-5 text-[#6D5DF6]" />
                   <h3 className="text-[15.5px] font-bold text-gray-800">Order Summary</h3>
@@ -829,7 +841,7 @@ export const PrintStudio = () => {
               </div>
 
               {/* Payment Checkout Panel */}
-              <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex flex-col gap-4">
+              <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-4">
                   <div className="flex items-center gap-2">
                     <Lock className="w-4.5 h-4.5 text-[#6D5DF6]" />
@@ -873,8 +885,8 @@ export const PrintStudio = () => {
 
       {/* ── PAYMENT MODAL ── */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0F172A]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#F8FAFC] rounded-[24px] max-w-[420px] w-full p-7 shadow-[0_20px_60px_rgba(15,23,42,0.12)] relative border border-[#E5E7EB] animate-scaleIn text-left max-h-[92vh] overflow-y-auto scrollbar-none flex flex-col gap-6">
+        <div className="fixed inset-0 z-50 bg-[#0F172A]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#F8FAFC] rounded-t-[24px] sm:rounded-[24px] max-w-[420px] w-full p-5 sm:p-7 shadow-[0_20px_60px_rgba(15,23,42,0.12)] relative border border-[#E5E7EB] animate-scaleIn text-left max-h-[92vh] overflow-y-auto scrollbar-none flex flex-col gap-5 sm:gap-6">
             
             {/* Header */}
             <div className="text-center">

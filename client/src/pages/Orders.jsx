@@ -285,7 +285,7 @@ export const Orders = () => {
     <div className="min-h-screen bg-[#FFFFFF] font-sans antialiased text-[#111827] pb-32 overflow-x-hidden w-full">
       
       {/* ── HEADER ── */}
-      <header className="h-[72px] border-b border-[#ECECEC] bg-white sticky top-0 z-40 px-6">
+      <header className="h-[60px] md:h-[72px] border-b border-[#ECECEC] bg-white sticky top-0 z-40 px-4 md:px-6">
         <div className="max-w-[800px] h-full mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
@@ -295,8 +295,8 @@ export const Orders = () => {
               <ArrowLeft className="w-5 h-5 text-gray-750 stroke-[2]" />
             </button>
             <div className="text-left">
-              <h1 className="text-[17.5px] font-bold text-gray-800 tracking-tight">My Orders</h1>
-              <p className="text-[11.5px] text-gray-500 font-medium mt-0.5 leading-none">Track and manage your print orders</p>
+              <h1 className="text-[15px] md:text-[17.5px] font-bold text-gray-800 tracking-tight">My Orders</h1>
+              <p className="text-[10.5px] md:text-[11.5px] text-gray-500 font-medium mt-0.5 leading-none">Track and manage your print orders</p>
             </div>
           </div>
 
@@ -323,7 +323,7 @@ export const Orders = () => {
       </header>
 
       {/* ── SEGMENTED FILTER TABS ── */}
-      <div className="max-w-[800px] mx-auto px-6 mt-6 text-left">
+      <div className="max-w-[800px] mx-auto px-4 md:px-6 mt-4 md:mt-6 text-left">
         <div className="flex border-b border-[#ECECEC] gap-6 relative">
           <button 
             onClick={() => setActiveTab('active')}
@@ -369,7 +369,7 @@ export const Orders = () => {
         </div>
       </div>
 
-      <main className="max-w-[800px] mx-auto px-6 mt-6 space-y-6">
+      <main className="max-w-[800px] mx-auto px-4 md:px-6 mt-4 md:mt-6 space-y-4 md:space-y-6">
         
         {/* ── STATUS BANNER ── */}
         <div className="w-full select-none">
@@ -444,13 +444,13 @@ export const Orders = () => {
                 >
                   
                   {/* Order Card Summary header */}
-                  <div className="p-5 flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-full bg-[#6D5DF6] flex items-center justify-center text-white shrink-0 shadow-sm shadow-[#6D5DF6]/20">
-                      <FileText className="w-5.5 h-5.5" />
+                  <div className="p-4 md:p-5 flex items-start gap-3 md:gap-4">
+                    <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-[#6D5DF6] flex items-center justify-center text-white shrink-0 shadow-sm shadow-[#6D5DF6]/20">
+                      <FileText className="w-5 h-5 md:w-5.5 md:h-5.5" />
                     </div>
 
-                    <div className="flex-1 min-w-0 text-left">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0 text-left">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                         <div className="text-left">
                           <span className="text-[12px] text-[#8C939F] font-semibold block">Order ID</span>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -478,7 +478,7 @@ export const Orders = () => {
                       </div>
 
                       {/* Card meta columns details */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4 text-[12.5px] text-[#6B7280]">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5 mt-3 md:mt-4 text-[12.5px] text-[#6B7280]">
                         <div className="text-left">
                           <span className="text-[12px] text-[#8C939F] font-semibold block">UPI Reference Note</span>
                           <div className="flex items-center gap-1.5 mt-1">
@@ -770,7 +770,7 @@ export const Orders = () => {
         )}
 
         {/* ── HELP CARD ── */}
-        <div className="bg-white rounded-[22px] border border-[#ECECEC] p-5.5 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
+        <div className="bg-white rounded-[18px] md:rounded-[22px] border border-[#ECECEC] p-4 md:p-5.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center text-[#6D5DF6] shrink-0">
               <Headset className="w-5.5 h-5.5" />
