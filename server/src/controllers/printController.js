@@ -187,3 +187,72 @@ export const updatePrintOrderStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error updating print order status', error: error.message });
   }
 };
+
+// @desc    Generate a signed Cloudinary upload signature for direct browser upload
+// @route   GET /api/print/cloudinary-sign
+// @access  Private
+// This allows the browser to upload directly to Cloudinary, bypassing Vercel's 4.5MB body limit
+export const getCloudinarySignature = async (req, res) => {
+  try {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      // In dev: tell client to use server-side upload instead
+      return res.json({ useFallback: true });
+    }
+
+    const { v2: cloudinary } = await import('cloudinary');
+    const timestamp = Math.round(Date.now() / 1000);
+    const folder = 'engineering-market/prints';
+
+    const signature = cloudinary.utils.api_sign_request(
+      { timestamp, folder, resource_type: 'raw' },
+      apiSecret
+    );
+
+    res.json({
+      cloudName,
+      apiKey,
+      timestamp,
+      signature,
+      folder,
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
+    });
+  } catch (error) {
+    console.error('Cloudinary sign error:', error);
+    res.status(500).json({ message: 'Failed to generate upload signature', error: error.message });
+  }
+};
+
+// @desc    Register a PDF that was uploaded directly to Cloudinary by the browser
+// @route   POST /api/print/register-pdf
+// @access  Private
+export const registerPdf = async (req, res) => {
+  try {
+    const { url, fileName, pagesCount } = req.body;
+
+    if (!url || !fileName) {
+      return res.status(400).json({ message: 'url and fileName are required' });
+    }
+
+    // Check if already registered (idempotent)
+    const existing = await UploadedFile.findOne({ url });
+    if (existing) {
+      return res.json({ url: existing.url, fileName: existing.fileName, pagesCount: existing.pagesCount });
+    }
+
+    const record = await UploadedFile.create({
+      url,
+      fileName,
+      pagesCount: pagesCount || 1,
+      student: req.user._id
+    });
+
+    res.status(201).json({ url: record.url, fileName: record.fileName, pagesCount: record.pagesCount });
+  } catch (error) {
+    console.error('Register PDF error:', error);
+    res.status(500).json({ message: 'Failed to register PDF metadata', error: error.message });
+  }
+};

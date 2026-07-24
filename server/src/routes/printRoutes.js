@@ -3,7 +3,9 @@ import {
   createPrintOrder,
   getMyPrintOrders,
   getAllPrintOrders,
-  updatePrintOrderStatus
+  updatePrintOrderStatus,
+  getCloudinarySignature,
+  registerPdf
 } from '../controllers/printController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { handlePdfUpload, handleSingleUpload } from '../middleware/uploadMiddleware.js';
@@ -14,7 +16,11 @@ const router = express.Router();
 router.post('/order', protect, createPrintOrder);
 router.get('/my-orders', protect, getMyPrintOrders);
 
-// Upload endpoints
+// Direct-to-Cloudinary upload flow (bypasses Vercel 4.5MB body limit)
+router.get('/cloudinary-sign', protect, getCloudinarySignature);  // Step 1: get signature
+router.post('/register-pdf', protect, registerPdf);               // Step 2: register after client upload
+
+// Legacy server-side upload (kept for local dev fallback)
 router.post('/upload-pdf', protect, handlePdfUpload('pdf'), (req, res) => {
   if (!req.file || !req.file.path) {
     return res.status(400).json({ message: 'PDF upload failed' });
