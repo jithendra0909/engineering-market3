@@ -11,6 +11,16 @@ import {
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
+const getMediaUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  const isDev = !import.meta.env.PROD;
+  const serverBase = isDev ? 'http://localhost:5000' : '';
+  return `${serverBase}${path}`;
+};
+
 export const PrintDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, showToast } = useAuth();
@@ -69,15 +79,33 @@ export const PrintDashboard = () => {
     showToast(`${label} copied to clipboard!`, 'success');
   };
 
-  // Download files trigger
+  // Download files trigger — opens each PDF in a new tab with correct URL
   const downloadAllFiles = (files) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+      showToast('No files attached to this order.', 'error');
+      return;
+    }
+    let opened = 0;
     files.forEach(file => {
-      if (file.pdfFileUrl) {
-        window.open(file.pdfFileUrl, '_blank');
+      const url = getMediaUrl(file.pdfFileUrl);
+      if (url) {
+        // Use an anchor tag to force download
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.download = file.fileName || 'document.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        opened++;
       }
     });
-    showToast(`Downloading files...`, 'success');
+    if (opened > 0) {
+      showToast(`Opening ${opened} file${opened > 1 ? 's' : ''}...`, 'success');
+    } else {
+      showToast('No downloadable PDF URLs found for this order.', 'error');
+    }
   };
 
   // Group verification queue items

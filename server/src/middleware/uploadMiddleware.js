@@ -179,49 +179,40 @@ const pdfUpload = multer({
 const fastGetPdfPageCount = (buffer) => {
   if (!buffer || buffer.length === 0) return null;
 
-  const searchSlice = (sliceText) => {
-    const dictRegex = /<<([^>]+)>>/g;
-    let match;
+  try {
+    // Strategy 1: Scan the ENTIRE buffer (in 512KB chunks to avoid huge string creation)
+    // Looking for /Count <number> pattern — most reliable approach
+    const CHUNK = 512 * 1024;
     let maxCount = 0;
-    while ((match = dictRegex.exec(sliceText)) !== null) {
-      const dictContent = match[1];
-      if (/\/Type\s*\/Pages/.test(dictContent)) {
-        const countMatch = dictContent.match(/\/Count\s+(\d+)/);
-        if (countMatch) {
-          const count = parseInt(countMatch[1], 10);
-          if (count > maxCount) {
-            maxCount = count;
-          }
+
+    for (let offset = 0; offset < buffer.length; offset += CHUNK) {
+      const end = Math.min(offset + CHUNK + 64, buffer.length); // 64 byte overlap
+      const chunk = buffer.toString('latin1', offset, end);
+
+      // Match /Count <number> anywhere (not just inside <<>>)
+      const matches = chunk.match(/\/Count\s+(\d+)/g);
+      if (matches) {
+        for (const m of matches) {
+          const n = parseInt(m.match(/\d+/)[0], 10);
+          if (n > maxCount) maxCount = n;
         }
       }
     }
-    return maxCount;
-  };
 
-  const headerSize = Math.min(buffer.length, 256 * 1024);
-  const headerText = buffer.toString('binary', 0, headerSize);
-  let count = searchSlice(headerText);
-  if (count > 0) return count;
+    if (maxCount > 0) return maxCount;
 
-  if (buffer.length > 256 * 1024) {
-    const trailerStart = Math.max(0, buffer.length - 1024 * 1024);
-    const trailerText = buffer.toString('binary', trailerStart);
-    count = searchSlice(trailerText);
-    if (count > 0) return count;
-  }
-
-  const lastSegmentStart = Math.max(0, buffer.length - 1024 * 1024);
-  const lastSegmentText = buffer.toString('binary', lastSegmentStart);
-  const countMatches = lastSegmentText.match(/\/Count\s+(\d+)/g);
-  if (countMatches) {
-    const lastMatch = countMatches[countMatches.length - 1];
-    const numMatch = lastMatch.match(/\d+/);
-    if (numMatch) {
-      return parseInt(numMatch[0], 10);
+    // Strategy 2: Look for /N <number> in trailer (some older PDFs use this)
+    const trailerSlice = buffer.toString('latin1', Math.max(0, buffer.length - 256 * 1024));
+    const nMatch = trailerSlice.match(/\/N\s+(\d+)/);
+    if (nMatch) {
+      const n = parseInt(nMatch[1], 10);
+      if (n > 0) return n;
     }
-  }
 
-  return null;
+    return null;
+  } catch (e) {
+    return null;
+  }
 };
 
 const checkPdfMagicBytes = (buffer) => {
