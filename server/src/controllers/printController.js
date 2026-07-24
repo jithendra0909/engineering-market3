@@ -259,7 +259,7 @@ export const registerPdf = async (req, res) => {
   }
 };
 
-// @desc    Generate a signed Cloudinary delivery URL for accessing a PDF
+// @desc    Generate signed Cloudinary URLs for PDF download/view
 // @route   GET /api/print/signed-url?url=<cloudinary_url>
 // @access  Private (Admin)
 export const getSignedPdfUrl = async (req, res) => {
@@ -267,38 +267,32 @@ export const getSignedPdfUrl = async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ message: 'url query parameter is required' });
 
-    // Non-Cloudinary URLs: return as-is
     if (!url.includes('cloudinary.com')) {
-      return res.json({ signedUrl: url });
+      return res.json({ signedUrl: url, fallbackUrls: [] });
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
     if (!cloudName || !apiSecret) {
-      return res.json({ signedUrl: url });
+      return res.json({ signedUrl: url, fallbackUrls: [] });
     }
 
     // Extract version and public ID from Cloudinary URL
-    // Format: https://res.cloudinary.com/cloud/{type}/upload/v{version}/{publicId}.{ext}
     const versionMatch = url.match(/\/upload\/(v\d+)\//);
     const version = versionMatch ? versionMatch[1] : null;
 
     const uploadMatch = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
-    if (!uploadMatch) return res.json({ signedUrl: url });
+    if (!uploadMatch) return res.json({ signedUrl: url, fallbackUrls: [] });
 
     const fullPath = uploadMatch[1];
     const publicId = fullPath.replace(/\.[^.]+$/, '');
     const ext = fullPath.match(/\.([^.]+)$/)?.[1] || 'pdf';
 
-    // Detect resource_type from URL (image vs raw)
     const isRaw = url.includes('/raw/upload/');
     const resourceType = isRaw ? 'raw' : 'image';
 
-    // Generate signed delivery URL using the configured cloudinary SDK
-    // No transformations = won't be blocked by strict transformations
-    // The signature authenticates access for restricted/authenticated resources
-    const urlOptions = {
+    const baseOptions = {
       sign_url: true,
       secure: true,
       resource_type: resourceType,
@@ -306,21 +300,33 @@ export const getSignedPdfUrl = async (req, res) => {
       type: 'upload'
     };
     if (version) {
-      urlOptions.version = version.replace('v', '');
+      baseOptions.version = version.replace('v', '');
     }
 
-    let signedUrl = cloudinary.url(publicId, urlOptions);
+    // PRIMARY: fl_attachment forces Cloudinary to serve the ORIGINAL uploaded file binary
+    // (without this, PDFs stored as 'image' type get rasterized to PNG)
+    // Signed URLs bypass strict transformations, so this works even with restricted accounts
+    const downloadUrl = cloudinary.url(publicId, {
+      ...baseOptions,
+      flags: 'attachment'
+    });
 
-    // If resource_type was 'image' but resource might actually be 'auto'/other,
-    // also provide fallback URLs for the client to try
-    const fallbackUrls = [];
-    if (resourceType === 'image') {
-      // Also try 'raw' in case the resource was stored differently
-      const rawOptions = { ...urlOptions, resource_type: 'raw' };
-      fallbackUrls.push(cloudinary.url(publicId, rawOptions));
-    }
+    // FALLBACK 1: Plain signed URL without transformation (for raw-type PDFs that work directly)
+    const plainUrl = cloudinary.url(publicId, baseOptions);
 
-    res.json({ signedUrl, fallbackUrls });
+    // FALLBACK 2: Try as 'raw' resource type with fl_attachment
+    const rawDownloadUrl = resourceType !== 'raw' 
+      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw', flags: 'attachment' })
+      : null;
+
+    // FALLBACK 3: Try as 'raw' resource type plain
+    const rawPlainUrl = resourceType !== 'raw'
+      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw' })
+      : null;
+
+    const fallbackUrls = [plainUrl, rawDownloadUrl, rawPlainUrl].filter(Boolean);
+
+    res.json({ signedUrl: downloadUrl, fallbackUrls });
   } catch (error) {
     console.error('Signed URL generation error:', error);
     res.status(500).json({ message: 'Failed to generate signed URL', error: error.message });
