@@ -207,9 +207,8 @@ export const getCloudinarySignature = async (req, res) => {
     const timestamp = Math.round(Date.now() / 1000);
     const folder = 'engineering-market/prints';
 
-    // Only sign params that Cloudinary actually validates — resource_type is NOT signed
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder },
+      { timestamp, folder, resource_type: 'raw' },
       apiSecret
     );
 
@@ -219,6 +218,7 @@ export const getCloudinarySignature = async (req, res) => {
       timestamp,
       signature,
       folder,
+      resourceType: 'raw',
       uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
     });
   } catch (error) {

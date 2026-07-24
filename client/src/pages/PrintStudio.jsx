@@ -214,6 +214,9 @@ export const PrintStudio = () => {
             cloudForm.append('timestamp', signData.timestamp);
             cloudForm.append('signature', signData.signature);
             cloudForm.append('folder', signData.folder);
+            if (signData.resourceType) {
+              cloudForm.append('resource_type', signData.resourceType);
+            }
 
             const cloudRes = await fetch(signData.uploadUrl, {
               method: 'POST',
