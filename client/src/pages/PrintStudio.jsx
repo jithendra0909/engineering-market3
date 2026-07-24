@@ -5,6 +5,7 @@ import {
   Trash2, Plus, Minus, Check, Lock, AlertTriangle, 
   ShieldCheck, XCircle, Info, Copy, ShieldAlert
 } from 'lucide-react';
+import { PDFDocument } from 'pdf-lib';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
@@ -128,43 +129,28 @@ export const PrintStudio = () => {
     }
   };
 
-  // PDF Page counting — reads first 512KB + last 512KB only (fast, no hanging on large files)
-  const parsePdfPageCount = (file) => {
-    return new Promise((resolve) => {
-      const SLICE = 512 * 1024; // 512KB
-      let maxCount = 0;
-      let done = 0;
-      const total = file.size > SLICE ? 2 : 1;
+  // Accurate PDF Page counting using pdf-lib (supports all PDF stream compressions & versions)
+  const parsePdfPageCount = async (file) => {
+    try {
+      // 4-second maximum timeout guard so page counting NEVER blocks UI or upload
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 4000));
 
-      const scanText = (text) => {
+      const countPromise = (async () => {
         try {
-          const matches = text.match(/\/Count\s+(\d+)/g);
-          if (matches) {
-            for (const m of matches) {
-              const n = parseInt(m.match(/\d+/)[0], 10);
-              if (n > maxCount) maxCount = n;
-            }
-          }
-        } catch (e) { /* ignore */ }
-        done++;
-        if (done === total) resolve(maxCount > 0 ? maxCount : 1);
-      };
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+          const count = pdfDoc.getPageCount();
+          return (count && count > 0) ? count : 1;
+        } catch (err) {
+          console.warn('pdf-lib page count warning:', err);
+          return 1;
+        }
+      })();
 
-      const readSlice = (blob) => {
-        const r = new FileReader();
-        r.onload = () => scanText(r.result);
-        r.onerror = () => { done++; if (done === total) resolve(maxCount > 0 ? maxCount : 1); };
-        r.readAsBinaryString(blob);
-      };
-
-      // Always read last 512KB (trailer — most PDFs store /Count here)
-      readSlice(file.slice(Math.max(0, file.size - SLICE)));
-
-      // Also read first 512KB if file is large (linearized PDFs store /Count at start)
-      if (file.size > SLICE) {
-        readSlice(file.slice(0, SLICE));
-      }
-    });
+      return await Promise.race([countPromise, timeoutPromise]);
+    } catch (e) {
+      return 1;
+    }
   };
 
   // Upload PDFs — direct browser→Cloudinary (bypasses Vercel 4.5MB body limit)
@@ -181,7 +167,7 @@ export const PrintStudio = () => {
     for (const file of pdfs) {
       const tempId = Date.now() + '-' + Math.random();
 
-      // Add card immediately with uploading state
+      // 1. Add file card immediately to UI with uploading indicator
       setFiles(prev => [...prev, {
         id: tempId,
         fileName: file.name,
@@ -195,21 +181,20 @@ export const PrintStudio = () => {
         uploading: true
       }]);
 
+      // 2. Count pages in parallel and update page count as soon as pdf-lib finishes
+      parsePdfPageCount(file).then(count => {
+        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
+      }).catch(() => {});
+
+      // 3. Upload file asynchronously without waiting for page count
       try {
-        // Count pages + get upload signature at the same time (parallel)
-        const [pagesCount, signRes] = await Promise.all([
-          parsePdfPageCount(file),
-          api.get('/print/cloudinary-sign')
-        ]);
-
-        // Update page count immediately once known
-        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: pagesCount } : f));
-
+        const signRes = await api.get('/print/cloudinary-sign');
         const signData = signRes.data;
+
         let fileUrl;
 
         if (signData.useFallback) {
-          // Dev fallback: upload through server (local env only, no Cloudinary)
+          // Local dev fallback when Cloudinary env vars are missing
           const formData = new FormData();
           formData.append('pdf', file);
           const response = await api.post('/print/upload-pdf', formData, {
@@ -221,7 +206,7 @@ export const PrintStudio = () => {
             setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: response.data.pagesCount } : f));
           }
         } else {
-          // Upload directly to Cloudinary from browser (no Vercel body size limit)
+          // Direct browser upload to Cloudinary (bypasses Vercel 4.5MB body limit)
           const cloudForm = new FormData();
           cloudForm.append('file', file);
           cloudForm.append('api_key', signData.apiKey);
@@ -242,15 +227,16 @@ export const PrintStudio = () => {
           const cloudData = await cloudRes.json();
           fileUrl = cloudData.secure_url;
 
-          // Register URL + page count with server (tiny JSON, no size limit issue)
+          // Register URL with backend
+          const finalPageCount = await parsePdfPageCount(file);
           await api.post('/print/register-pdf', {
             url: fileUrl,
             fileName: file.name,
-            pagesCount
+            pagesCount: finalPageCount
           });
         }
 
-        // Mark upload complete
+        // Mark upload as complete
         setFiles(prev => prev.map(f => f.id === tempId
           ? { ...f, pdfFileUrl: fileUrl, uploading: false }
           : f
@@ -263,7 +249,7 @@ export const PrintStudio = () => {
       }
     }
 
-    // Reset so same file can be re-selected
+    // Reset file input so same file can be re-selected if needed
     e.target.value = '';
   };
 
