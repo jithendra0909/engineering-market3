@@ -1,6 +1,7 @@
 import PrintOrder from '../models/PrintOrder.js';
 import User from '../models/User.js';
 import UploadedFile from '../models/UploadedFile.js';
+import cloudinary from '../config/cloudinary.js';
 
 // @desc    Place a print order
 // @route   POST /api/print/order
@@ -203,12 +204,12 @@ export const getCloudinarySignature = async (req, res) => {
       return res.json({ useFallback: true });
     }
 
-    const { v2: cloudinary } = await import('cloudinary');
     const timestamp = Math.round(Date.now() / 1000);
     const folder = 'engineering-market/prints';
 
+    // resource_type must NOT be in signed params for raw uploads
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder, resource_type: 'raw' },
+      { timestamp, folder },
       apiSecret
     );
 
@@ -258,7 +259,7 @@ export const registerPdf = async (req, res) => {
   }
 };
 
-// @desc    Generate a signed Cloudinary URL for accessing a PDF (handles restricted/image-type PDFs)
+// @desc    Generate a signed/authenticated Cloudinary URL for accessing a PDF
 // @route   GET /api/print/signed-url?url=<cloudinary_url>
 // @access  Private (Admin)
 export const getSignedPdfUrl = async (req, res) => {
@@ -266,19 +267,18 @@ export const getSignedPdfUrl = async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).json({ message: 'url query parameter is required' });
 
-    // Non-Cloudinary URLs or large-file references: return as-is
+    // Non-Cloudinary URLs: return as-is
     if (!url.includes('cloudinary.com')) {
       return res.json({ signedUrl: url });
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    if (!cloudName || !apiSecret) {
-      return res.json({ signedUrl: url }); // No credentials, return original
+    if (!cloudName || !apiKey || !apiSecret) {
+      return res.json({ signedUrl: url });
     }
-
-    const { v2: cloudinary } = await import('cloudinary');
 
     // Extract public ID from Cloudinary URL
     // Format: https://res.cloudinary.com/cloud/{type}/upload/v{version}/{publicId}.{ext}
@@ -293,14 +293,23 @@ export const getSignedPdfUrl = async (req, res) => {
     const isRaw = url.includes('/raw/upload/');
     const resourceType = isRaw ? 'raw' : 'image';
 
-    // Generate signed URL with fl_attachment to force download
-    const signedUrl = cloudinary.url(publicId, {
-      sign_url: true,
-      secure: true,
-      resource_type: resourceType,
-      format: ext,
-      flags: 'attachment'
-    });
+    // Method 1: Generate a private_download_url (authenticated API download link)
+    // This bypasses strict transformations entirely — it's a server-authenticated download
+    const timestamp = Math.round(Date.now() / 1000);
+    const expiresAt = timestamp + 3600; // 1 hour
+    const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
+    const signature = cloudinary.utils.api_sign_request(
+      { public_id: publicId, timestamp },
+      apiSecret
+    );
+
+    // Build the authenticated API download URL
+    const signedUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/download?` +
+      `public_id=${encodeURIComponent(publicId)}` +
+      `&format=${ext}` +
+      `&api_key=${apiKey}` +
+      `&timestamp=${timestamp}` +
+      `&signature=${signature}`;
 
     res.json({ signedUrl });
   } catch (error) {
