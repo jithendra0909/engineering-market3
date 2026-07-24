@@ -129,22 +129,10 @@ export const PrintStudio = () => {
     }
   };
 
-  // Fast & accurate PDF Page counting (Regex trailer scan + pdf-lib fallback)
+  // Accurate PDF Page counting using pdf-lib
   const parsePdfPageCount = async (file) => {
     try {
-      // 1. Fast Trailer Scan (<10ms for huge files like 1399-page books)
-      try {
-        const tailSlice = file.slice(Math.max(0, file.size - 128 * 1024));
-        const tailText = await tailSlice.text();
-        const countMatches = [...tailText.matchAll(/\/Count\s+(\d+)/g)];
-        if (countMatches.length > 0) {
-          const maxCount = Math.max(...countMatches.map(m => parseInt(m[1], 10) || 0));
-          if (maxCount > 0) return maxCount;
-        }
-      } catch (fastErr) { /* fallback to pdf-lib */ }
-
-      // 2. Fallback: pdf-lib with 2.5s maximum timeout guard
-      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 2500));
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 6000));
       const countPromise = (async () => {
         try {
           const arrayBuffer = await file.arrayBuffer();
@@ -152,6 +140,7 @@ export const PrintStudio = () => {
           const count = pdfDoc.getPageCount();
           return (count && count > 0) ? count : 1;
         } catch (err) {
+          console.warn('pdf-lib page count warning:', err);
           return 1;
         }
       })();
@@ -176,7 +165,7 @@ export const PrintStudio = () => {
     for (const file of pdfs) {
       const tempId = Date.now() + '-' + Math.random();
 
-      // Add file card immediately to UI with uploading indicator
+      // 1. Add file card immediately to UI with uploading indicator
       setFiles(prev => [...prev, {
         id: tempId,
         fileName: file.name,
@@ -190,14 +179,13 @@ export const PrintStudio = () => {
         uploading: true
       }]);
 
-      // Execute upload & page count concurrently
-      (async () => {
-        let detectedPages = 1;
-        try {
-          detectedPages = await parsePdfPageCount(file);
-          setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: detectedPages } : f));
-        } catch (e) {}
+      // 2. Count pages in parallel and update page count as soon as pdf-lib finishes
+      parsePdfPageCount(file).then(count => {
+        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
+      }).catch(() => {});
 
+      // 3. Upload file asynchronously in parallel
+      (async () => {
         let fileUrl = '';
 
         try {
@@ -214,10 +202,10 @@ export const PrintStudio = () => {
             });
             fileUrl = response.data.url;
             if (response.data.pagesCount > 1) {
-              detectedPages = response.data.pagesCount;
+              setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: response.data.pagesCount } : f));
             }
           } else {
-            // Direct browser upload to Cloudinary (with 12s timeout guard)
+            // Direct browser upload to Cloudinary (with 15s timeout guard)
             try {
               const cloudForm = new FormData();
               cloudForm.append('file', file);
@@ -227,7 +215,7 @@ export const PrintStudio = () => {
               cloudForm.append('folder', signData.folder);
 
               const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 12000);
+              const timeoutId = setTimeout(() => controller.abort(), 15000);
 
               const cloudRes = await fetch(signData.uploadUrl, {
                 method: 'POST',
@@ -241,21 +229,21 @@ export const PrintStudio = () => {
                 fileUrl = cloudData.secure_url;
               }
             } catch (cloudErr) {
-              console.warn('Cloudinary direct upload skipped/timed out, using registered reference:', cloudErr);
+              console.warn('Cloudinary upload skipped, using registered reference:', cloudErr);
             }
 
-            // Fallback for large files (>10MB Cloudinary limit) or network timeouts:
-            // Generate a registered reference URL so large files (like 1399-page books) NEVER fail!
+            // Fallback for large files (>10MB Cloudinary limit) or network timeouts
             if (!fileUrl) {
               fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
             }
 
-            // Register URL & metadata with backend
+            // Register URL & page metadata with backend
             try {
+              const pageCount = await parsePdfPageCount(file);
               await api.post('/print/register-pdf', {
                 url: fileUrl,
                 fileName: file.name,
-                pagesCount: detectedPages
+                pagesCount: pageCount
               }, { timeout: 8000 });
             } catch (regErr) {
               console.warn('Backend PDF registration warning:', regErr);
@@ -269,7 +257,7 @@ export const PrintStudio = () => {
         } finally {
           // ALWAYS mark upload as completed!
           setFiles(prev => prev.map(f => f.id === tempId
-            ? { ...f, pages: detectedPages, pdfFileUrl: fileUrl, uploading: false }
+            ? { ...f, pdfFileUrl: fileUrl, uploading: false }
             : f
           ));
         }
