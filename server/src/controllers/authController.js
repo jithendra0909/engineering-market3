@@ -1,7 +1,3 @@
-import { preprocessImage } from "../services/imageProcessor.js";
-import { extractTextFromImage } from "../services/ocrService.js";
-import { extractFields } from "../services/fieldExtractor.js";
-import { verifyFields } from "../utils/verifyFields.js";
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import User from '../models/User.js';
@@ -61,34 +57,6 @@ const registerStudent = async (req, res) => {
       return res.status(400).json({ message: 'Student ID card image is required for registration' });
     }
 
-    // Process uploaded image
-const processedImage = await preprocessImage(req.file.buffer);
-
-// OCR
-const extractedText = await extractTextFromImage(processedImage);
-console.log(extractedText);
-
-// Extract Name, Reg No, College
-const extractedData = extractFields(extractedText);
-
-// Verify
-const verificationResult = verifyFields(
-  {
-    name: fullName,
-    registrationNumber,
-    college,
-  },
-  extractedData
-);
-
-// Stop registration if verification fails
-if (!verificationResult.verified) {
-  return res.status(400).json({
-    message: "ID Card verification failed",
-    verificationResult,
-    extractedData,
-  });
-}
     // Create user
     const user = await User.create({
       fullName,
@@ -100,16 +68,7 @@ if (!verificationResult.verified) {
       year,
       college,
       idCardImageUrl: req.file.path, // Configured by uploadMiddleware (Cloudinary or local static URL)
-      verificationStatus: "approved",
-
-      ocrVerified: true,
-
-      ocrExtractedData: extractedData,
-
-      verificationResult: {
-        nameMatched: verificationResult.nameMatched,
-        registrationMatched: verificationResult.registrationMatched,
-      },
+      verificationStatus: 'pending', // Default is pending approval
       role: 'student'
     });
 

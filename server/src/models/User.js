@@ -40,40 +40,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  ocrExtractedData: {
-  name: {
-    type: String,
-    default: ""
-  },
-  registrationNumber: {
-    type: String,
-    default: ""
-  },
-  college: {
-    type: String,
-    default: ""
-  }
-},
-
-verificationResult: {
-  nameMatched: {
-    type: Boolean,
-    default: false
-  },
-  registrationMatched: {
-    type: Boolean,
-    default: false
-  },
-  collegeMatched: {
-    type: Boolean,
-    default: false
-  }
-},
-
-ocrVerified: {
-  type: Boolean,
-  default: false
-},
   profileImageUrl: {
     type: String,
     default: ''
