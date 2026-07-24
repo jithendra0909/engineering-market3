@@ -257,3 +257,54 @@ export const registerPdf = async (req, res) => {
     res.status(500).json({ message: 'Failed to register PDF metadata', error: error.message });
   }
 };
+
+// @desc    Generate a signed Cloudinary URL for accessing a PDF (handles restricted/image-type PDFs)
+// @route   GET /api/print/signed-url?url=<cloudinary_url>
+// @access  Private (Admin)
+export const getSignedPdfUrl = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ message: 'url query parameter is required' });
+
+    // Non-Cloudinary URLs or large-file references: return as-is
+    if (!url.includes('cloudinary.com')) {
+      return res.json({ signedUrl: url });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiSecret) {
+      return res.json({ signedUrl: url }); // No credentials, return original
+    }
+
+    const { v2: cloudinary } = await import('cloudinary');
+
+    // Extract public ID from Cloudinary URL
+    // Format: https://res.cloudinary.com/cloud/{type}/upload/v{version}/{publicId}.{ext}
+    const uploadMatch = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
+    if (!uploadMatch) return res.json({ signedUrl: url });
+
+    const fullPath = uploadMatch[1]; // e.g. "engineering-market/prints/abc123.pdf"
+    const publicId = fullPath.replace(/\.[^.]+$/, ''); // Remove extension
+    const ext = fullPath.match(/\.([^.]+)$/)?.[1] || 'pdf';
+
+    // Detect resource_type from URL (image vs raw)
+    const isRaw = url.includes('/raw/upload/');
+    const resourceType = isRaw ? 'raw' : 'image';
+
+    // Generate signed URL with fl_attachment to force download
+    const signedUrl = cloudinary.url(publicId, {
+      sign_url: true,
+      secure: true,
+      resource_type: resourceType,
+      format: ext,
+      flags: 'attachment'
+    });
+
+    res.json({ signedUrl });
+  } catch (error) {
+    console.error('Signed URL generation error:', error);
+    res.status(500).json({ message: 'Failed to generate signed URL', error: error.message });
+  }
+};
