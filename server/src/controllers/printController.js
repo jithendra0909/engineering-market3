@@ -219,8 +219,7 @@ export const getCloudinarySignature = async (req, res) => {
       timestamp,
       signature,
       folder,
-      // resource_type=raw goes in the URL path, not the signed params
-      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`
     });
   } catch (error) {
     console.error('Cloudinary sign error:', error);

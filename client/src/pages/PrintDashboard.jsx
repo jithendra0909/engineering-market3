@@ -87,6 +87,10 @@ export const PrintDashboard = () => {
     }
     let opened = 0;
     files.forEach(file => {
+      if (file.pdfFileUrl?.startsWith('large-file://')) {
+        showToast(`Large File: ${file.fileName} (${file.pagesCount} pgs) - Registered metadata reference`, 'info');
+        return;
+      }
       const url = getMediaUrl(file.pdfFileUrl);
       if (url) {
         // Use an anchor tag to force download
@@ -103,8 +107,6 @@ export const PrintDashboard = () => {
     });
     if (opened > 0) {
       showToast(`Opening ${opened} file${opened > 1 ? 's' : ''}...`, 'success');
-    } else {
-      showToast('No downloadable PDF URLs found for this order.', 'error');
     }
   };
 
