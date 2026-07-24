@@ -293,13 +293,11 @@ export const getSignedPdfUrl = async (req, res) => {
     const isRaw = url.includes('/raw/upload/');
     const resourceType = isRaw ? 'raw' : 'image';
 
-    // Method 1: Generate a private_download_url (authenticated API download link)
-    // This bypasses strict transformations entirely — it's a server-authenticated download
+    // Generate authenticated API download link
+    // All query params (public_id, format, timestamp) MUST be signed together
     const timestamp = Math.round(Date.now() / 1000);
-    const expiresAt = timestamp + 3600; // 1 hour
-    const paramsToSign = `public_id=${publicId}&timestamp=${timestamp}`;
     const signature = cloudinary.utils.api_sign_request(
-      { public_id: publicId, timestamp },
+      { public_id: publicId, format: ext, timestamp },
       apiSecret
     );
 
