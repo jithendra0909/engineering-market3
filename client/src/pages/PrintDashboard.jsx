@@ -166,17 +166,6 @@ export const PrintDashboard = () => {
     });
   };
 
-  const downloadAllFiles = (files) => {
-    if (!files || files.length === 0) {
-      showToast('No files attached to this order.', 'error');
-      return;
-    }
-    showToast(`Downloading ${files.length} file(s)...`, 'info');
-    files.forEach((file, i) => {
-      setTimeout(() => handleDownloadFile(file.pdfFileUrl, file.fileName), i * 600);
-    });
-  };
-
   // ─── HELPERS ───
   const verificationQueue = orders.filter(o => o.status === 'pending');
   const activeJobs = orders.filter(o => o.status === 'printing');
