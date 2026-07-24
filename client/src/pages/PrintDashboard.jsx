@@ -79,35 +79,83 @@ export const PrintDashboard = () => {
     showToast(`${label} copied to clipboard!`, 'success');
   };
 
-  // Download files trigger — opens each PDF in a new tab with correct URL
+  // Get downloadable URL with Cloudinary attachment flag
+  const getDownloadableUrl = (url, fileName) => {
+    if (!url) return '';
+    let fullUrl = getMediaUrl(url);
+    if (fullUrl.includes('cloudinary.com') && !fullUrl.includes('/fl_attachment')) {
+      fullUrl = fullUrl.replace('/upload/', '/upload/fl_attachment/');
+    }
+    return fullUrl;
+  };
+
+  // Open PDF directly in new tab for easy Ctrl+P printing
+  const handleOpenPrintFile = (url) => {
+    if (!url) {
+      showToast('No PDF link available for this file.', 'error');
+      return;
+    }
+    if (url.startsWith('large-file://')) {
+      showToast('Registered file metadata reference. Original document is with student.', 'info');
+      return;
+    }
+    const fullUrl = getMediaUrl(url);
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Download PDF file directly to device
+  const handleDownloadFile = async (url, fileName) => {
+    if (!url) {
+      showToast('No download link available for this file.', 'error');
+      return;
+    }
+
+    if (url.startsWith('large-file://')) {
+      showToast(`Registered file metadata reference: ${fileName}`, 'info');
+      return;
+    }
+
+    try {
+      const downloadUrl = getDownloadableUrl(url, fileName);
+      const response = await fetch(downloadUrl);
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName || 'document.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        showToast(`Downloading ${fileName}...`, 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('Blob fetch download fallback:', e);
+    }
+
+    // Direct anchor fallback
+    const a = document.createElement('a');
+    a.href = getDownloadableUrl(url, fileName);
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.download = fileName || 'document.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast(`Downloading ${fileName}...`, 'success');
+  };
+
+  // Download files trigger for entire order
   const downloadAllFiles = (files) => {
     if (!files || files.length === 0) {
       showToast('No files attached to this order.', 'error');
       return;
     }
-    let opened = 0;
     files.forEach(file => {
-      if (file.pdfFileUrl?.startsWith('large-file://')) {
-        showToast(`Large File: ${file.fileName} (${file.pagesCount} pgs) - Registered metadata reference`, 'info');
-        return;
-      }
-      const url = getMediaUrl(file.pdfFileUrl);
-      if (url) {
-        // Use an anchor tag to force download
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.download = file.fileName || 'document.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        opened++;
-      }
+      handleDownloadFile(file.pdfFileUrl, file.fileName);
     });
-    if (opened > 0) {
-      showToast(`Opening ${opened} file${opened > 1 ? 's' : ''}...`, 'success');
-    }
   };
 
   // Group verification queue items
@@ -301,12 +349,101 @@ export const PrintDashboard = () => {
                         </div>
                       )}
 
+                      {/* Files Detailed Printing Specification Breakdown */}
+                      <div className="bg-[#F8FAFC] rounded-2xl p-3.5 border border-[#E5E7EB] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-wider block">
+                            Files to Print ({order.files?.length})
+                          </span>
+                          <button
+                            onClick={() => downloadAllFiles(order.files)}
+                            className="text-[11px] font-bold text-[#6D5DF6] hover:underline flex items-center gap-1"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download All ({order.files?.length})
+                          </button>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {order.files?.map((file, idx) => (
+                            <div key={idx} className="bg-white rounded-xl p-3 border border-gray-200/80 space-y-2 text-left shadow-2xs">
+                              {/* File name & copy count */}
+                              <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <FileText className="w-4 h-4 text-rose-500 shrink-0" />
+                                  <span className="text-[13px] font-bold text-gray-800 truncate" title={file.fileName}>
+                                    {file.fileName}
+                                  </span>
+                                </div>
+                                <span className="bg-[#6D5DF6]/10 text-[#6D5DF6] text-[11px] font-extrabold px-2 py-0.5 rounded-md shrink-0">
+                                  {file.sets} {file.sets === 1 ? 'Copy' : 'Copies'} ({file.pagesCount} pgs)
+                                </span>
+                              </div>
+
+                              {/* Printing Badges Specs */}
+                              <div className="flex flex-wrap gap-1.5 text-[10.5px]">
+                                {/* Color specification */}
+                                <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                  file.colorType === 'color' 
+                                    ? 'bg-amber-100 text-amber-900 border border-amber-200' 
+                                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                }`}>
+                                  {file.colorType === 'color' ? '🎨 Full Color' : '⬛ Black & White'}
+                                </span>
+
+                                {/* Layout specification */}
+                                <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                  file.layout === 'both-side'
+                                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                    : file.layout === 'four-pages'
+                                    ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                    : 'bg-blue-100 text-blue-900 border border-blue-200'
+                                }`}>
+                                  {file.layout === 'both-side' ? '🔄 Double-Sided (2-Sided)' : file.layout === 'four-pages' ? '📊 1/4 Page (4 pg/sheet)' : '📄 Single-Sided'}
+                                </span>
+
+                                {/* Binding specification */}
+                                <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                  file.binding === 'spiral'
+                                    ? 'bg-indigo-100 text-indigo-900 border border-indigo-200'
+                                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                }`}>
+                                  {file.binding === 'spiral' ? '🌀 Spiral Binding' : '📎 No Binding'}
+                                </span>
+                              </div>
+
+                              {/* Student custom instructions note if present */}
+                              {file.instructions && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[11px] text-amber-900 font-semibold">
+                                  📝 <span className="font-extrabold">Student Note:</span> {file.instructions}
+                                </div>
+                              )}
+
+                              {/* Direct action buttons per file */}
+                              <div className="flex items-center gap-2 pt-1">
+                                <button
+                                  onClick={() => handleOpenPrintFile(file.pdfFileUrl)}
+                                  className="flex-1 h-8 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 text-[#6D5DF6]" /> Open / Print PDF
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadFile(file.pdfFileUrl, file.fileName)}
+                                  className="flex-1 h-8 rounded-lg bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                                >
+                                  <Download className="w-3.5 h-3.5" /> Download PDF
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
                       <button
                         onClick={() => updateStatus(order._id, 'printing')}
                         className="w-full h-[52px] rounded-[16px] border border-[#6D5DF6] text-[#6D5DF6] font-bold text-[13.5px] bg-white hover:bg-[#6D5DF6]/5 transition-all select-none active:scale-[0.99] flex items-center justify-center gap-1.5"
                       >
                         <CheckSquare className="w-4.5 h-4.5 stroke-[2.5]" />
-                        Verify Payment
+                        Verify Payment & Start Printing
                       </button>
                     </div>
                   ))}
@@ -403,7 +540,7 @@ export const PrintDashboard = () => {
                             </div>
                           </div>
                           <span className="bg-[#FAF9FF] border border-[#6D5DF6]/20 text-[#6D5DF6] font-bold text-[10.5px] px-2.5 py-0.5 rounded-full select-none">
-                            Printing
+                            Printing Active
                           </span>
                         </div>
 
@@ -419,7 +556,7 @@ export const PrintDashboard = () => {
                           <div>
                             <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">Printing Specs</span>
                             <span className="text-gray-700 font-medium">
-                              {order.files?.length} files • {totalPagesCount} pages
+                              {order.files?.length} files • {totalPagesCount} pages total
                             </span>
                           </div>
                           <div>
@@ -429,35 +566,101 @@ export const PrintDashboard = () => {
                         </div>
 
                         {/* Detailed Files list inside the card */}
-                        <div className="bg-slate-50 rounded-xl p-3 border border-gray-100 space-y-2">
-                          <span className="text-[9.5px] text-[#9CA3AF] font-bold block uppercase">Files Details ({order.files?.length})</span>
-                          <div className="flex flex-col gap-1.5">
+                        <div className="bg-[#F8FAFC] rounded-2xl p-3.5 border border-[#E5E7EB] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-wider block">
+                              Files to Print ({order.files?.length})
+                            </span>
+                            <button
+                              onClick={() => downloadAllFiles(order.files)}
+                              className="text-[11px] font-bold text-[#6D5DF6] hover:underline flex items-center gap-1"
+                            >
+                              <Download className="w-3.5 h-3.5" /> Download All ({order.files?.length})
+                            </button>
+                          </div>
+
+                          <div className="space-y-2.5">
                             {order.files?.map((file, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-[11.5px] font-medium text-gray-700 bg-white px-2.5 py-1.5 rounded-lg border border-gray-200/50">
-                                <span className="truncate max-w-[65%]">{file.fileName}</span>
-                                <span className="text-[10.5px] text-gray-500 select-none">
-                                  ({file.pagesCount} pgs • {file.sets} sets • {file.colorType === 'color' ? 'Color' : 'B&W'})
-                                </span>
+                              <div key={idx} className="bg-white rounded-xl p-3 border border-gray-200/80 space-y-2 text-left shadow-2xs">
+                                {/* File name & copy count */}
+                                <div className="flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <FileText className="w-4 h-4 text-rose-500 shrink-0" />
+                                    <span className="text-[13px] font-bold text-gray-800 truncate" title={file.fileName}>
+                                      {file.fileName}
+                                    </span>
+                                  </div>
+                                  <span className="bg-[#6D5DF6]/10 text-[#6D5DF6] text-[11px] font-extrabold px-2 py-0.5 rounded-md shrink-0">
+                                    {file.sets} {file.sets === 1 ? 'Copy' : 'Copies'} ({file.pagesCount} pgs)
+                                  </span>
+                                </div>
+
+                                {/* Printing Badges Specs */}
+                                <div className="flex flex-wrap gap-1.5 text-[10.5px]">
+                                  {/* Color specification */}
+                                  <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                    file.colorType === 'color' 
+                                      ? 'bg-amber-100 text-amber-900 border border-amber-200' 
+                                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                                  }`}>
+                                    {file.colorType === 'color' ? '🎨 Full Color' : '⬛ Black & White'}
+                                  </span>
+
+                                  {/* Layout specification */}
+                                  <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                    file.layout === 'both-side'
+                                      ? 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                      : file.layout === 'four-pages'
+                                      ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                      : 'bg-blue-100 text-blue-900 border border-blue-200'
+                                  }`}>
+                                    {file.layout === 'both-side' ? '🔄 Double-Sided (2-Sided)' : file.layout === 'four-pages' ? '📊 1/4 Page (4 pg/sheet)' : '📄 Single-Sided'}
+                                  </span>
+
+                                  {/* Binding specification */}
+                                  <span className={`px-2 py-0.5 rounded-md font-bold ${
+                                    file.binding === 'spiral'
+                                      ? 'bg-indigo-100 text-indigo-900 border border-indigo-200'
+                                      : 'bg-gray-100 text-gray-500 border border-gray-200'
+                                  }`}>
+                                    {file.binding === 'spiral' ? '🌀 Spiral Binding' : '📎 No Binding'}
+                                  </span>
+                                </div>
+
+                                {/* Student custom instructions note if present */}
+                                {file.instructions && (
+                                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[11px] text-amber-900 font-semibold">
+                                    📝 <span className="font-extrabold">Student Note:</span> {file.instructions}
+                                  </div>
+                                )}
+
+                                {/* Direct action buttons per file */}
+                                <div className="flex items-center gap-2 pt-1">
+                                  <button
+                                    onClick={() => handleOpenPrintFile(file.pdfFileUrl)}
+                                    className="flex-1 h-8 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5 text-[#6D5DF6]" /> Open / Print PDF
+                                  </button>
+                                  <button
+                                    onClick={() => handleDownloadFile(file.pdfFileUrl, file.fileName)}
+                                    className="flex-1 h-8 rounded-lg bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                                  >
+                                    <Download className="w-3.5 h-3.5" /> Download PDF
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3.5 pt-1">
-                          <button
-                            onClick={() => downloadAllFiles(order.files)}
-                            className="h-[52px] rounded-[16px] border border-[#6D5DF6] text-[#6D5DF6] font-bold text-[13px] bg-white hover:bg-[#6D5DF6]/5 transition-all select-none active:scale-[0.99] flex items-center justify-center gap-1.5"
-                          >
-                            <Download className="w-4 h-4" />
-                            Download Files
-                          </button>
-                          
+                        <div className="pt-1">
                           <button
                             onClick={() => updateStatus(order._id, 'out-for-delivery')}
-                            className="h-[52px] rounded-[16px] bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold text-[13px] transition-all select-none active:scale-[0.99] flex items-center justify-center gap-1.5 shadow-sm"
+                            className="w-full h-[52px] rounded-[16px] bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold text-[13.5px] transition-all select-none active:scale-[0.99] flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <Truck className="w-4.5 h-4.5" />
-                            Dispatch Order
+                            Dispatch Order to Runner
                           </button>
                         </div>
                       </div>
