@@ -1,6 +1,7 @@
 import PrintOrder from '../models/PrintOrder.js';
 import User from '../models/User.js';
 import UploadedFile from '../models/UploadedFile.js';
+import cloudinary from '../config/cloudinary.js';
 
 // @desc    Place a print order
 // @route   POST /api/print/order
@@ -203,12 +204,12 @@ export const getCloudinarySignature = async (req, res) => {
       return res.json({ useFallback: true });
     }
 
-    const { v2: cloudinary } = await import('cloudinary');
     const timestamp = Math.round(Date.now() / 1000);
     const folder = 'engineering-market/prints';
 
+    // resource_type must NOT be in signed params for raw uploads
     const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder, resource_type: 'raw' },
+      { timestamp, folder },
       apiSecret
     );
 
@@ -218,6 +219,7 @@ export const getCloudinarySignature = async (req, res) => {
       timestamp,
       signature,
       folder,
+      resourceType: 'raw',
       uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
     });
   } catch (error) {
@@ -254,5 +256,79 @@ export const registerPdf = async (req, res) => {
   } catch (error) {
     console.error('Register PDF error:', error);
     res.status(500).json({ message: 'Failed to register PDF metadata', error: error.message });
+  }
+};
+
+// @desc    Generate signed Cloudinary URLs for PDF download/view
+// @route   GET /api/print/signed-url?url=<cloudinary_url>
+// @access  Private (Admin)
+export const getSignedPdfUrl = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ message: 'url query parameter is required' });
+
+    if (!url.includes('cloudinary.com')) {
+      return res.json({ signedUrl: url, fallbackUrls: [] });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiSecret) {
+      return res.json({ signedUrl: url, fallbackUrls: [] });
+    }
+
+    // Extract version and public ID from Cloudinary URL
+    const versionMatch = url.match(/\/upload\/(v\d+)\//);
+    const version = versionMatch ? versionMatch[1] : null;
+
+    const uploadMatch = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
+    if (!uploadMatch) return res.json({ signedUrl: url, fallbackUrls: [] });
+
+    const fullPath = uploadMatch[1];
+    const publicId = fullPath.replace(/\.[^.]+$/, '');
+    const ext = fullPath.match(/\.([^.]+)$/)?.[1] || 'pdf';
+
+    const isRaw = url.includes('/raw/upload/');
+    const resourceType = isRaw ? 'raw' : 'image';
+
+    const baseOptions = {
+      sign_url: true,
+      secure: true,
+      resource_type: resourceType,
+      format: ext,
+      type: 'upload'
+    };
+    if (version) {
+      baseOptions.version = version.replace('v', '');
+    }
+
+    // PRIMARY: fl_attachment forces Cloudinary to serve the ORIGINAL uploaded file binary
+    // (without this, PDFs stored as 'image' type get rasterized to PNG)
+    // Signed URLs bypass strict transformations, so this works even with restricted accounts
+    const downloadUrl = cloudinary.url(publicId, {
+      ...baseOptions,
+      flags: 'attachment'
+    });
+
+    // FALLBACK 1: Plain signed URL without transformation (for raw-type PDFs that work directly)
+    const plainUrl = cloudinary.url(publicId, baseOptions);
+
+    // FALLBACK 2: Try as 'raw' resource type with fl_attachment
+    const rawDownloadUrl = resourceType !== 'raw' 
+      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw', flags: 'attachment' })
+      : null;
+
+    // FALLBACK 3: Try as 'raw' resource type plain
+    const rawPlainUrl = resourceType !== 'raw'
+      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw' })
+      : null;
+
+    const fallbackUrls = [plainUrl, rawDownloadUrl, rawPlainUrl].filter(Boolean);
+
+    res.json({ signedUrl: downloadUrl, fallbackUrls });
+  } catch (error) {
+    console.error('Signed URL generation error:', error);
+    res.status(500).json({ message: 'Failed to generate signed URL', error: error.message });
   }
 };

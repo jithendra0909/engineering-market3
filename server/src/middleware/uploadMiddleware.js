@@ -262,7 +262,7 @@ const handlePdfUpload = (fieldName) => {
         if (isCloudinaryConfigured) {
           const result = await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
-              { folder: 'engineering-market/prints', resource_type: 'auto' },
+              { folder: 'engineering-market/prints', resource_type: 'raw' },
               (error, uploadResult) => {
                 if (error) return reject(error);
                 resolve(uploadResult.secure_url);

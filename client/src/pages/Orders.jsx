@@ -11,12 +11,19 @@ import api from '../api/axios';
 
 const getMediaUrl = (path) => {
   if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-    return path;
+  let url = path;
+
+  // Cloudinary fix: PDFs stored under /image/upload/ return HTTP 401. Replace with /raw/upload/
+  if (url.includes('cloudinary.com') && url.includes('/image/upload/') && url.toLowerCase().includes('.pdf')) {
+    url = url.replace('/image/upload/', '/raw/upload/');
+  }
+
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
   }
   const isDev = !import.meta.env.PROD;
   const serverBase = isDev ? 'http://localhost:5000' : '';
-  return `${serverBase}${path}`;
+  return `${serverBase}${url}`;
 };
 
 
