@@ -128,48 +128,42 @@ export const PrintStudio = () => {
     }
   };
 
-  // PDF Page counting — scans full file in 1MB chunks for accuracy
-  const parsePdfPageCount = async (file) => {
+  // PDF Page counting — reads first 512KB + last 512KB only (fast, no hanging on large files)
+  const parsePdfPageCount = (file) => {
     return new Promise((resolve) => {
-      const CHUNK = 1024 * 1024; // 1MB chunks
+      const SLICE = 512 * 1024; // 512KB
       let maxCount = 0;
-      let chunksRead = 0;
-      const totalChunks = Math.ceil(file.size / CHUNK);
+      let done = 0;
+      const total = file.size > SLICE ? 2 : 1;
 
-      // Read all chunks and collect /Count values
-      const readChunk = (index) => {
-        const start = index * CHUNK;
-        const end = Math.min(start + CHUNK + 64, file.size); // 64b overlap
-        const slice = file.slice(start, end);
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const text = reader.result;
-            const matches = text.match(/\/Count\s+(\d+)/g);
-            if (matches) {
-              for (const m of matches) {
-                const n = parseInt(m.match(/\d+/)[0], 10);
-                if (n > maxCount) maxCount = n;
-              }
+      const scanText = (text) => {
+        try {
+          const matches = text.match(/\/Count\s+(\d+)/g);
+          if (matches) {
+            for (const m of matches) {
+              const n = parseInt(m.match(/\d+/)[0], 10);
+              if (n > maxCount) maxCount = n;
             }
-          } catch (e) { /* ignore */ }
-          chunksRead++;
-          if (chunksRead === totalChunks) {
-            resolve(maxCount > 0 ? maxCount : 1);
-          } else if (index + 1 < totalChunks) {
-            readChunk(index + 1);
           }
-        };
-        reader.onerror = () => {
-          chunksRead++;
-          if (chunksRead === totalChunks) resolve(maxCount > 0 ? maxCount : 1);
-          else if (index + 1 < totalChunks) readChunk(index + 1);
-        };
-        reader.readAsBinaryString(slice);
+        } catch (e) { /* ignore */ }
+        done++;
+        if (done === total) resolve(maxCount > 0 ? maxCount : 1);
       };
 
-      if (totalChunks === 0) return resolve(1);
-      readChunk(0);
+      const readSlice = (blob) => {
+        const r = new FileReader();
+        r.onload = () => scanText(r.result);
+        r.onerror = () => { done++; if (done === total) resolve(maxCount > 0 ? maxCount : 1); };
+        r.readAsBinaryString(blob);
+      };
+
+      // Always read last 512KB (trailer — most PDFs store /Count here)
+      readSlice(file.slice(Math.max(0, file.size - SLICE)));
+
+      // Also read first 512KB if file is large (linearized PDFs store /Count at start)
+      if (file.size > SLICE) {
+        readSlice(file.slice(0, SLICE));
+      }
     });
   };
 
@@ -187,8 +181,8 @@ export const PrintStudio = () => {
     for (const file of pdfs) {
       const tempId = Date.now() + '-' + Math.random();
 
-      // Add card immediately with uploading state; page count detected in parallel
-      const fileItem = {
+      // Add card immediately with uploading state
+      setFiles(prev => [...prev, {
         id: tempId,
         fileName: file.name,
         pages: 1,
@@ -199,23 +193,23 @@ export const PrintStudio = () => {
         instructions: '',
         pdfFileUrl: '',
         uploading: true
-      };
-      setFiles(prev => [...prev, fileItem]);
-
-      // Count pages in parallel (doesn't block upload)
-      parsePdfPageCount(file).then(count => {
-        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
-      });
+      }]);
 
       try {
-        // Step 1: Get Cloudinary upload signature from server
-        const signRes = await api.get('/print/cloudinary-sign');
-        const signData = signRes.data;
+        // Count pages + get upload signature at the same time (parallel)
+        const [pagesCount, signRes] = await Promise.all([
+          parsePdfPageCount(file),
+          api.get('/print/cloudinary-sign')
+        ]);
 
+        // Update page count immediately once known
+        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: pagesCount } : f));
+
+        const signData = signRes.data;
         let fileUrl;
 
         if (signData.useFallback) {
-          // Dev fallback: upload through server (local env only)
+          // Dev fallback: upload through server (local env only, no Cloudinary)
           const formData = new FormData();
           formData.append('pdf', file);
           const response = await api.post('/print/upload-pdf', formData, {
@@ -223,19 +217,17 @@ export const PrintStudio = () => {
             timeout: 5 * 60 * 1000
           });
           fileUrl = response.data.url;
-          // Also update pages from server response
           if (response.data.pagesCount > 1) {
             setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: response.data.pagesCount } : f));
           }
         } else {
-          // Step 2: Upload directly to Cloudinary from browser (no server body limit)
+          // Upload directly to Cloudinary from browser (no Vercel body size limit)
           const cloudForm = new FormData();
           cloudForm.append('file', file);
           cloudForm.append('api_key', signData.apiKey);
           cloudForm.append('timestamp', signData.timestamp);
           cloudForm.append('signature', signData.signature);
           cloudForm.append('folder', signData.folder);
-          cloudForm.append('resource_type', 'raw');
 
           const cloudRes = await fetch(signData.uploadUrl, {
             method: 'POST',
@@ -250,25 +242,28 @@ export const PrintStudio = () => {
           const cloudData = await cloudRes.json();
           fileUrl = cloudData.secure_url;
 
-          // Step 3: Register the URL + metadata with our server (tiny JSON request)
-          const pagesNow = await parsePdfPageCount(file); // re-read final value
+          // Register URL + page count with server (tiny JSON, no size limit issue)
           await api.post('/print/register-pdf', {
             url: fileUrl,
             fileName: file.name,
-            pagesCount: pagesNow
+            pagesCount
           });
         }
 
-        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pdfFileUrl: fileUrl, uploading: false } : f));
+        // Mark upload complete
+        setFiles(prev => prev.map(f => f.id === tempId
+          ? { ...f, pdfFileUrl: fileUrl, uploading: false }
+          : f
+        ));
 
       } catch (err) {
         console.error('PDF upload error:', err);
-        showToast(`Failed to upload ${file.name}: ${err.message || 'Please try again'}`, 'error');
+        showToast(`Failed to upload ${file.name}: ${err.response?.data?.message || err.message || 'Please try again'}`, 'error');
         setFiles(prev => prev.filter(f => f.id !== tempId));
       }
     }
 
-    // Reset input so same file can be re-selected
+    // Reset so same file can be re-selected
     e.target.value = '';
   };
 
