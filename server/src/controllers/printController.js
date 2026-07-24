@@ -259,76 +259,102 @@ export const registerPdf = async (req, res) => {
   }
 };
 
-// @desc    Generate signed Cloudinary URLs for PDF download/view
-// @route   GET /api/print/signed-url?url=<cloudinary_url>
+// @desc    Proxy-fetch a PDF from Cloudinary and return it to the client
+//          This bypasses ALL Cloudinary delivery restrictions (strict transforms, auth, CORS)
+//          because the fetch happens server-to-server with the configured SDK credentials.
+// @route   GET /api/print/proxy-pdf?url=<cloudinary_url>&mode=view|download
 // @access  Private (Admin)
-export const getSignedPdfUrl = async (req, res) => {
+export const proxyPdfDownload = async (req, res) => {
   try {
-    const { url } = req.query;
+    const { url, mode = 'download', fileName = 'document.pdf' } = req.query;
     if (!url) return res.status(400).json({ message: 'url query parameter is required' });
 
+    // Non-Cloudinary URLs: redirect directly
     if (!url.includes('cloudinary.com')) {
-      return res.json({ signedUrl: url, fallbackUrls: [] });
+      return res.redirect(url);
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    if (!cloudName || !apiSecret) {
-      return res.json({ signedUrl: url, fallbackUrls: [] });
-    }
-
-    // Extract version and public ID from Cloudinary URL
+    // Extract public ID and version from URL
     const versionMatch = url.match(/\/upload\/(v\d+)\//);
-    const version = versionMatch ? versionMatch[1] : null;
-
+    const version = versionMatch ? versionMatch[1].replace('v', '') : undefined;
     const uploadMatch = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
-    if (!uploadMatch) return res.json({ signedUrl: url, fallbackUrls: [] });
+    
+    if (!uploadMatch || !cloudName || !apiSecret) {
+      // Can't parse or no credentials — try fetching original URL directly
+      return await tryFetchAndSend(res, [url], fileName, mode);
+    }
 
     const fullPath = uploadMatch[1];
     const publicId = fullPath.replace(/\.[^.]+$/, '');
     const ext = fullPath.match(/\.([^.]+)$/)?.[1] || 'pdf';
-
     const isRaw = url.includes('/raw/upload/');
-    const resourceType = isRaw ? 'raw' : 'image';
 
-    const baseOptions = {
-      sign_url: true,
-      secure: true,
-      resource_type: resourceType,
-      format: ext,
-      type: 'upload'
+    // Build multiple signed URLs to try (different resource types + flags)
+    const makeSignedUrl = (resourceType, useAttachment) => {
+      const opts = {
+        sign_url: true,
+        secure: true,
+        resource_type: resourceType,
+        format: ext,
+        type: 'upload'
+      };
+      if (version) opts.version = version;
+      if (useAttachment) opts.flags = 'attachment';
+      return cloudinary.url(publicId, opts);
     };
-    if (version) {
-      baseOptions.version = version.replace('v', '');
-    }
 
-    // PRIMARY: fl_attachment forces Cloudinary to serve the ORIGINAL uploaded file binary
-    // (without this, PDFs stored as 'image' type get rasterized to PNG)
-    // Signed URLs bypass strict transformations, so this works even with restricted accounts
-    const downloadUrl = cloudinary.url(publicId, {
-      ...baseOptions,
-      flags: 'attachment'
-    });
+    // Try these URLs in order — first valid PDF response wins
+    const urlsToTry = [
+      makeSignedUrl(isRaw ? 'raw' : 'image', true),   // primary type + fl_attachment
+      makeSignedUrl(isRaw ? 'raw' : 'image', false),  // primary type, no flag
+      makeSignedUrl(isRaw ? 'image' : 'raw', true),   // alternate type + fl_attachment
+      makeSignedUrl(isRaw ? 'image' : 'raw', false),  // alternate type, no flag
+      url                                               // original URL as-is
+    ];
 
-    // FALLBACK 1: Plain signed URL without transformation (for raw-type PDFs that work directly)
-    const plainUrl = cloudinary.url(publicId, baseOptions);
-
-    // FALLBACK 2: Try as 'raw' resource type with fl_attachment
-    const rawDownloadUrl = resourceType !== 'raw' 
-      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw', flags: 'attachment' })
-      : null;
-
-    // FALLBACK 3: Try as 'raw' resource type plain
-    const rawPlainUrl = resourceType !== 'raw'
-      ? cloudinary.url(publicId, { ...baseOptions, resource_type: 'raw' })
-      : null;
-
-    const fallbackUrls = [plainUrl, rawDownloadUrl, rawPlainUrl].filter(Boolean);
-
-    res.json({ signedUrl: downloadUrl, fallbackUrls });
+    await tryFetchAndSend(res, urlsToTry, fileName, mode);
   } catch (error) {
-    console.error('Signed URL generation error:', error);
-    res.status(500).json({ message: 'Failed to generate signed URL', error: error.message });
+    console.error('Proxy PDF error:', error);
+    res.status(500).json({ message: 'Failed to retrieve PDF', error: error.message });
   }
 };
+
+// Helper: try multiple URLs, return first one that is a valid PDF
+async function tryFetchAndSend(res, urls, fileName, mode) {
+  for (const tryUrl of urls) {
+    try {
+      const response = await fetch(tryUrl);
+      if (!response.ok) continue;
+
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Verify it's actually a PDF (magic bytes: %PDF)
+      if (buffer.length >= 4) {
+        const magic = buffer.slice(0, 5).toString('ascii');
+        if (magic.startsWith('%PDF')) {
+          // It's a real PDF! Send it to the client
+          const disposition = mode === 'view' ? 'inline' : 'attachment';
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+          res.setHeader('Content-Length', buffer.length);
+          res.setHeader('Cache-Control', 'private, max-age=3600');
+          return res.send(buffer);
+        }
+      }
+      // Not a PDF — try next URL
+    } catch (e) {
+      // Fetch failed — try next URL
+      continue;
+    }
+  }
+
+  // All URLs exhausted — nothing returned a valid PDF
+  res.status(404).json({ 
+    message: 'Could not retrieve a valid PDF from any Cloudinary URL. The file may have been corrupted during upload or is no longer available.',
+    tried: urls.length 
+  });
+}

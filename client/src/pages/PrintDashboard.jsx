@@ -87,22 +87,16 @@ export const PrintDashboard = () => {
     });
   };
 
-  // ─── SIGNED URL DOWNLOAD SYSTEM ───
-  const getSignedUrl = async (url) => {
-    if (!url || !url.includes('cloudinary.com')) return { signedUrl: getMediaUrl(url), fallbackUrls: [] };
-    try {
-      const { data } = await api.get('/print/signed-url', { params: { url } });
-      return {
-        signedUrl: data.signedUrl || getMediaUrl(url),
-        fallbackUrls: data.fallbackUrls || []
-      };
-    } catch (e) {
-      console.warn('Signed URL fetch failed, using original:', e);
-      return { signedUrl: getMediaUrl(url), fallbackUrls: [] };
-    }
+  // ─── SERVER PROXY PDF DOWNLOAD SYSTEM ───
+  const fetchPdfBlob = async (url, mode, fileName) => {
+    const response = await api.get('/print/proxy-pdf', {
+      params: { url, mode, fileName },
+      responseType: 'blob'
+    });
+    return response.data;
   };
 
-  const handleOpenPrintFile = async (url) => {
+  const handleOpenPrintFile = async (url, fileName = 'document.pdf') => {
     if (!url) {
       showToast('No PDF link available for this file.', 'error');
       return;
@@ -112,20 +106,18 @@ export const PrintDashboard = () => {
       return;
     }
     showToast('Preparing PDF for viewing...', 'info');
-    const { signedUrl, fallbackUrls } = await getSignedUrl(url);
-    window.open(signedUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  // Try fetching a URL as blob; returns blob on success, null on failure
-  const tryFetchBlob = async (fetchUrl) => {
     try {
-      const response = await fetch(fetchUrl);
-      if (response.ok) return await response.blob();
-    } catch (e) { /* ignore */ }
-    return null;
+      const blob = await fetchPdfBlob(url, 'view', fileName);
+      const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      console.error('Failed to open PDF:', e);
+      const errMsg = e.response?.data?.message || 'Failed to open PDF file from server.';
+      showToast(errMsg, 'error');
+    }
   };
 
-  const handleDownloadFile = async (url, fileName) => {
+  const handleDownloadFile = async (url, fileName = 'document.pdf') => {
     if (!url) {
       showToast('No download link available for this file.', 'error');
       return;
@@ -137,45 +129,23 @@ export const PrintDashboard = () => {
 
     const fileKey = url;
     setDownloadingFiles(prev => new Set(prev).add(fileKey));
-    
-    try {
-      const { signedUrl, fallbackUrls } = await getSignedUrl(url);
-      
-      // Try primary signed URL
-      let blob = await tryFetchBlob(signedUrl);
-      
-      // Try fallback URLs if primary failed
-      if (!blob && fallbackUrls.length > 0) {
-        for (const fbUrl of fallbackUrls) {
-          blob = await tryFetchBlob(fbUrl);
-          if (blob) break;
-        }
-      }
-      
-      // Try original URL as last resort
-      if (!blob) {
-        blob = await tryFetchBlob(getMediaUrl(url));
-      }
 
-      if (blob) {
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = fileName || 'document.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-        showToast(`Downloaded ${fileName}!`, 'success');
-      } else {
-        // All blob attempts failed — open signed URL directly
-        window.open(signedUrl, '_blank');
-        showToast(`Opening ${fileName} in new tab...`, 'info');
-      }
+    try {
+      showToast(`Downloading ${fileName}...`, 'info');
+      const blob = await fetchPdfBlob(url, 'download', fileName);
+      const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName || 'document.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      showToast(`Downloaded ${fileName}!`, 'success');
     } catch (e) {
-      console.warn('Download failed:', e);
-      window.open(getMediaUrl(url), '_blank');
-      showToast(`Opening ${fileName} in new tab...`, 'info');
+      console.error('Download failed:', e);
+      const errMsg = e.response?.data?.message || `Failed to download ${fileName}`;
+      showToast(errMsg, 'error');
     } finally {
       setDownloadingFiles(prev => {
         const next = new Set(prev);
@@ -183,6 +153,17 @@ export const PrintDashboard = () => {
         return next;
       });
     }
+  };
+
+  const downloadAllFiles = (files) => {
+    if (!files || files.length === 0) {
+      showToast('No files attached to this order.', 'error');
+      return;
+    }
+    showToast(`Downloading ${files.length} file(s)...`, 'info');
+    files.forEach((file, i) => {
+      setTimeout(() => handleDownloadFile(file.pdfFileUrl, file.fileName), i * 600);
+    });
   };
 
   const downloadAllFiles = (files) => {
@@ -327,7 +308,7 @@ export const PrintDashboard = () => {
         {/* Action Buttons */}
         <div className="px-4 pb-3 grid grid-cols-2 gap-2">
           <button
-            onClick={() => handleOpenPrintFile(file.pdfFileUrl)}
+            onClick={() => handleOpenPrintFile(file.pdfFileUrl, file.fileName)}
             className="h-10 rounded-xl border-2 border-gray-200 text-gray-700 hover:border-[#6D5DF6] hover:text-[#6D5DF6] text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
           >
             <ExternalLink className="w-4 h-4" /> Open PDF
