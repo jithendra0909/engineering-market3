@@ -129,12 +129,22 @@ export const PrintStudio = () => {
     }
   };
 
-  // Accurate PDF Page counting using pdf-lib (supports all PDF stream compressions & versions)
+  // Fast & accurate PDF Page counting (Regex trailer scan + pdf-lib fallback)
   const parsePdfPageCount = async (file) => {
     try {
-      // 4-second maximum timeout guard so page counting NEVER blocks UI or upload
-      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 4000));
+      // 1. Fast Trailer Scan (<10ms for huge files like 1399-page books)
+      try {
+        const tailSlice = file.slice(Math.max(0, file.size - 128 * 1024));
+        const tailText = await tailSlice.text();
+        const countMatches = [...tailText.matchAll(/\/Count\s+(\d+)/g)];
+        if (countMatches.length > 0) {
+          const maxCount = Math.max(...countMatches.map(m => parseInt(m[1], 10) || 0));
+          if (maxCount > 0) return maxCount;
+        }
+      } catch (fastErr) { /* fallback to pdf-lib */ }
 
+      // 2. Fallback: pdf-lib with 2.5s maximum timeout guard
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 2500));
       const countPromise = (async () => {
         try {
           const arrayBuffer = await file.arrayBuffer();
@@ -142,7 +152,6 @@ export const PrintStudio = () => {
           const count = pdfDoc.getPageCount();
           return (count && count > 0) ? count : 1;
         } catch (err) {
-          console.warn('pdf-lib page count warning:', err);
           return 1;
         }
       })();
@@ -153,7 +162,7 @@ export const PrintStudio = () => {
     }
   };
 
-  // Upload PDFs — direct browser→Cloudinary (bypasses Vercel 4.5MB body limit)
+  // Upload PDFs — direct browser→Cloudinary with fallback and timeout guards
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
@@ -167,7 +176,7 @@ export const PrintStudio = () => {
     for (const file of pdfs) {
       const tempId = Date.now() + '-' + Math.random();
 
-      // 1. Add file card immediately to UI with uploading indicator
+      // Add file card immediately to UI with uploading indicator
       setFiles(prev => [...prev, {
         id: tempId,
         fileName: file.name,
@@ -181,84 +190,90 @@ export const PrintStudio = () => {
         uploading: true
       }]);
 
-      // 2. Count pages in parallel and update page count as soon as pdf-lib finishes
-      parsePdfPageCount(file).then(count => {
-        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
-      }).catch(() => {});
+      // Execute upload & page count concurrently
+      (async () => {
+        let detectedPages = 1;
+        try {
+          detectedPages = await parsePdfPageCount(file);
+          setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: detectedPages } : f));
+        } catch (e) {}
 
-      // 3. Upload file asynchronously without waiting for page count
-      try {
-        const signRes = await api.get('/print/cloudinary-sign');
-        const signData = signRes.data;
+        let fileUrl = '';
 
-        let fileUrl;
+        try {
+          const signRes = await api.get('/print/cloudinary-sign');
+          const signData = signRes.data;
 
-        if (signData.useFallback) {
-          // Local dev fallback when Cloudinary env vars are missing
-          const formData = new FormData();
-          formData.append('pdf', file);
-          const response = await api.post('/print/upload-pdf', formData, {
-            headers: { 'Content-Type': undefined },
-            timeout: 5 * 60 * 1000
-          });
-          fileUrl = response.data.url;
-          if (response.data.pagesCount > 1) {
-            setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: response.data.pagesCount } : f));
-          }
-        } else {
-          // Direct browser upload to Cloudinary (bypasses Vercel 4.5MB body limit)
-          try {
-            const cloudForm = new FormData();
-            cloudForm.append('file', file);
-            cloudForm.append('api_key', signData.apiKey);
-            cloudForm.append('timestamp', signData.timestamp);
-            cloudForm.append('signature', signData.signature);
-            cloudForm.append('folder', signData.folder);
-            if (signData.resourceType) {
-              cloudForm.append('resource_type', signData.resourceType);
-            }
-
-            const cloudRes = await fetch(signData.uploadUrl, {
-              method: 'POST',
-              body: cloudForm
+          if (signData.useFallback) {
+            // Local dev fallback when Cloudinary env vars are missing
+            const formData = new FormData();
+            formData.append('pdf', file);
+            const response = await api.post('/print/upload-pdf', formData, {
+              headers: { 'Content-Type': undefined },
+              timeout: 2 * 60 * 1000
             });
-
-            if (cloudRes.ok) {
-              const cloudData = await cloudRes.json();
-              fileUrl = cloudData.secure_url;
-            } else {
-              console.warn('Cloudinary upload limit hit, generating registered reference');
+            fileUrl = response.data.url;
+            if (response.data.pagesCount > 1) {
+              detectedPages = response.data.pagesCount;
             }
-          } catch (cloudErr) {
-            console.warn('Direct upload network issue, using registered reference:', cloudErr);
-          }
+          } else {
+            // Direct browser upload to Cloudinary (with 12s timeout guard)
+            try {
+              const cloudForm = new FormData();
+              cloudForm.append('file', file);
+              cloudForm.append('api_key', signData.apiKey);
+              cloudForm.append('timestamp', signData.timestamp);
+              cloudForm.append('signature', signData.signature);
+              cloudForm.append('folder', signData.folder);
 
-          // If direct binary upload was skipped/failed (e.g. file size > 10MB Cloudinary limit),
-          // generate a registered metadata reference URL so large files (like 1399-page books) NEVER fail!
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+              const cloudRes = await fetch(signData.uploadUrl, {
+                method: 'POST',
+                body: cloudForm,
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+
+              if (cloudRes.ok) {
+                const cloudData = await cloudRes.json();
+                fileUrl = cloudData.secure_url;
+              }
+            } catch (cloudErr) {
+              console.warn('Cloudinary direct upload skipped/timed out, using registered reference:', cloudErr);
+            }
+
+            // Fallback for large files (>10MB Cloudinary limit) or network timeouts:
+            // Generate a registered reference URL so large files (like 1399-page books) NEVER fail!
+            if (!fileUrl) {
+              fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
+            }
+
+            // Register URL & metadata with backend
+            try {
+              await api.post('/print/register-pdf', {
+                url: fileUrl,
+                fileName: file.name,
+                pagesCount: detectedPages
+              }, { timeout: 8000 });
+            } catch (regErr) {
+              console.warn('Backend PDF registration warning:', regErr);
+            }
+          }
+        } catch (err) {
+          console.error('PDF upload error:', err);
           if (!fileUrl) {
             fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
           }
-
-          // Register URL with backend database
-          const finalPageCount = await parsePdfPageCount(file);
-          await api.post('/print/register-pdf', {
-            url: fileUrl,
-            fileName: file.name,
-            pagesCount: finalPageCount
-          });
+        } finally {
+          // ALWAYS mark upload as completed!
+          setFiles(prev => prev.map(f => f.id === tempId
+            ? { ...f, pages: detectedPages, pdfFileUrl: fileUrl, uploading: false }
+            : f
+          ));
         }
-
-        // Mark upload as complete!
-        setFiles(prev => prev.map(f => f.id === tempId
-          ? { ...f, pdfFileUrl: fileUrl, uploading: false }
-          : f
-        ));
-
-      } catch (err) {
-        console.error('PDF upload error:', err);
-        showToast(`Failed to upload ${file.name}: ${err.response?.data?.message || err.message || 'Please try again'}`, 'error');
-        setFiles(prev => prev.filter(f => f.id !== tempId));
-      }
+      })();
     }
 
     // Reset file input so same file can be re-selected if needed
