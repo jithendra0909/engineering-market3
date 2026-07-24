@@ -219,7 +219,7 @@ export const getCloudinarySignature = async (req, res) => {
       timestamp,
       signature,
       folder,
-      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
     });
   } catch (error) {
     console.error('Cloudinary sign error:', error);
