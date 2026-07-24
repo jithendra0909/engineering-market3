@@ -89,13 +89,16 @@ export const PrintDashboard = () => {
 
   // ─── SIGNED URL DOWNLOAD SYSTEM ───
   const getSignedUrl = async (url) => {
-    if (!url || !url.includes('cloudinary.com')) return getMediaUrl(url);
+    if (!url || !url.includes('cloudinary.com')) return { signedUrl: getMediaUrl(url), fallbackUrls: [] };
     try {
       const { data } = await api.get('/print/signed-url', { params: { url } });
-      return data.signedUrl || getMediaUrl(url);
+      return {
+        signedUrl: data.signedUrl || getMediaUrl(url),
+        fallbackUrls: data.fallbackUrls || []
+      };
     } catch (e) {
       console.warn('Signed URL fetch failed, using original:', e);
-      return getMediaUrl(url);
+      return { signedUrl: getMediaUrl(url), fallbackUrls: [] };
     }
   };
 
@@ -109,8 +112,17 @@ export const PrintDashboard = () => {
       return;
     }
     showToast('Preparing PDF for viewing...', 'info');
-    const signedUrl = await getSignedUrl(url);
+    const { signedUrl, fallbackUrls } = await getSignedUrl(url);
     window.open(signedUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  // Try fetching a URL as blob; returns blob on success, null on failure
+  const tryFetchBlob = async (fetchUrl) => {
+    try {
+      const response = await fetch(fetchUrl);
+      if (response.ok) return await response.blob();
+    } catch (e) { /* ignore */ }
+    return null;
   };
 
   const handleDownloadFile = async (url, fileName) => {
@@ -127,10 +139,25 @@ export const PrintDashboard = () => {
     setDownloadingFiles(prev => new Set(prev).add(fileKey));
     
     try {
-      const signedUrl = await getSignedUrl(url);
-      const response = await fetch(signedUrl);
-      if (response.ok) {
-        const blob = await response.blob();
+      const { signedUrl, fallbackUrls } = await getSignedUrl(url);
+      
+      // Try primary signed URL
+      let blob = await tryFetchBlob(signedUrl);
+      
+      // Try fallback URLs if primary failed
+      if (!blob && fallbackUrls.length > 0) {
+        for (const fbUrl of fallbackUrls) {
+          blob = await tryFetchBlob(fbUrl);
+          if (blob) break;
+        }
+      }
+      
+      // Try original URL as last resort
+      if (!blob) {
+        blob = await tryFetchBlob(getMediaUrl(url));
+      }
+
+      if (blob) {
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
@@ -141,14 +168,13 @@ export const PrintDashboard = () => {
         setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
         showToast(`Downloaded ${fileName}!`, 'success');
       } else {
-        // Fallback: open directly
+        // All blob attempts failed — open signed URL directly
         window.open(signedUrl, '_blank');
         showToast(`Opening ${fileName} in new tab...`, 'info');
       }
     } catch (e) {
       console.warn('Download failed:', e);
-      const signedUrl = await getSignedUrl(url);
-      window.open(signedUrl, '_blank');
+      window.open(getMediaUrl(url), '_blank');
       showToast(`Opening ${fileName} in new tab...`, 'info');
     } finally {
       setDownloadingFiles(prev => {

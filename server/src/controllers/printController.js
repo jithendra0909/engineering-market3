@@ -259,7 +259,7 @@ export const registerPdf = async (req, res) => {
   }
 };
 
-// @desc    Generate a signed/authenticated Cloudinary URL for accessing a PDF
+// @desc    Generate a signed Cloudinary delivery URL for accessing a PDF
 // @route   GET /api/print/signed-url?url=<cloudinary_url>
 // @access  Private (Admin)
 export const getSignedPdfUrl = async (req, res) => {
@@ -273,43 +273,54 @@ export const getSignedPdfUrl = async (req, res) => {
     }
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    if (!cloudName || !apiKey || !apiSecret) {
+    if (!cloudName || !apiSecret) {
       return res.json({ signedUrl: url });
     }
 
-    // Extract public ID from Cloudinary URL
+    // Extract version and public ID from Cloudinary URL
     // Format: https://res.cloudinary.com/cloud/{type}/upload/v{version}/{publicId}.{ext}
+    const versionMatch = url.match(/\/upload\/(v\d+)\//);
+    const version = versionMatch ? versionMatch[1] : null;
+
     const uploadMatch = url.match(/\/upload\/(?:v\d+\/)?(.+)$/);
     if (!uploadMatch) return res.json({ signedUrl: url });
 
-    const fullPath = uploadMatch[1]; // e.g. "engineering-market/prints/abc123.pdf"
-    const publicId = fullPath.replace(/\.[^.]+$/, ''); // Remove extension
+    const fullPath = uploadMatch[1];
+    const publicId = fullPath.replace(/\.[^.]+$/, '');
     const ext = fullPath.match(/\.([^.]+)$/)?.[1] || 'pdf';
 
     // Detect resource_type from URL (image vs raw)
     const isRaw = url.includes('/raw/upload/');
     const resourceType = isRaw ? 'raw' : 'image';
 
-    // Generate authenticated API download link
-    // All query params (public_id, format, timestamp) MUST be signed together
-    const timestamp = Math.round(Date.now() / 1000);
-    const signature = cloudinary.utils.api_sign_request(
-      { public_id: publicId, format: ext, timestamp },
-      apiSecret
-    );
+    // Generate signed delivery URL using the configured cloudinary SDK
+    // No transformations = won't be blocked by strict transformations
+    // The signature authenticates access for restricted/authenticated resources
+    const urlOptions = {
+      sign_url: true,
+      secure: true,
+      resource_type: resourceType,
+      format: ext,
+      type: 'upload'
+    };
+    if (version) {
+      urlOptions.version = version.replace('v', '');
+    }
 
-    // Build the authenticated API download URL
-    const signedUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/download?` +
-      `public_id=${encodeURIComponent(publicId)}` +
-      `&format=${ext}` +
-      `&api_key=${apiKey}` +
-      `&timestamp=${timestamp}` +
-      `&signature=${signature}`;
+    let signedUrl = cloudinary.url(publicId, urlOptions);
 
-    res.json({ signedUrl });
+    // If resource_type was 'image' but resource might actually be 'auto'/other,
+    // also provide fallback URLs for the client to try
+    const fallbackUrls = [];
+    if (resourceType === 'image') {
+      // Also try 'raw' in case the resource was stored differently
+      const rawOptions = { ...urlOptions, resource_type: 'raw' };
+      fallbackUrls.push(cloudinary.url(publicId, rawOptions));
+    }
+
+    res.json({ signedUrl, fallbackUrls });
   } catch (error) {
     console.error('Signed URL generation error:', error);
     res.status(500).json({ message: 'Failed to generate signed URL', error: error.message });
