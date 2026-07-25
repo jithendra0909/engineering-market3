@@ -90,7 +90,9 @@ export const PrintDashboard = () => {
   // ─── SERVER PROXY & GRIDFS PDF DOWNLOAD SYSTEM ───
   const fetchPdfBlob = async (url, mode, fileName) => {
     if (url.startsWith('/api/print/file/')) {
-      const endpoint = mode === 'download' ? `${url}?download=true` : url;
+      // Remove '/api' prefix since axios baseURL is already '/api'
+      let endpoint = url.replace('/api', '');
+      if (mode === 'download') endpoint += '?download=true';
       const response = await api.get(endpoint, { responseType: 'blob' });
       return response.data;
     }
