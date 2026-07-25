@@ -191,18 +191,14 @@ export const PrintStudio = () => {
       // 3. Supabase Direct Upload Pipeline (Handles PDFs of ANY size natively)
       (async () => {
         let fileUrl = '';
-        let pagesCount = 1;
-        try {
-          pagesCount = await parsePdfPageCount(file);
-        } catch (e) {}
 
         try {
-          // Fake progress interval while waiting for Supabase
+          // Fake progress interval while waiting for Supabase (goes up to 90%)
           let currentProgress = 0;
           const progressInterval = setInterval(() => {
-            currentProgress += (100 - currentProgress) * 0.1;
+            currentProgress += (90 - currentProgress) * 0.15;
             setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: Math.round(currentProgress) } : f));
-          }, 500);
+          }, 300);
 
           const ext = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
