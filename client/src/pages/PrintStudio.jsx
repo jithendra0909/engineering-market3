@@ -151,7 +151,21 @@ export const PrintStudio = () => {
     }
   };
 
-  // Upload PDFs — direct browser→Cloudinary with fallback and timeout guards
+  // Helper: Read blob slice as base64 string
+  const readSliceAsBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        const base64 = result.substring(result.indexOf(',') + 1);
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Upload PDFs — chunked GridFS pipeline (Handles files of ANY size, bypasses Cloudinary & Vercel limits)
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
@@ -176,7 +190,8 @@ export const PrintStudio = () => {
         binding: 'none',
         instructions: '',
         pdfFileUrl: '',
-        uploading: true
+        uploading: true,
+        uploadProgress: 0
       }]);
 
       // 2. Count pages in parallel and update page count as soon as pdf-lib finishes
@@ -184,75 +199,52 @@ export const PrintStudio = () => {
         setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
       }).catch(() => {});
 
-      // 3. Upload file asynchronously in parallel
+      // 3. Chunked GridFS Upload Pipeline (Handles PDFs of ANY size natively)
       (async () => {
         let fileUrl = '';
+        let pagesCount = 1;
+        try {
+          pagesCount = await parsePdfPageCount(file);
+        } catch (e) {}
 
         try {
-          const signRes = await api.get('/print/cloudinary-sign');
-          const signData = signRes.data;
+          const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks (safe for Vercel 4.5MB payload limit)
+          const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+          const uploadId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-          if (signData.useFallback) {
-            // Local dev fallback when Cloudinary env vars are missing
-            const formData = new FormData();
-            formData.append('pdf', file);
-            const response = await api.post('/print/upload-pdf', formData, {
-              headers: { 'Content-Type': undefined },
-              timeout: 2 * 60 * 1000
-            });
-            fileUrl = response.data.url;
-            if (response.data.pagesCount > 1) {
-              setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: response.data.pagesCount } : f));
-            }
-          } else {
-            // Direct browser upload to Cloudinary (with 15s timeout guard)
-            try {
-              const cloudForm = new FormData();
-              cloudForm.append('file', file);
-              cloudForm.append('api_key', signData.apiKey);
-              cloudForm.append('timestamp', signData.timestamp);
-              cloudForm.append('signature', signData.signature);
-              cloudForm.append('folder', signData.folder);
+          for (let i = 0; i < totalChunks; i++) {
+            const start = i * CHUNK_SIZE;
+            const end = Math.min(file.size, start + CHUNK_SIZE);
+            const chunkBlob = file.slice(start, end);
+            const chunkData = await readSliceAsBase64(chunkBlob);
 
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const res = await api.post('/print/upload-chunk', {
+              uploadId,
+              chunkIndex: i,
+              totalChunks,
+              chunkData,
+              fileName: file.name,
+              pagesCount
+            }, { timeout: 30000 });
 
-              const cloudRes = await fetch(signData.uploadUrl, {
-                method: 'POST',
-                body: cloudForm,
-                signal: controller.signal
-              });
-              clearTimeout(timeoutId);
+            const progress = Math.round(((i + 1) / totalChunks) * 100);
+            setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: progress } : f));
 
-              if (cloudRes.ok) {
-                const cloudData = await cloudRes.json();
-                fileUrl = cloudData.secure_url;
-              }
-            } catch (cloudErr) {
-              console.warn('Cloudinary upload skipped, using registered reference:', cloudErr);
-            }
-
-            // Fallback for large files (>10MB Cloudinary limit) or network timeouts
-            if (!fileUrl) {
-              fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
-            }
-
-            // Register URL & page metadata with backend
-            try {
-              const pageCount = await parsePdfPageCount(file);
-              await api.post('/print/register-pdf', {
-                url: fileUrl,
-                fileName: file.name,
-                pagesCount: pageCount
-              }, { timeout: 8000 });
-            } catch (regErr) {
-              console.warn('Backend PDF registration warning:', regErr);
+            if (res.data.isComplete && res.data.url) {
+              fileUrl = res.data.url;
             }
           }
         } catch (err) {
-          console.error('PDF upload error:', err);
+          console.warn('Chunked upload warning, falling back to registered reference:', err);
           if (!fileUrl) {
             fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
+            try {
+              await api.post('/print/register-pdf', {
+                url: fileUrl,
+                fileName: file.name,
+                pagesCount: pagesCount
+              });
+            } catch (regErr) {}
           }
         } finally {
           // ALWAYS mark upload as completed!
@@ -690,7 +682,7 @@ export const PrintStudio = () => {
                             />
                             {fileItem.uploading && (
                               <span className="text-[11.5px] text-[#6D5DF6] font-bold ml-1.5 animate-pulse">
-                                • Uploading...
+                                • Uploading... {fileItem.uploadProgress ? `${fileItem.uploadProgress}%` : ''}
                               </span>
                             )}
                           </div>

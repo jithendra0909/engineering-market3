@@ -1,7 +1,19 @@
+import mongoose from 'mongoose';
 import PrintOrder from '../models/PrintOrder.js';
 import User from '../models/User.js';
 import UploadedFile from '../models/UploadedFile.js';
+import PdfChunk from '../models/PdfChunk.js';
 import cloudinary from '../config/cloudinary.js';
+
+let gridfsBucket;
+const getGridFSBucket = () => {
+  if (!gridfsBucket && mongoose.connection.db) {
+    gridfsBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: 'print_pdfs'
+    });
+  }
+  return gridfsBucket;
+};
 
 // @desc    Place a print order
 // @route   POST /api/print/order
@@ -356,3 +368,136 @@ async function tryFetchAndSend(res, urls, fileName, mode) {
     tried: urls.length 
   });
 }
+
+// @desc    Upload a PDF chunk (3MB max per chunk to bypass Vercel limits)
+// @route   POST /api/print/upload-chunk
+// @access  Private
+export const uploadPdfChunk = async (req, res) => {
+  try {
+    const { uploadId, chunkIndex, totalChunks, chunkData, fileName, pagesCount } = req.body;
+
+    if (!uploadId || chunkIndex === undefined || !totalChunks || !chunkData || !fileName) {
+      return res.status(400).json({ message: 'Missing chunk upload parameters' });
+    }
+
+    // Store this chunk in MongoDB
+    await PdfChunk.create({
+      uploadId,
+      chunkIndex,
+      totalChunks,
+      data: chunkData
+    });
+
+    // Check how many chunks have arrived
+    const savedCount = await PdfChunk.countDocuments({ uploadId });
+
+    if (savedCount < totalChunks) {
+      return res.json({ 
+        success: true, 
+        received: savedCount, 
+        totalChunks, 
+        isComplete: false 
+      });
+    }
+
+    // All chunks saved! Reassemble full PDF buffer
+    const chunks = await PdfChunk.find({ uploadId }).sort({ chunkIndex: 1 });
+    const bufferArray = chunks.map(c => Buffer.from(c.data, 'base64'));
+    const fullBuffer = Buffer.concat(bufferArray);
+
+    // Save to GridFS
+    const bucket = getGridFSBucket();
+    if (!bucket) {
+      return res.status(500).json({ message: 'Database file storage is not ready' });
+    }
+
+    const uploadStream = bucket.openUploadStream(fileName, {
+      contentType: 'application/pdf',
+      metadata: {
+        student: req.user._id,
+        pagesCount: pagesCount || 1
+      }
+    });
+
+    const fileId = uploadStream.id;
+
+    await new Promise((resolve, reject) => {
+      uploadStream.on('finish', resolve);
+      uploadStream.on('error', reject);
+      uploadStream.end(fullBuffer);
+    });
+
+    // Clean up temporary chunks
+    await PdfChunk.deleteMany({ uploadId });
+
+    const fileUrl = `/api/print/file/${fileId}`;
+
+    // Register with UploadedFile model
+    await UploadedFile.create({
+      url: fileUrl,
+      fileName,
+      pagesCount: pagesCount || 1,
+      student: req.user._id
+    });
+
+    res.json({
+      success: true,
+      isComplete: true,
+      url: fileUrl,
+      fileName,
+      pagesCount: pagesCount || 1
+    });
+  } catch (error) {
+    console.error('Upload chunk error:', error);
+    res.status(500).json({ message: 'Failed to process PDF chunk', error: error.message });
+  }
+};
+
+// @desc    Stream or download a PDF file from GridFS database storage
+// @route   GET /api/print/file/:fileId
+// @access  Public / Private
+export const getPrintFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const isDownload = req.query.download === 'true';
+
+    if (!mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ message: 'Invalid file ID' });
+    }
+
+    const bucket = getGridFSBucket();
+    if (!bucket) {
+      return res.status(500).json({ message: 'Database file storage is not ready' });
+    }
+
+    const _id = new mongoose.Types.ObjectId(fileId);
+    const files = await bucket.find({ _id }).toArray();
+
+    if (!files || files.length === 0) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const file = files[0];
+    const fileName = file.filename || 'document.pdf';
+    const disposition = isDownload ? 'attachment' : 'inline';
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `${disposition}; filename="${encodeURIComponent(fileName)}"`);
+    res.setHeader('Content-Length', file.length);
+    res.setHeader('Cache-Control', 'private, max-age=86400');
+
+    const downloadStream = bucket.openDownloadStream(_id);
+    downloadStream.on('error', (err) => {
+      console.error('GridFS stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Error streaming PDF file' });
+      }
+    });
+
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.error('Get print file error:', error);
+    res.status(500).json({ message: 'Failed to retrieve PDF file', error: error.message });
+  }
+};
+

@@ -6,7 +6,9 @@ import {
   updatePrintOrderStatus,
   getCloudinarySignature,
   registerPdf,
-  proxyPdfDownload
+  proxyPdfDownload,
+  uploadPdfChunk,
+  getPrintFile
 } from '../controllers/printController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { handlePdfUpload, handleSingleUpload } from '../middleware/uploadMiddleware.js';
@@ -16,6 +18,10 @@ const router = express.Router();
 // Student routes
 router.post('/order', protect, createPrintOrder);
 router.get('/my-orders', protect, getMyPrintOrders);
+
+// Direct Chunked GridFS Upload Flow (Handles PDFs of ANY size — bypasses Vercel 4.5MB limit & Cloudinary 10MB limit)
+router.post('/upload-chunk', protect, uploadPdfChunk);
+router.get('/file/:fileId', getPrintFile);
 
 // Direct-to-Cloudinary upload flow (bypasses Vercel 4.5MB body limit)
 router.get('/cloudinary-sign', protect, getCloudinarySignature);  // Step 1: get signature

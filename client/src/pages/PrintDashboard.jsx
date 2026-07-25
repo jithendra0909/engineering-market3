@@ -87,8 +87,13 @@ export const PrintDashboard = () => {
     });
   };
 
-  // ─── SERVER PROXY PDF DOWNLOAD SYSTEM ───
+  // ─── SERVER PROXY & GRIDFS PDF DOWNLOAD SYSTEM ───
   const fetchPdfBlob = async (url, mode, fileName) => {
+    if (url.startsWith('/api/print/file/')) {
+      const endpoint = mode === 'download' ? `${url}?download=true` : url;
+      const response = await api.get(endpoint, { responseType: 'blob' });
+      return response.data;
+    }
     const response = await api.get('/print/proxy-pdf', {
       params: { url, mode, fileName },
       responseType: 'blob'
