@@ -72,6 +72,14 @@ export const PrintStudio = () => {
   const totalPages = files.reduce((acc, f) => acc + (f.pages * f.sets), 0);
   const totalSets = files.reduce((acc, f) => acc + f.sets, 0);
 
+  // Total sheets (papers) — accounts for layout (both-side = half sheets, four-pages = quarter sheets)
+  const totalSheets = files.reduce((acc, f) => {
+    let sheets = f.pages;
+    if (f.layout === 'both-side') sheets = Math.ceil(f.pages / 2);
+    else if (f.layout === 'four-pages') sheets = Math.ceil(f.pages / 4);
+    return acc + (sheets * f.sets);
+  }, 0);
+
   const calculateFileSubtotal = (fileObj) => {
     let sheets = fileObj.pages;
     if (fileObj.layout === 'both-side') {
@@ -479,19 +487,21 @@ export const PrintStudio = () => {
 
               {/* Styled Display Box / Editable Fields */}
               {useMyDetails ? (
-                <div className="border border-[#ECECEC] rounded-[20px] p-5.5 bg-white">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex flex-col text-left">
-                      <span className="text-[11.5px] font-extrabold text-[#6B7280] uppercase tracking-wider">Name</span>
-                      <span className="text-[14.5px] font-bold text-gray-800 mt-1.5">{studentName || 'Not Set'}</span>
+                <div className="border border-[#ECECEC] rounded-[16px] p-3.5 bg-[#FAFAFA]">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Name:</span>
+                      <span className="text-[13px] font-bold text-gray-800">{studentName || 'Not Set'}</span>
                     </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[11.5px] font-extrabold text-[#6B7280] uppercase tracking-wider">Reg. No.</span>
-                      <span className="text-[14.5px] font-bold text-gray-800 mt-1.5">{registrationNumber || 'Not Set'}</span>
+                    <div className="hidden sm:block w-px h-4 bg-gray-200"></div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Reg:</span>
+                      <span className="text-[13px] font-bold text-gray-800">{registrationNumber || 'Not Set'}</span>
                     </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[11.5px] font-extrabold text-[#6B7280] uppercase tracking-wider">Phone</span>
-                      <span className="text-[14.5px] font-bold text-gray-800 mt-1.5">{contactNumber || 'Not Set'}</span>
+                    <div className="hidden sm:block w-px h-4 bg-gray-200"></div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Phone:</span>
+                      <span className="text-[13px] font-bold text-gray-800">{contactNumber || 'Not Set'}</span>
                     </div>
                   </div>
                 </div>
@@ -865,6 +875,10 @@ export const PrintStudio = () => {
                     <span className="text-gray-700 font-bold">{totalPages}</span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span>Total Papers (Sheets)</span>
+                    <span className="text-gray-700 font-bold">{totalSheets}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span>Total Sets</span>
                     <span className="text-gray-700 font-bold">{totalSets}</span>
                   </div>
@@ -929,8 +943,8 @@ export const PrintStudio = () => {
 
       {/* ── PAYMENT MODAL ── */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0F172A]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#F8FAFC] rounded-t-[24px] sm:rounded-[24px] max-w-[420px] w-full p-5 sm:p-7 shadow-[0_20px_60px_rgba(15,23,42,0.12)] relative border border-[#E5E7EB] animate-scaleIn text-left max-h-[92vh] overflow-y-auto scrollbar-none flex flex-col gap-5 sm:gap-6">
+        <div className="fixed inset-0 z-[60] bg-[#0F172A]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-[#F8FAFC] rounded-t-[24px] sm:rounded-[24px] max-w-[420px] w-full p-5 sm:p-7 shadow-[0_20px_60px_rgba(15,23,42,0.12)] relative border border-[#E5E7EB] animate-scaleIn text-left max-h-[85vh] overflow-y-auto scrollbar-none flex flex-col gap-4 sm:gap-5 pb-8">
             
             {/* Header */}
             <div className="text-center">
