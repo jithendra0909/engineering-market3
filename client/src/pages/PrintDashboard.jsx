@@ -87,15 +87,23 @@ export const PrintDashboard = () => {
     });
   };
 
-  // ─── SERVER PROXY & GRIDFS PDF DOWNLOAD SYSTEM ───
+  // ─── PDF DOWNLOAD SYSTEM (Supabase + Legacy Proxy) ───
   const fetchPdfBlob = async (url, mode, fileName) => {
+    // If it's a Supabase URL, fetch it directly (bypassing backend)
+    if (url.includes('supabase.co')) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch from Supabase');
+      return await response.blob();
+    }
+    
+    // Legacy GridFS / Cloudinary proxy
     if (url.startsWith('/api/print/file/')) {
-      // Remove '/api' prefix since axios baseURL is already '/api'
       let endpoint = url.replace('/api', '');
       if (mode === 'download') endpoint += '?download=true';
       const response = await api.get(endpoint, { responseType: 'blob' });
       return response.data;
     }
+    
     const response = await api.get('/print/proxy-pdf', {
       params: { url, mode, fileName },
       responseType: 'blob'

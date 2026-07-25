@@ -8,6 +8,7 @@ import {
 import { PDFDocument } from 'pdf-lib';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import supabase from '../config/supabase';
 
 export const PrintStudio = () => {
   const navigate = useNavigate();
@@ -151,19 +152,7 @@ export const PrintStudio = () => {
     }
   };
 
-  // Helper: Read blob slice as base64 string
-  const readSliceAsBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result;
-        const base64 = result.substring(result.indexOf(',') + 1);
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
+  // Supabase Upload Pipeline
 
   // Upload PDFs — chunked GridFS pipeline (Handles files of ANY size, bypasses Cloudinary & Vercel limits)
   const handleFileChange = async (e) => {
@@ -199,7 +188,7 @@ export const PrintStudio = () => {
         setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
       }).catch(() => {});
 
-      // 3. Chunked GridFS Upload Pipeline (Handles PDFs of ANY size natively)
+      // 3. Supabase Direct Upload Pipeline (Handles PDFs of ANY size natively)
       (async () => {
         let fileUrl = '';
         let pagesCount = 1;
@@ -208,44 +197,40 @@ export const PrintStudio = () => {
         } catch (e) {}
 
         try {
-          const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks (safe for Vercel 4.5MB payload limit)
-          const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-          const uploadId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+          // Fake progress interval while waiting for Supabase
+          let currentProgress = 0;
+          const progressInterval = setInterval(() => {
+            currentProgress += (100 - currentProgress) * 0.1;
+            setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: Math.round(currentProgress) } : f));
+          }, 500);
 
-          for (let i = 0; i < totalChunks; i++) {
-            const start = i * CHUNK_SIZE;
-            const end = Math.min(file.size, start + CHUNK_SIZE);
-            const chunkBlob = file.slice(start, end);
-            const chunkData = await readSliceAsBase64(chunkBlob);
+          const ext = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
+          
+          const { data, error } = await supabase.storage
+            .from('prints')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
 
-            const res = await api.post('/print/upload-chunk', {
-              uploadId,
-              chunkIndex: i,
-              totalChunks,
-              chunkData,
-              fileName: file.name,
-              pagesCount
-            }, { timeout: 30000 });
+          clearInterval(progressInterval);
 
-            const progress = Math.round(((i + 1) / totalChunks) * 100);
-            setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: progress } : f));
-
-            if (res.data.isComplete && res.data.url) {
-              fileUrl = res.data.url;
-            }
+          if (error) {
+            throw error;
           }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('prints')
+            .getPublicUrl(fileName);
+
+          fileUrl = publicUrl;
+          setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: 100 } : f));
+
         } catch (err) {
-          console.warn('Chunked upload warning, falling back to registered reference:', err);
-          if (!fileUrl) {
-            fileUrl = `large-file://${Date.now()}-${Math.random().toString(36).substring(2, 9)}/${encodeURIComponent(file.name)}`;
-            try {
-              await api.post('/print/register-pdf', {
-                url: fileUrl,
-                fileName: file.name,
-                pagesCount: pagesCount
-              });
-            } catch (regErr) {}
-          }
+          console.error('Supabase upload error:', err);
+          showToast(`Failed to upload ${file.name}. Please try again.`, 'error');
         } finally {
           // ALWAYS mark upload as completed!
           setFiles(prev => prev.map(f => f.id === tempId
