@@ -222,6 +222,19 @@ export const PrintStudio = () => {
             .getPublicUrl(fileName);
 
           fileUrl = publicUrl;
+          
+          // Register the URL with the backend so checkout validation passes
+          let pagesCount = 1;
+          try {
+            pagesCount = await parsePdfPageCount(file);
+          } catch (e) {}
+
+          await api.post('/print/register-pdf', {
+            url: fileUrl,
+            fileName: file.name,
+            pagesCount
+          });
+
           setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: 100 } : f));
 
         } catch (err) {
