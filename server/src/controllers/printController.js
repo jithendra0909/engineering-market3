@@ -192,6 +192,45 @@ export const updatePrintOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
+    // Auto-cleanup: Delete PDF files from Supabase Storage after delivery
+    if (status === 'delivered' && order.files && order.files.length > 0) {
+      (async () => {
+        try {
+          const SUPABASE_URL = 'https://ymarvpwrpwbkkonhsdhm.supabase.co';
+          const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltYXJ2cHdycHdia2tvbmhzZGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MTU2MjMsImV4cCI6MjEwMDQ5MTYyM30.FHOV_bAzkOOuXTN3GXdYCkYFT92vUDovuozVT1WYawI';
+
+          const filesToDelete = [];
+          for (const file of order.files) {
+            const url = file.pdfFileUrl;
+            if (url && url.includes('supabase.co') && url.includes('/prints/')) {
+              // Extract filename from URL: .../storage/v1/object/public/prints/FILENAME
+              const fileName = url.split('/prints/').pop();
+              if (fileName) filesToDelete.push(fileName);
+            }
+            // Clean up UploadedFile record from MongoDB
+            if (url) {
+              await UploadedFile.deleteOne({ url });
+            }
+          }
+
+          if (filesToDelete.length > 0) {
+            const deleteRes = await fetch(`${SUPABASE_URL}/storage/v1/object/prints`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ prefixes: filesToDelete })
+            });
+            console.log(`[Cleanup] Deleted ${filesToDelete.length} file(s) from Supabase for order ${order._id}`, deleteRes.ok ? '✓' : '✗');
+          }
+        } catch (cleanupErr) {
+          console.error('[Cleanup] Error deleting files after delivery:', cleanupErr.message);
+          // Don't fail the status update if cleanup fails
+        }
+      })();
+    }
+
     res.json({
       message: 'Print order status updated successfully',
       order
