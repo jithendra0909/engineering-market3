@@ -50,7 +50,7 @@ export const CollegeMarket = () => {
             <GraduationCap className="w-5 h-5 text-[#6C4EFF] stroke-[1.8]" />
           </div>
           <div>
-            <h1 className="text-[22px] lg:text-[28px] font-bold text-[#111827]">College Market</h1>
+            <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">College Market</h1>
             <p className="text-[12px] text-[#9CA3AF]">{user?.college || 'Your College'}</p>
           </div>
         </div>

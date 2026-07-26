@@ -176,8 +176,8 @@ export const Signup = () => {
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-[24px] font-bold text-[#111827]">Create Account</h1>
-          <p className="text-[13px] text-[#9CA3AF] mt-1">Join the Engineering Market student community</p>
+          <h1 className="text-[20px] font-bold text-[#111827] tracking-tight">Create Account</h1>
+          <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Join the Engineering Market student community</p>
         </div>
 
         {/* Error */}

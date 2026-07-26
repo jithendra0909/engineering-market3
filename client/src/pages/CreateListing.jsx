@@ -139,10 +139,10 @@ export const CreateListing = () => {
         <ChevronLeft className="w-4 h-4" /> Back
       </button>
 
-      <h1 className="text-[22px] font-bold text-[#111827] mb-1">
+      <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight mb-1">
         {listingType === 'donate' ? 'Donate an Item' : 'Sell an Item'}
       </h1>
-      <p className="text-[13px] text-[#9CA3AF] mb-6">
+      <p className="text-[12px] text-[#9CA3AF] mb-6 leading-relaxed">
         {listingType === 'donate' ? 'Give items to students in need.' : 'List your item for other students to buy.'}
       </p>
 

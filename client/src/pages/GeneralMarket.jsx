@@ -45,8 +45,8 @@ export const GeneralMarket = () => {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-[22px] lg:text-[28px] font-bold text-[#111827]">General Market</h1>
-        <p className="text-[13px] text-[#9CA3AF] mt-1">Discover items from verified students across all colleges.</p>
+        <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight">General Market</h1>
+        <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Discover items from verified students across all colleges.</p>
       </div>
 
       {/* Search + Filter bar */}

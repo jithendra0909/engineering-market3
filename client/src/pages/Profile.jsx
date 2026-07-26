@@ -523,7 +523,7 @@ export const Profile = () => {
           PAGE HEADER (mobile)
           ═══════════════════════════════════════ */}
       <div className="flex items-center justify-between py-4 lg:py-6">
-        <h1 className="text-[22px] lg:text-[26px] font-bold text-[#111827]">Profile</h1>
+        <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight">Profile</h1>
         <div className="flex items-center gap-1">
           <button 
             onClick={() => showToast('Profile settings are managed by campus administration.', 'info')}

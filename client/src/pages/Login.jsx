@@ -52,8 +52,8 @@ export const Login = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-[24px] font-bold text-[#111827]">Welcome back</h1>
-          <p className="text-[13px] text-[#9CA3AF] mt-1">Sign in to your Engineering Market account</p>
+          <h1 className="text-[20px] font-bold text-[#111827] tracking-tight">Welcome back</h1>
+          <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Sign in to your Engineering Market account</p>
         </div>
 
         {/* Form */}
