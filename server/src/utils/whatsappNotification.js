@@ -10,7 +10,7 @@
 export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, itemTitle, chatUrl, customMessage }) => {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-  const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'new_message_alert';
+  const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'new_chat_alert';
 
   // Sanitize and format phone number (defaults to India country code +91 for 10-digit numbers)
   let cleanPhone = (recipientPhone || '').replace(/[^0-9]/g, '');
@@ -34,26 +34,25 @@ export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, 
   try {
     const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
     
-    const isHelloWorld = templateName === 'hello_world';
-    const langCode = process.env.WHATSAPP_TEMPLATE_LANG || (isHelloWorld ? 'en_US' : 'en');
+    // Use en_US — Meta's default language code for English templates
+    const langCode = process.env.WHATSAPP_TEMPLATE_LANG || 'en_US';
 
     const templateObj = {
       name: templateName,
       language: { code: langCode }
     };
 
-    if (!isHelloWorld) {
-      templateObj.components = [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: recipientName || 'Seller' },
-            { type: 'text', text: itemTitle || 'your listing' },
-            { type: 'text', text: chatUrl || 'https://engineering-market.vercel.app' }
-          ]
-        }
-      ];
-    }
+    // Template body: Hi {{1}}! You have a new buyer message for your item "{{2}}" on Engineering Market. Open {{3}} to reply.
+    templateObj.components = [
+      {
+        type: 'body',
+        parameters: [
+          { type: 'text', text: recipientName || 'Seller' },
+          { type: 'text', text: itemTitle || 'your listing' },
+          { type: 'text', text: chatUrl || 'https://engineering-market.vercel.app' }
+        ]
+      }
+    ];
 
     // Template payload structure
     const payload = {
