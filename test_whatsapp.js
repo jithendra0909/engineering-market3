@@ -28,7 +28,7 @@ console.log('Token (first 20 chars):', accessToken ? accessToken.substring(0, 20
 console.log('Template Name:', templateName);
 console.log('');
 
-const testPhone = '919391461855';
+const testPhone = '919032906509';
 
 const url = 'https://graph.facebook.com/v19.0/' + phoneNumberId + '/messages';
 

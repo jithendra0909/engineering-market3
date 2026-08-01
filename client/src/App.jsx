@@ -147,16 +147,11 @@ function App() {
             />
 
             {/* Stubs / Coming Soon */}
+            {/* ── COMING SOON: Print Hub routes temporarily redirect to Vendors overlay ── */}
+            {/* To launch Print Hub, restore original routes below */}
             <Route path="/vendors" element={<Vendors />} />
-            <Route 
-              path="/vendors/print-studio" 
-              element={
-                <ProtectedRoute>
-                  <PrintStudio />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="/orders" element={<Orders />} />
+            <Route path="/vendors/print-studio" element={<Navigate to="/vendors" replace />} />
+            <Route path="/orders" element={<Navigate to="/vendors" replace />} />
             <Route 
               path="/vendors/print-dashboard" 
               element={

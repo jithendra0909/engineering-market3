@@ -13,6 +13,21 @@ export const Vendors = () => {
   return (
     <div className="relative overflow-hidden">
 
+      {/* ── COMING SOON OVERLAY — Remove this block to launch Print Hub ── */}
+      <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center text-center px-6">
+        <div className="w-20 h-20 bg-[#F4F1FF] rounded-full flex items-center justify-center mb-5">
+          <Printer className="w-10 h-10 text-[#6C4EFF] stroke-[1.5]" />
+        </div>
+        <h2 className="text-[22px] font-extrabold text-[#111827] tracking-tight">EM Printf Hub</h2>
+        <p className="text-[13px] text-[#9CA3AF] mt-2 max-w-sm leading-relaxed">
+          We're putting the finishing touches on our vendor marketplace. Printing services, verified vendors, and more — launching very soon!
+        </p>
+        <div className="mt-5 px-6 py-2.5 bg-[#F4F1FF] text-[#6C4EFF] font-bold text-[12px] rounded-full border border-[#6C4EFF]/20">
+          🚀 Coming Soon
+        </div>
+      </div>
+      {/* ── END COMING SOON OVERLAY ── */}
+
       {/* Decorative background blobs — matches Home page */}
       <div className="absolute top-0 left-0 w-full h-[500px] pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-20 -left-20 w-[300px] h-[300px] bg-[#6C4EFF]/[0.06] rounded-full blur-3xl" />
