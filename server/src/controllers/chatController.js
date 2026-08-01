@@ -94,7 +94,10 @@ export const createConversation = async (req, res) => {
       seller: sellerId
     });
 
+    let isNewConversation = false;
+
     if (!conversation) {
+      isNewConversation = true;
       conversation = new Conversation({
         listing: listingId,
         buyer: buyerId,
@@ -106,6 +109,21 @@ export const createConversation = async (req, res) => {
         }
       });
       await conversation.save();
+
+      // Send WhatsApp notification to seller for new buyer interest
+      const buyer = await User.findById(buyerId).select('fullName');
+      const seller = await User.findById(sellerId).select('whatsappNumber fullName');
+
+      if (seller && seller.whatsappNumber) {
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://engineering-market.vercel.app';
+        sendWhatsAppNotification({
+          recipientPhone: seller.whatsappNumber,
+          recipientName: seller.fullName,
+          itemTitle: listing.title || 'an item on Engineering Market',
+          chatUrl: clientBaseUrl,
+          customMessage: `${buyer?.fullName || 'A buyer'} is interested in your listing "${listing.title}"`
+        }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
+      }
     }
 
     res.status(201).json(conversation);
@@ -173,21 +191,8 @@ export const sendMessage = async (req, res) => {
 
     await conversation.save();
 
-    // Asynchronously send WhatsApp notification to recipient without blocking response
-    User.findById(recipientId).select('whatsappNumber fullName').then((recipient) => {
-      if (recipient && recipient.whatsappNumber) {
-        Listing.findById(conversation.listing).select('title').then((listing) => {
-          const clientBaseUrl = process.env.CLIENT_URL || 'https://engineering-market.vercel.app';
-          sendWhatsAppNotification({
-            recipientPhone: recipient.whatsappNumber,
-            recipientName: recipient.fullName,
-            itemTitle: listing?.title || 'an item on Engineering Market',
-            chatUrl: clientBaseUrl,
-            customMessage: text.trim()
-          });
-        }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
-      }
-    }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
+    // WhatsApp notification is sent on conversation creation (first contact).
+    // We intentionally do NOT send a WhatsApp template for every message to avoid spamming the seller.
 
     res.status(201).json(message);
   } catch (error) {

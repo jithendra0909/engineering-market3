@@ -79,19 +79,18 @@ const getCollegeListings = async (req, res) => {
     const now = new Date();
     let query = { 
       marketType: 'college', 
-      sellerCollege: req.user.college,
       status: 'available' 
     };
     
-    if (req.user && req.user.role === 'admin') {
-      // Admin sees everything
-    } else if (req.user) {
+    if (req.user.role === 'admin') {
+      // Admin sees all college listings across all colleges
+    } else {
+      // Students only see their own college's listings
+      query.sellerCollege = req.user.college;
       query.$or = [
         { expiresAt: { $gt: now } },
         { seller: req.user._id }
       ];
-    } else {
-      query.expiresAt = { $gt: now };
     }
 
     const listings = await Listing.find(query)
@@ -125,7 +124,14 @@ const getListingById = async (req, res) => {
       }
     }
     
-    res.json(listing);
+    // Add status metadata for the client
+    const now = new Date();
+    const listingObj = listing.toObject();
+    listingObj.isExpired = listing.expiresAt < now;
+    listingObj.isSold = listing.status === 'sold';
+    listingObj.isRemoved = listing.status === 'removed';
+    
+    res.json(listingObj);
   } catch (error) {
     res.status(500).json({ message: 'Server error retrieving listing details', error: error.message });
   }
@@ -184,19 +190,19 @@ const updateListing = async (req, res) => {
     
     // Check ownership
     if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'User not authorized to edit this listing' });
+      return res.status(403).json({ message: 'User not authorized to edit this listing' });
     }
     
     const { title, description, price, category, condition, listingType, marketType, status } = req.body;
     
-    listing.title = title || listing.title;
-    listing.description = description || listing.description;
-    listing.price = listingType === 'donate' ? 0 : (price !== undefined ? Number(price) : listing.price);
-    listing.category = category || listing.category;
-    listing.condition = condition || listing.condition;
-    listing.listingType = listingType || listing.listingType;
-    listing.marketType = marketType || listing.marketType;
-    listing.status = status || listing.status;
+    if (title !== undefined) listing.title = title;
+    if (description !== undefined) listing.description = description;
+    if (category !== undefined) listing.category = category;
+    if (condition !== undefined) listing.condition = condition;
+    if (listingType !== undefined) listing.listingType = listingType;
+    if (marketType !== undefined) listing.marketType = marketType;
+    if (status !== undefined) listing.status = status;
+    listing.price = (listingType || listing.listingType) === 'donate' ? 0 : (price !== undefined ? Number(price) : listing.price);
     
     // Update uploaded images if provided
     if (req.uploadedPaths && req.uploadedPaths.length > 0) {
@@ -223,7 +229,7 @@ const deleteListing = async (req, res) => {
     
     // Check ownership or admin
     if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'User not authorized to delete this listing' });
+      return res.status(403).json({ message: 'User not authorized to delete this listing' });
     }
     
     await listing.deleteOne();
@@ -296,7 +302,7 @@ const renewListing = async (req, res) => {
 
     // Check ownership
     if (listing.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-      return res.status(401).json({ message: 'User not authorized to renew this listing' });
+      return res.status(403).json({ message: 'User not authorized to renew this listing' });
     }
 
     // Extend expiresAt by 30 days

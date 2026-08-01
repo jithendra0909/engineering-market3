@@ -139,6 +139,23 @@ export const ProductDetails = () => {
         <ChevronLeft className="w-4 h-4" /> Back
       </button>
 
+      {/* Status banners for expired/sold/removed listings */}
+      {listing.isSold && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
+          <span className="text-base">🏷️</span> This item has been sold and is no longer available.
+        </div>
+      )}
+      {listing.isRemoved && (
+        <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
+          <span className="text-base">🚫</span> This listing has been removed.
+        </div>
+      )}
+      {listing.isExpired && !listing.isSold && !listing.isRemoved && (
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
+          <span className="text-base">⏰</span> This listing has expired. Contact the seller to check availability.
+        </div>
+      )}
+
       <div className="lg:flex gap-10">
         {/* ── Left: Image gallery ── */}
         <div className="lg:w-1/2 lg:flex-shrink-0">

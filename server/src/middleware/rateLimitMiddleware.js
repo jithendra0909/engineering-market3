@@ -15,7 +15,8 @@ const checkListingLimit = async (req, res, next) => {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const weeklyCount = await Listing.countDocuments({
       seller: req.user._id,
-      createdAt: { $gte: oneWeekAgo }
+      createdAt: { $gte: oneWeekAgo },
+      status: 'available'
     });
 
     if (weeklyCount >= 3) {

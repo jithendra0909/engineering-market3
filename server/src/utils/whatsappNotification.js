@@ -62,6 +62,8 @@ export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, 
       template: templateObj
     };
 
+    console.log(`[WhatsApp Notification] Sending template "${templateName}" to ${cleanPhone} with params: [${recipientName}, ${itemTitle}]`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -74,11 +76,17 @@ export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('[WhatsApp Notification] Error sending message via Meta API:', data);
+      console.error(`[WhatsApp Notification] ❌ Meta API Error (HTTP ${response.status}):`);
+      console.error(`  Error Type: ${data.error?.type || 'unknown'}`);
+      console.error(`  Error Code: ${data.error?.code || 'unknown'}`);
+      console.error(`  Message: ${data.error?.message || JSON.stringify(data)}`);
+      if (data.error?.error_data?.details) {
+        console.error(`  Details: ${data.error.error_data.details}`);
+      }
     } else {
-      console.log(`[WhatsApp Notification] Successfully sent notification to ${cleanPhone} (Message ID: ${data.messages?.[0]?.id})`);
+      console.log(`[WhatsApp Notification] ✅ Successfully sent to ${cleanPhone} (Message ID: ${data.messages?.[0]?.id})`);
     }
   } catch (error) {
-    console.error('[WhatsApp Notification] Network/Server Error:', error.message);
+    console.error('[WhatsApp Notification] ❌ Network/Server Error:', error.message);
   }
 };
