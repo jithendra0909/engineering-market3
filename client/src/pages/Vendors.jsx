@@ -9,24 +9,12 @@ export const Vendors = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('All');
   const [searchVal, setSearchVal] = useState('');
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   return (
     <div className="relative overflow-hidden">
 
-      {/* ── COMING SOON OVERLAY — Remove this block to launch Print Hub ── */}
-      <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center text-center px-6">
-        <div className="w-20 h-20 bg-[#F4F1FF] rounded-full flex items-center justify-center mb-5">
-          <Printer className="w-10 h-10 text-[#6C4EFF] stroke-[1.5]" />
-        </div>
-        <h2 className="text-[22px] font-extrabold text-[#111827] tracking-tight">EM Printf Hub</h2>
-        <p className="text-[13px] text-[#9CA3AF] mt-2 max-w-sm leading-relaxed">
-          We're putting the finishing touches on our vendor marketplace. Printing services, verified vendors, and more — launching very soon!
-        </p>
-        <div className="mt-5 px-6 py-2.5 bg-[#F4F1FF] text-[#6C4EFF] font-bold text-[12px] rounded-full border border-[#6C4EFF]/20">
-          🚀 Coming Soon
-        </div>
-      </div>
-      {/* ── END COMING SOON OVERLAY ── */}
+
 
       {/* Decorative background blobs — matches Home page */}
       <div className="absolute top-0 left-0 w-full h-[500px] pointer-events-none overflow-hidden -z-10">
@@ -92,7 +80,7 @@ export const Vendors = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(activeTab === 'All' || activeTab === 'Printing') && (
               <button
-                onClick={() => navigate('/vendors/print-studio')}
+                onClick={() => setShowComingSoon(true)}
                 className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
               >
                 {/* Icon badge — Home page style */}
@@ -149,6 +137,32 @@ export const Vendors = () => {
         </section>
 
       </div>
+
+      {/* ── COMING SOON MODAL — Remove this block to launch Print Hub ── */}
+      {showComingSoon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-6" onClick={() => setShowComingSoon(false)}>
+          <div className="bg-white rounded-[24px] p-8 max-w-sm w-full text-center shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-[#F4F1FF] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Printer className="w-8 h-8 text-[#6C4EFF] stroke-[1.5]" />
+            </div>
+            <h2 className="text-[20px] font-extrabold text-[#111827] tracking-tight">EM Printf Hub</h2>
+            <p className="text-[13px] text-[#9CA3AF] mt-2 leading-relaxed">
+              We're putting the finishing touches on our printing service. Upload PDFs, get classroom delivery — launching very soon!
+            </p>
+            <div className="mt-4 px-6 py-2.5 bg-[#F4F1FF] text-[#6C4EFF] font-bold text-[12px] rounded-full border border-[#6C4EFF]/20 inline-block">
+              🚀 Coming Soon
+            </div>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="mt-4 block w-full text-[13px] font-semibold text-[#9CA3AF] hover:text-[#111827] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* ── END COMING SOON MODAL ── */}
+
     </div>
   );
 };
