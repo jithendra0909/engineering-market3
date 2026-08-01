@@ -35,7 +35,7 @@ export const sendWhatsAppNotification = async ({ recipientPhone, recipientName, 
     const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
     
     // Use en_US — Meta's default language code for English templates
-    const langCode = process.env.WHATSAPP_TEMPLATE_LANG || 'en_US';
+    const langCode = process.env.WHATSAPP_TEMPLATE_LANG || 'en';
 
     const templateObj = {
       name: templateName,
