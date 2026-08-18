@@ -32,6 +32,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
 import FeedbackRoadmap from './pages/FeedbackRoadmap';
+import GiftStudio from './pages/GiftStudio';
 
 // Layout wrapper to inject Navbar & BottomNav
 const AppLayout = ({ children }) => {
@@ -150,6 +151,7 @@ function App() {
             {/* ── COMING SOON: Print Hub routes temporarily redirect to Vendors overlay ── */}
             {/* To launch Print Hub, restore original routes below */}
             <Route path="/vendors" element={<Vendors />} />
+            <Route path="/vendors/gift-studio" element={<GiftStudio />} />
             <Route path="/vendors/print-studio" element={<Navigate to="/vendors" replace />} />
             <Route path="/orders" element={<Navigate to="/vendors" replace />} />
             <Route 

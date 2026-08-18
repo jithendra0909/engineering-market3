@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Printer, LayoutGrid, Star, ChevronRight, 
-  ShieldCheck, Lock, Headset, Award, Search
+  ShieldCheck, Lock, Headset, Award, Search, Gift
 } from 'lucide-react';
 
 export const Vendors = () => {
@@ -10,6 +10,12 @@ export const Vendors = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchVal, setSearchVal] = useState('');
   const [showComingSoon, setShowComingSoon] = useState(false);
+
+  // Filter vendors based on active tab and search
+  const showPrintHub = (activeTab === 'All' || activeTab === 'Printing') && 
+    (!searchVal || 'em printf hub printing'.includes(searchVal.toLowerCase()));
+  const showGiftStudio = (activeTab === 'All' || activeTab === 'Gifts') && 
+    (!searchVal || 'em gift studio personalized gifts photo frames'.includes(searchVal.toLowerCase()));
 
   return (
     <div className="relative overflow-hidden">
@@ -70,6 +76,18 @@ export const Vendors = () => {
               <Printer className="w-3.5 h-3.5 stroke-[2]" />
               Printing
             </button>
+
+            <button 
+              onClick={() => setActiveTab('Gifts')}
+              className={`h-10 px-5 rounded-full flex items-center gap-2 font-bold text-[12px] transition-all border shrink-0 ${
+                activeTab === 'Gifts' 
+                  ? 'bg-[#F4F1FF] border-[#6C4EFF]/20 text-[#6C4EFF]' 
+                  : 'bg-white border-[#E9E6F8]/70 text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30'
+              }`}
+            >
+              <Gift className="w-3.5 h-3.5 stroke-[2]" />
+              Gifts
+            </button>
           </div>
         </div>
 
@@ -78,7 +96,8 @@ export const Vendors = () => {
           <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">Popular Vendors</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(activeTab === 'All' || activeTab === 'Printing') && (
+            {/* ── EM Printf Hub (Coming Soon) ── */}
+            {showPrintHub && (
               <button
                 onClick={() => setShowComingSoon(true)}
                 className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
@@ -109,6 +128,45 @@ export const Vendors = () => {
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     4.8
                     <span className="text-[#9CA3AF] font-medium text-[11px]">(256)</span>
+                  </div>
+                  
+                  <ChevronRight className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C4EFF] transition-colors" />
+                </div>
+              </button>
+            )}
+
+            {/* ── EM Gift Studio (Active) ── */}
+            {showGiftStudio && (
+              <button
+                onClick={() => navigate('/vendors/gift-studio')}
+                className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
+              >
+                {/* Icon badge */}
+                <div className="w-16 h-16 bg-[#F4F1FF] rounded-[14px] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Gift className="w-8 h-8 text-[#6C4EFF] stroke-[1.8]" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-grow flex flex-col justify-center min-w-0">
+                  <h3 className="font-bold text-[15px] text-[#111827] truncate leading-tight">EM Gift Studio</h3>
+                  <p className="text-[12px] text-[#6C4EFF] font-bold mt-0.5">Personalized Gifts</p>
+                  <p className="text-[11px] text-[#9CA3AF] mt-1 truncate">Photo Frames • Custom Gifts</p>
+                  
+                  {/* Verified badge */}
+                  <div className="mt-2 flex">
+                    <span className="bg-[#EEF9F2] text-emerald-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" />
+                      Verified
+                    </span>
+                  </div>
+                </div>
+
+                {/* Rating + Arrow */}
+                <div className="flex flex-col items-end justify-between self-stretch py-0.5 shrink-0">
+                  <div className="flex items-center gap-1 text-[13px] font-bold text-[#111827]">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    4.9
+                    <span className="text-[#9CA3AF] font-medium text-[11px]">(128)</span>
                   </div>
                   
                   <ChevronRight className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C4EFF] transition-colors" />
@@ -168,3 +226,4 @@ export const Vendors = () => {
 };
 
 export default Vendors;
+
