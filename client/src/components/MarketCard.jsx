@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import './MarketCard.css';
 
 export const MarketCard = ({
   title,
@@ -8,26 +9,36 @@ export const MarketCard = ({
   icon: Icon,
   buttonText,
   link,
-  bgColor = 'bg-[#F4F1FF]',
-  iconBgColor = 'bg-white',
-  iconColor = 'text-[#6C4EFF]'
+  bgColor,
+  iconBgColor,
+  iconColor
 }) => {
   return (
-    <div className={`p-5 rounded-[24px] flex flex-col justify-between h-[165px] border border-[#E9E6F8]/50 shadow-sm ${bgColor}`}>
+    <div 
+      className="market-card"
+      style={bgColor ? { backgroundColor: bgColor } : undefined}
+    >
       <div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${iconBgColor} ${iconColor}`}>
-          <Icon className="w-5 h-5 stroke-[2]" />
+        <div 
+          className="market-card-icon-box"
+          style={{
+            backgroundColor: iconBgColor || undefined,
+            color: iconColor || undefined
+          }}
+        >
+          <Icon className="market-card-icon" />
         </div>
-        <h3 className="font-bold text-[15px] text-[#111827] mt-3">{title}</h3>
-        <p className="text-[11px] text-[#6B7280] mt-1 leading-relaxed">
+        <h3 className="market-card-title">{title}</h3>
+        <p className="market-card-desc">
           {description}
         </p>
       </div>
       <Link 
         to={link} 
-        className={`text-xs font-bold hover:underline flex items-center gap-0.5 mt-2 ${iconColor}`}
+        className="market-card-link"
+        style={iconColor ? { color: iconColor } : undefined}
       >
-        {buttonText} <ChevronRight className="w-3.5 h-3.5" />
+        {buttonText} <ChevronRight className="market-card-chevron" />
       </Link>
     </div>
   );

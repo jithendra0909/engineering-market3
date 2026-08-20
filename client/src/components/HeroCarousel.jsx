@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import './HeroCarousel.css';
 
 const BANNERS = [
   { id: 1, image: '/images/file_000000007ac07207bf291c82f183c3b7 (1).png', alt: 'Buy. Sell. Donate. — All things student.' },
@@ -67,26 +68,25 @@ export const HeroCarousel = () => {
 
   return (
     <div
-      className="relative w-full overflow-hidden select-none group"
+      className="hero-carousel"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      style={{ borderRadius: '20px' }}
     >
       {/* Slider track */}
       <div
         ref={sliderRef}
-        className="flex will-change-transform"
+        className="hero-carousel-slider"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
         {BANNERS.map((banner) => (
-          <div key={banner.id} className="w-full flex-shrink-0">
+          <div key={banner.id} className="hero-carousel-slide">
             <img
               src={banner.image}
               alt={banner.alt}
-              className="w-full h-auto object-cover"
+              className="hero-carousel-image"
               draggable={false}
               loading={banner.id === 1 ? 'eager' : 'lazy'}
             />
@@ -97,37 +97,33 @@ export const HeroCarousel = () => {
       {/* Navigation arrows (desktop only — appear on hover) */}
       <button
         onClick={() => setCurrent((p) => (p === 0 ? BANNERS.length - 1 : p - 1))}
-        className="absolute left-3 lg:left-5 top-1/2 -translate-y-1/2 w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-[#111827] opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-105 active:scale-95 z-10"
+        className="hero-carousel-arrow prev"
         aria-label="Previous banner"
       >
-        <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        <svg className="hero-carousel-arrow-icon" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
       </button>
       <button
         onClick={() => setCurrent((p) => (p + 1) % BANNERS.length)}
-        className="absolute right-3 lg:right-5 top-1/2 -translate-y-1/2 w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex items-center justify-center text-[#111827] opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:scale-105 active:scale-95 z-10"
+        className="hero-carousel-arrow next"
         aria-label="Next banner"
       >
-        <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        <svg className="hero-carousel-arrow-icon" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
       </button>
 
       {/* Dot indicators */}
-      <div className="absolute bottom-3 lg:bottom-5 left-1/2 -translate-x-1/2 flex gap-[6px] z-10">
+      <div className="hero-carousel-dots">
         {BANNERS.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrent(idx)}
             aria-label={`Go to banner ${idx + 1}`}
-            className={`h-[6px] rounded-full transition-all duration-400 ${
-              current === idx
-                ? 'bg-[#6C4EFF] w-6 shadow-sm'
-                : 'bg-white/60 w-[6px] hover:bg-white/90'
-            }`}
+            className={`hero-carousel-dot ${current === idx ? 'active' : ''}`}
           />
         ))}
       </div>
 
       {/* Subtle gradient overlay at bottom for dot readability */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/[0.06] to-transparent pointer-events-none" />
+      <div className="hero-carousel-overlay" />
     </div>
   );
 };

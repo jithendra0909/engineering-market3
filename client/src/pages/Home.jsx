@@ -12,11 +12,7 @@ import ProductCard from '../components/ProductCard';
 import VerificationRequiredModal from '../components/VerificationRequiredModal';
 import api from '../api/axios';
 import { Logo } from '../components/Logo';
-
-/* ═══════════════════════════════════════════════
-   HOME PAGE — Premium Apple-inspired layout
-   Mobile-first, responsive up to 1440px desktop
-   ═══════════════════════════════════════════════ */
+import './Home.css';
 
 export const Home = () => {
   const { isLoggedIn, isVerified, showToast } = useAuth();
@@ -61,90 +57,80 @@ export const Home = () => {
       name: 'Rohan Mehta',
       dept: 'Computer Engineering',
       initials: 'RM',
-      color: 'bg-[#F4F1FF] text-[#6C4EFF]',
+      colorStyle: { backgroundColor: '#F4F1FF', color: '#6C4EFF' },
     },
     {
       quote: '"Sold my old calculator within a day. Super easy and trustworthy platform."',
       name: 'Priya Sharma',
       dept: 'Electronics Engineering',
       initials: 'PS',
-      color: 'bg-[#EEF9F2] text-emerald-700',
+      colorStyle: { backgroundColor: '#EEF9F2', color: '#047857' },
     },
     {
       quote: '"Great place to find hostel essentials and study materials."',
       name: 'Aman Verma',
       dept: 'Mechanical Engineering',
       initials: 'AV',
-      color: 'bg-[#FFF4ED] text-orange-700',
+      colorStyle: { backgroundColor: '#FFF4ED', color: '#c2410c' },
     },
   ];
 
   /* ── Skeleton loader for product cards ── */
   const Skeleton = () => (
-    <div className="bg-white border border-[#E9E6F8]/70 rounded-[20px] overflow-hidden animate-pulse">
-      <div className="aspect-square bg-[#F4F1FF]" />
-      <div className="p-3.5 flex flex-col gap-2">
-        <div className="h-3.5 bg-[#F4F1FF] rounded-full w-3/4" />
-        <div className="h-3.5 bg-[#F4F1FF] rounded-full w-1/2" />
-        <div className="h-3 bg-[#F4F1FF] rounded-full w-2/3" />
+    <div className="product-card animate-pulse">
+      <div className="product-card-image-wrapper" style={{ backgroundColor: '#F4F1FF' }} />
+      <div className="product-card-info">
+        <div style={{ height: '14px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '75%' }} />
+        <div style={{ height: '14px', backgroundColor: '#F4F4FF', borderRadius: '9999px', width: '50%' }} />
+        <div style={{ height: '12px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '66%' }} />
       </div>
     </div>
   );
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="home-page">
 
-      {/* ╔══════════════════════════════════════╗
-          ║   DECORATIVE BACKGROUND BLOBS       ║
-          ╚══════════════════════════════════════╝ */}
-      <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-20 -left-20 w-[300px] h-[300px] bg-[#6C4EFF]/[0.06] rounded-full blur-3xl animate-pulse-soft" />
-        <div className="absolute top-10 right-0 w-[250px] h-[250px] bg-[#E14BA1]/[0.04] rounded-full blur-3xl animate-pulse-soft" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-40 left-1/3 w-[200px] h-[200px] bg-[#6C4EFF]/[0.03] rounded-full blur-3xl" />
+      {/* DECORATIVE BACKGROUND BLOBS */}
+      <div className="home-bg-blobs">
+        <div className="home-blob-1 animate-pulse-soft" />
+        <div className="home-blob-2 animate-pulse-soft" />
+        <div className="home-blob-3" />
       </div>
 
-      <div className="max-w-[1360px] mx-auto px-5 lg:px-8 pt-5 lg:pt-8 pb-28 lg:pb-12 flex flex-col gap-10 lg:gap-14">
+      <div className="home-container">
 
-        {/* ╔══════════════════════════════════════╗
-            ║   MOBILE SEARCH BAR                  ║
-            ╚══════════════════════════════════════╝ */}
-        <div className="block lg:hidden">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#9CA3AF]" />
+        {/* MOBILE SEARCH BAR */}
+        <div className="home-mobile-search">
+          <div className="home-mobile-search-wrapper">
+            <Search className="home-mobile-search-icon" />
             <input
               type="text"
               placeholder="Search for items, services, or vendors..."
               onFocus={() => navigate('/general-market')}
               readOnly
-              className="w-full h-11 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] placeholder-[#9CA3AF] cursor-pointer"
+              className="home-mobile-search-input"
             />
           </div>
         </div>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   HERO CAROUSEL                      ║
-            ╚══════════════════════════════════════╝ */}
+        {/* HERO CAROUSEL */}
         <section>
           <HeroCarousel />
         </section>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   MARKET CARDS + TRENDING ITEMS      ║
-            ║   Desktop: side-by-side layout       ║
-            ║   Mobile: stacked                    ║
-            ╚══════════════════════════════════════╝ */}
-        <section className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+        {/* MARKET CARDS + TRENDING ITEMS */}
+        <section className="home-markets-section">
 
-          {/* ── Market selection cards (left column on desktop) ── */}
-          <div className="flex flex-row lg:flex-col gap-4 lg:gap-5 lg:w-[280px] lg:flex-shrink-0">
+          {/* Market selection cards */}
+          <div className="home-market-cards-col">
             {/* College Market */}
-            <div className="flex-1 bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 lg:p-6 flex flex-col justify-between gap-4 hover:shadow-md transition-shadow">
+            <div className="home-market-card-box">
               <div>
-                <div className="w-11 h-11 bg-[#F4F1FF] rounded-[14px] flex items-center justify-center mb-3">
-                  <GraduationCap className="w-5 h-5 text-[#6C4EFF] stroke-[1.8]" />
+                <div className="home-market-icon-wrapper">
+                  <GraduationCap className="home-market-icon" />
                 </div>
-                <h3 className="font-bold text-[15px] text-[#111827]">College Market</h3>
-                <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">
+                <h3 className="home-market-card-title">College Market</h3>
+                <p className="home-market-card-desc">
                   Buy, sell, or donate within your college community.
                 </p>
               </div>
@@ -156,205 +142,197 @@ export const Home = () => {
                     navigate('/college-market');
                   }
                 }}
-                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
+                className="home-market-card-btn"
               >
-                Explore College <ChevronRight className="w-3.5 h-3.5" />
+                Explore College <ChevronRight style={{ width: '14px', height: '14px' }} />
               </button>
             </div>
 
             {/* General Market */}
-            <div className="flex-1 bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 lg:p-6 flex flex-col justify-between gap-4 hover:shadow-md transition-shadow">
+            <div className="home-market-card-box">
               <div>
-                <div className="w-11 h-11 bg-[#F4F1FF] rounded-[14px] flex items-center justify-center mb-3">
-                  <Store className="w-5 h-5 text-[#6C4EFF] stroke-[1.8]" />
+                <div className="home-market-icon-wrapper">
+                  <Store className="home-market-icon" />
                 </div>
-                <h3 className="font-bold text-[15px] text-[#111827]">General Market</h3>
-                <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">
+                <h3 className="home-market-card-title">General Market</h3>
+                <p className="home-market-card-desc">
                   Discover items listed by verified students across different colleges.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/general-market')}
-                className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6C4EFF] hover:gap-2 transition-all text-left"
+                className="home-market-card-btn"
               >
-                Explore General <ChevronRight className="w-3.5 h-3.5" />
+                Explore General <ChevronRight style={{ width: '14px', height: '14px' }} />
               </button>
             </div>
           </div>
 
-          {/* ── Trending Items (right column on desktop) ── */}
-          <div className="flex-1 flex flex-col gap-5">
-            <div className="flex items-end justify-between">
-              <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">Trending Items</h2>
+          {/* Trending Items */}
+          <div className="home-trending-col">
+            <div className="home-section-header">
+              <h2 className="home-section-title">Trending Items</h2>
               <button
                 onClick={() => navigate('/general-market')}
-                className="text-[12px] font-bold text-[#6C4EFF] flex items-center gap-0.5 hover:gap-1.5 transition-all text-left"
+                className="home-view-all-btn"
               >
-                View All <ArrowRight className="w-3.5 h-3.5" />
+                View All <ArrowRight style={{ width: '14px', height: '14px' }} />
               </button>
             </div>
 
-            {/* Mobile: horizontal scroll · Desktop: 4-col grid */}
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="home-skeleton-grid">
                 {[1, 2, 3, 4].map(n => <Skeleton key={n} />)}
               </div>
             ) : listings.length > 0 ? (
               <>
                 {/* Mobile horizontal scroll */}
-                <div className="flex lg:hidden gap-3 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+                <div className="home-trending-mobile-scroll no-scrollbar">
                   {listings.map((item) => (
-                    <div key={item._id} className="w-[155px] flex-shrink-0">
+                    <div key={item._id} className="home-trending-mobile-item">
                       <ProductCard product={item} />
                     </div>
                   ))}
                 </div>
                 {/* Desktop grid */}
-                <div className="hidden lg:grid grid-cols-4 gap-4">
+                <div className="home-trending-desktop-grid">
                   {listings.map((item) => (
                     <ProductCard key={item._id} product={item} />
                   ))}
                 </div>
               </>
             ) : (
-              <div className="text-center py-12 text-[#9CA3AF]">
-                <p className="text-sm font-medium">No items available yet</p>
+              <div className="home-empty-listings">
+                <p style={{ fontSize: '14px', fontWeight: 500 }}>No items available yet</p>
               </div>
             )}
           </div>
         </section>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   QUICK ACTIONS + TOP VENDORS        ║
-            ╚══════════════════════════════════════╝ */}
-        <section className="flex flex-col-reverse lg:flex-row gap-8 lg:gap-10">
+        {/* QUICK ACTIONS + TOP VENDORS */}
+        <section className="home-quick-actions-section">
 
           {/* Quick Actions */}
-          <div className="lg:flex-1">
-            <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827] mb-5">Quick Actions</h2>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="home-quick-actions-col">
+            <h2 className="home-section-title" style={{ marginBottom: '1.25rem' }}>Quick Actions</h2>
+            <div className="home-quick-actions-grid">
               {[
-                { icon: Tag, label: 'Buy', sub: 'Find great items', action: () => navigate('/general-market'), color: 'text-[#6C4EFF]', bg: 'bg-[#F4F1FF]' },
-                { icon: Tag, label: 'Sell', sub: 'List your items', action: () => handleGatedAction('/listing/new?type=sell'), color: 'text-emerald-600', bg: 'bg-[#EEF9F2]' },
-                { icon: Heart, label: 'Donate', sub: 'Give to those in need', action: () => handleGatedAction('/listing/new?type=donate'), color: 'text-rose-500', bg: 'bg-rose-50' },
+                { icon: Tag, label: 'Buy', sub: 'Find great items', action: () => navigate('/general-market'), iconColor: '#6C4EFF', bg: '#F4F1FF' },
+                { icon: Tag, label: 'Sell', sub: 'List your items', action: () => handleGatedAction('/listing/new?type=sell'), iconColor: '#059669', bg: '#EEF9F2' },
+                { icon: Heart, label: 'Donate', sub: 'Give to those in need', action: () => handleGatedAction('/listing/new?type=donate'), iconColor: '#f43f5e', bg: '#fff1f2' },
               ].map((item) => (
                 <button
                   key={item.label}
                   onClick={item.action}
-                  className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex flex-col items-center text-center gap-2.5 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                  className="home-quick-action-card"
                 >
-                  <div className={`w-11 h-11 ${item.bg} rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <item.icon className={`w-5 h-5 ${item.color} stroke-[1.8]`} />
+                  <div className="home-quick-action-icon-box" style={{ backgroundColor: item.bg }}>
+                    <item.icon style={{ width: '20px', height: '20px', color: item.iconColor, strokeWidth: 1.8 }} />
                   </div>
                   <div>
-                    <p className="font-bold text-[13px] text-[#111827]">{item.label}</p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-0.5 hidden sm:block">{item.sub}</p>
+                    <p className="home-quick-action-label">{item.label}</p>
+                    <p className="home-quick-action-sub">{item.sub}</p>
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Top Vendors Coming Soon — Full banner */}
-          <div className="lg:flex-1">
-            <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827] mb-5">
-              Top Vendors <span className="text-[12px] font-semibold text-[#9CA3AF]">(Coming Soon)</span>
+          {/* Top Vendors Coming Soon */}
+          <div className="home-quick-actions-col">
+            <h2 className="home-section-title" style={{ marginBottom: '1.25rem' }}>
+              Top Vendors <span style={{ fontSize: '12px', fontWeight: 600, color: '#9CA3AF' }}>(Coming Soon)</span>
             </h2>
             <Link
               to="/vendors"
               onClick={(e) => {
                 showToast('Vendor dashboard is coming soon!', 'info');
               }}
-              className="block rounded-[20px] overflow-hidden h-[160px] lg:h-[180px] group"
+              className="home-vendors-banner-link"
             >
               <img
                 src="/images/file_0000000089387207ae3efbac0454e8bd.png"
                 alt="Vendor Section Coming Soon"
-                className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+                className="home-vendors-banner-img"
               />
             </Link>
           </div>
         </section>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   TRUST FEATURES                     ║
-            ╚══════════════════════════════════════╝ */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8 py-4 lg:py-8 border-t border-[#E9E6F8]/60">
+        {/* TRUST FEATURES */}
+        <section className="home-trust-section">
           {[
-            { icon: ShieldCheck, title: 'Trusted & Verified', sub: 'All users and vendors are verified for safety.', color: 'text-[#6C4EFF]', bg: 'bg-[#F4F1FF]' },
-            { icon: BookOpen, title: 'Student Focused', sub: 'Built exclusively for engineering students.', color: 'text-emerald-600', bg: 'bg-[#EEF9F2]' },
-            { icon: Lock, title: 'Secure Transactions', sub: 'Safe and secure payments and communications.', color: 'text-blue-600', bg: 'bg-blue-50' },
-            { icon: MapPin, title: 'Local & Reliable', sub: 'Connect with trusted local vendors and peers.', color: 'text-orange-600', bg: 'bg-orange-50' },
+            { icon: ShieldCheck, title: 'Trusted & Verified', sub: 'All users and vendors are verified for safety.', iconColor: '#6C4EFF', bg: '#F4F1FF' },
+            { icon: BookOpen, title: 'Student Focused', sub: 'Built exclusively for engineering students.', iconColor: '#059669', bg: '#EEF9F2' },
+            { icon: Lock, title: 'Secure Transactions', sub: 'Safe and secure payments and communications.', iconColor: '#2563eb', bg: '#eff6ff' },
+            { icon: MapPin, title: 'Local & Reliable', sub: 'Connect with trusted local vendors and peers.', iconColor: '#ea580c', bg: '#fff7ed' },
           ].map((feat) => (
-            <div key={feat.title} className="flex flex-col items-center text-center p-4 lg:p-6">
-              <div className={`w-12 h-12 ${feat.bg} rounded-full flex items-center justify-center mb-3`}>
-                <feat.icon className={`w-5 h-5 ${feat.color} stroke-[1.8]`} />
+            <div key={feat.title} className="home-trust-item">
+              <div className="home-trust-icon-box" style={{ backgroundColor: feat.bg }}>
+                <feat.icon style={{ width: '20px', height: '20px', color: feat.iconColor, strokeWidth: 1.8 }} />
               </div>
-              <h4 className="font-bold text-[13px] text-[#111827]">{feat.title}</h4>
-              <p className="text-[11px] text-[#9CA3AF] mt-1 leading-relaxed max-w-[200px]">{feat.sub}</p>
+              <h4 className="home-trust-title">{feat.title}</h4>
+              <p className="home-trust-sub">{feat.sub}</p>
             </div>
           ))}
         </section>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   TESTIMONIALS                       ║
-            ╚══════════════════════════════════════╝ */}
-        <section className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">What Students Say</h2>
-            <div className="hidden lg:flex gap-2">
+        {/* TESTIMONIALS */}
+        <section className="home-testimonials-section">
+          <div className="home-section-header">
+            <h2 className="home-section-title">What Students Say</h2>
+            <div className="home-testimonial-nav">
               <button
                 onClick={() => setTestimonialIdx(Math.max(0, testimonialIdx - 1))}
                 disabled={testimonialIdx === 0}
-                className="w-8 h-8 rounded-full border border-[#E9E6F8] flex items-center justify-center text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30 disabled:opacity-30 transition-all"
+                className="home-testimonial-arrow"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft style={{ width: '16px', height: '16px' }} />
               </button>
               <button
                 onClick={() => setTestimonialIdx(Math.min(testimonials.length - 1, testimonialIdx + 1))}
                 disabled={testimonialIdx >= testimonials.length - 1}
-                className="w-8 h-8 rounded-full border border-[#E9E6F8] flex items-center justify-center text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30 disabled:opacity-30 transition-all"
+                className="home-testimonial-arrow"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight style={{ width: '16px', height: '16px' }} />
               </button>
             </div>
           </div>
 
-          {/* Mobile: horizontal scroll · Desktop: 3-col grid */}
-          <div className="flex lg:hidden gap-4 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+          {/* Mobile horizontal scroll */}
+          <div className="home-testimonials-mobile-scroll no-scrollbar">
             {testimonials.map((t, i) => (
               <TestimonialCard key={i} t={t} />
             ))}
           </div>
-          <div className="hidden lg:grid grid-cols-3 gap-6">
+          {/* Desktop grid */}
+          <div className="home-testimonials-desktop-grid">
             {testimonials.map((t, i) => (
               <TestimonialCard key={i} t={t} />
             ))}
           </div>
         </section>
 
-        {/* ╔══════════════════════════════════════╗
-            ║   FOOTER                             ║
-            ╚══════════════════════════════════════╝ */}
-        <footer className="border-t border-[#E9E6F8]/60 pt-10 lg:pt-14">
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-6">
+        {/* FOOTER */}
+        <footer className="home-footer">
+          <div className="home-footer-grid">
 
             {/* Brand column */}
-            <div className="col-span-2 lg:col-span-2 flex flex-col gap-4">
-              <Link to="/">
-                <Logo size={30} showText={true} textClass="text-[14px] font-bold text-[#111827]" />
+            <div className="home-footer-brand-col">
+              <Link to="/" style={{ textDecoration: 'none' }}>
+                <Logo size={30} showText={true} textClass="logo-text" />
               </Link>
-              <p className="text-[12px] text-[#9CA3AF] leading-relaxed max-w-[260px]">
+              <p className="home-footer-brand-desc">
                 The all-in-one marketplace for engineering students. Buy, sell, and donate with trust.
               </p>
-              <div className="flex gap-3 mt-1">
+              <div className="home-footer-socials">
                 {[Facebook, Instagram, Twitter, Youtube, Linkedin].map((Icon, i) => (
                   <button
                     key={i}
                     onClick={(e) => handleMockClick(e, 'Social Media')}
-                    className="w-8 h-8 rounded-full bg-[#FAFAFF] border border-[#E9E6F8]/70 flex items-center justify-center text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30 transition-all"
+                    className="home-footer-social-btn"
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon style={{ width: '14px', height: '14px' }} />
                   </button>
                 ))}
               </div>
@@ -367,20 +345,20 @@ export const Home = () => {
               { title: 'Support', links: [['Help Center', '#'], ['Safety Tips', '#'], ['Terms of Service', '#'], ['Privacy Policy', '#']] },
               { title: 'For Students', links: [['Study Resources', '#'], ['Engineering Blogs', '#'], ['Student Discounts', '#'], ['University Partners', '#']] },
             ].map((col) => (
-              <div key={col.title} className="flex flex-col gap-3">
-                <h4 className="font-bold text-[13px] text-[#111827]">{col.title}</h4>
-                <div className="flex flex-col gap-2">
+              <div key={col.title} className="home-footer-links-col">
+                <h4 className="home-footer-col-title">{col.title}</h4>
+                <div className="home-footer-links-list">
                   {col.links.map(([label, href]) => (
                     href === '#' ? (
                       <button
                         key={label}
                         onClick={(e) => handleMockClick(e, label)}
-                        className="text-[12px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors text-left"
+                        className="home-footer-link"
                       >
                         {label}
                       </button>
                     ) : (
-                      <Link key={label} to={href} className="text-[12px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">
+                      <Link key={label} to={href} className="home-footer-link">
                         {label}
                       </Link>
                     )
@@ -391,11 +369,11 @@ export const Home = () => {
           </div>
 
           {/* Copyright bar */}
-          <div className="mt-10 pt-6 border-t border-[#E9E6F8]/60 flex flex-col sm:flex-row items-center justify-between gap-3 pb-4">
-            <p className="text-[11px] text-[#9CA3AF]">© 2026 Engineering Market. All rights reserved.</p>
-            <div className="flex gap-4">
-              <button onClick={(e) => handleMockClick(e, 'Privacy Policy')} className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Privacy Policy</button>
-              <button onClick={(e) => handleMockClick(e, 'Terms of Service')} className="text-[11px] text-[#9CA3AF] hover:text-[#6C4EFF] transition-colors">Terms of Service</button>
+          <div className="home-footer-bottom">
+            <p className="home-footer-copy">© 2026 Engineering Market. All rights reserved.</p>
+            <div className="home-footer-legal-links">
+              <button onClick={(e) => handleMockClick(e, 'Privacy Policy')} className="home-footer-link" style={{ fontSize: '11px' }}>Privacy Policy</button>
+              <button onClick={(e) => handleMockClick(e, 'Terms of Service')} className="home-footer-link" style={{ fontSize: '11px' }}>Terms of Service</button>
             </div>
           </div>
         </footer>
@@ -409,20 +387,20 @@ export const Home = () => {
 
 /* ── Testimonial Card sub-component ── */
 const TestimonialCard = ({ t }) => (
-  <div className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex flex-col justify-between gap-4 min-w-[260px] lg:min-w-0 hover:shadow-md transition-shadow">
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center font-bold text-[12px]`}>
+  <div className="testimonial-card">
+    <div className="testimonial-user-info">
+      <div className="testimonial-avatar" style={t.colorStyle}>
         {t.initials}
       </div>
       <div>
-        <p className="font-bold text-[13px] text-[#111827]">{t.name}</p>
-        <p className="text-[10px] text-[#9CA3AF]">{t.dept}</p>
+        <p className="testimonial-name">{t.name}</p>
+        <p className="testimonial-dept">{t.dept}</p>
       </div>
     </div>
-    <p className="text-[12px] text-[#6B7280] leading-relaxed italic">{t.quote}</p>
-    <div className="flex gap-0.5">
+    <p className="testimonial-quote">{t.quote}</p>
+    <div className="testimonial-stars">
       {[1, 2, 3, 4, 5].map(n => (
-        <Star key={n} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+        <Star key={n} className="testimonial-star-icon" />
       ))}
     </div>
   </div>

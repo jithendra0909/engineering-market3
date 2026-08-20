@@ -1,130 +1,78 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Headset, UploadCloud, FileText, 
-  Trash2, Plus, Minus, Check, Lock, AlertTriangle, 
-  ShieldCheck, XCircle, Info, Copy, ShieldAlert
-} from 'lucide-react';
-import { PDFDocument } from 'pdf-lib';
 import { useAuth } from '../context/AuthContext';
+import { 
+  FileText, UploadCloud, Trash2, CheckCircle2, ShieldCheck, 
+  ShieldAlert, AlertTriangle, Headset, Copy, Check, Lock, Info, Plus, Minus, ArrowLeft, XCircle
+} from 'lucide-react';
 import api from '../api/axios';
-import supabase from '../config/supabase';
+import './PrintStudio.css';
 
 export const PrintStudio = () => {
+  const { user, isVerified, showToast } = useAuth();
   const navigate = useNavigate();
-  const { user, showToast } = useAuth();
 
-  // Student Details State
+  const isViit = user?.college === "Vignan's Institute of Information Technology (VIIT)";
+
+  // Auto-filled details from User Profile
   const [useMyDetails, setUseMyDetails] = useState(true);
   const [deliverToAnother, setDeliverToAnother] = useState(false);
-  const [studentName, setStudentName] = useState('');
-  const [registrationNumber, setRegistrationNumber] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
 
-  // Delivery Details State
-  const [department, setDepartment] = useState('');
+  const [studentName, setStudentName] = useState(user?.fullName || '');
+  const [registrationNumber, setRegistrationNumber] = useState(user?.registrationNumber || '');
+  const [contactNumber, setContactNumber] = useState(user?.whatsappNumber || '');
+  const [department, setDepartment] = useState(user?.department || '');
   const [section, setSection] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('');
+
+  // Delivery Date logic (min 2 days requirement)
+  const getEarliestAllowedDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d;
+  };
+
+  const formatDateForInput = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const earliestDateObj = getEarliestAllowedDate();
+  const earliestAllowedDate = formatDateForInput(earliestDateObj);
+  const todayDateString = formatDateForInput(new Date());
+
+  const [deliveryDate, setDeliveryDate] = useState(earliestAllowedDate);
   const [dateError, setDateError] = useState(false);
-
-  const todayDateString = (() => {
-    const localDate = new Date();
-    const yyyy = localDate.getFullYear();
-    const mm = String(localDate.getMonth() + 1).padStart(2, '0');
-    const dd = String(localDate.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  })();
-
-  const earliestAllowedDate = (() => {
-    const localDate = new Date(Date.now() + 2 * 86400000); // 2 days / 48 hours from now
-    const dd = String(localDate.getDate()).padStart(2, '0');
-    const mm = String(localDate.getMonth() + 1).padStart(2, '0');
-    const yyyy = localDate.getFullYear();
-    return `${dd}-${mm}-${yyyy}`;
-  })();
 
   // Files State
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
 
-  // Modal State
+  // Payment Modal State
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [upiRefCode, setUpiRefCode] = useState('');
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState('');
   const [submittingOrder, setSubmittingOrder] = useState(false);
 
-  // Departments & Slots Config
-  const DEPARTMENTS = ['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT', 'AI', 'DS'];
-  const SECTIONS = ['AI-1', 'AI-2', 'CSE-1', 'CSE-2', 'DS-1', 'DS-2', 'ECE-1', 'ECE-2', 'MECH-1'];
-
-  // Load User Data
   useEffect(() => {
     if (user && useMyDetails) {
       setStudentName(user.fullName || '');
       setRegistrationNumber(user.registrationNumber || '');
       setContactNumber(user.whatsappNumber || '');
+      setDepartment(user.department || '');
     }
   }, [user, useMyDetails]);
-
-  // Dynamic values calculation
-  const totalFiles = files.length;
-  const totalPages = files.reduce((acc, f) => acc + (f.pages * f.sets), 0);
-  const totalSets = files.reduce((acc, f) => acc + f.sets, 0);
-
-  // Total sheets (papers) — accounts for layout (both-side = half sheets, four-pages = quarter sheets)
-  const totalSheets = files.reduce((acc, f) => {
-    let sheets = f.pages;
-    if (f.layout === 'both-side') sheets = Math.ceil(f.pages / 2);
-    else if (f.layout === 'four-pages') sheets = Math.ceil(f.pages / 4);
-    return acc + (sheets * f.sets);
-  }, 0);
-
-  const calculateFileSubtotal = (fileObj) => {
-    let sheets = fileObj.pages;
-    if (fileObj.layout === 'both-side') {
-      sheets = Math.ceil(fileObj.pages / 2);
-    } else if (fileObj.layout === 'four-pages') {
-      sheets = Math.ceil(fileObj.pages / 4);
-    }
-    const perPaperRate = fileObj.colorType === 'bw' ? 1.3 : 3.5;
-    const bindingCost = fileObj.binding === 'spiral' ? 30 : 0;
-    return parseFloat(((sheets * perPaperRate * fileObj.sets) + (bindingCost * fileObj.sets)).toFixed(2));
-  };
-
-  const subtotal = parseFloat(files.reduce((acc, f) => acc + calculateFileSubtotal(f), 0).toFixed(2));
-  const totalPayable = subtotal;
-
-  // Date validation (48 hours / 2 days check)
-  const validateDeliveryDateTime = (dateVal) => {
-    if (!dateVal) return;
-    const selectedDate = new Date(dateVal + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffTime = selectedDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 2) {
-      setDateError(true);
-    } else {
-      setDateError(false);
-    }
-  };
-
-  const handleDateChange = (e) => {
-    setDeliveryDate(e.target.value);
-    validateDeliveryDateTime(e.target.value);
-  };
 
   const handleUseMyDetails = (checked) => {
     setUseMyDetails(checked);
     if (checked) {
       setDeliverToAnother(false);
-      if (user) {
-        setStudentName(user.fullName || '');
-        setRegistrationNumber(user.registrationNumber || '');
-        setContactNumber(user.whatsappNumber || '');
-      }
+      setStudentName(user?.fullName || '');
+      setRegistrationNumber(user?.registrationNumber || '');
+      setContactNumber(user?.whatsappNumber || '');
+      setDepartment(user?.department || '');
     }
   };
 
@@ -138,47 +86,33 @@ export const PrintStudio = () => {
     }
   };
 
-  // Accurate PDF Page counting using pdf-lib
-  const parsePdfPageCount = async (file) => {
-    try {
-      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(1), 6000));
-      const countPromise = (async () => {
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
-          const count = pdfDoc.getPageCount();
-          return (count && count > 0) ? count : 1;
-        } catch (err) {
-          console.warn('pdf-lib page count warning:', err);
-          return 1;
-        }
-      })();
+  const handleDateChange = (e) => {
+    const val = e.target.value;
+    setDeliveryDate(val);
 
-      return await Promise.race([countPromise, timeoutPromise]);
-    } catch (e) {
-      return 1;
+    if (val < earliestAllowedDate) {
+      setDateError(true);
+    } else {
+      setDateError(false);
     }
   };
 
-  // Supabase Upload Pipeline
-
-  // Upload PDFs — chunked GridFS pipeline (Handles files of ANY size, bypasses Cloudinary & Vercel limits)
+  // Multiple File Selection & PDF Page Extraction
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
-    if (selectedFiles.length === 0) return;
+    if (!selectedFiles.length) return;
 
-    const pdfs = selectedFiles.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
-    if (pdfs.length === 0) {
-      showToast('Please select actual PDF files.', 'error');
-      return;
-    }
+    for (const file of selectedFiles) {
+      if (file.type !== 'application/pdf') {
+        showToast(`Skipped ${file.name}: Only PDF files are allowed.`, 'error');
+        continue;
+      }
 
-    for (const file of pdfs) {
-      const tempId = Date.now() + '-' + Math.random();
-
-      // 1. Add file card immediately to UI with uploading indicator
-      setFiles(prev => [...prev, {
+      const tempId = Date.now() + Math.random().toString(36).substring(2, 9);
+      
+      const newFileItem = {
         id: tempId,
+        rawFile: file,
         fileName: file.name,
         pages: 1,
         sets: 1,
@@ -186,463 +120,429 @@ export const PrintStudio = () => {
         colorType: 'bw',
         binding: 'none',
         instructions: '',
-        pdfFileUrl: '',
+        fileUrl: '',
+        publicId: '',
         uploading: true,
         uploadProgress: 0
-      }]);
+      };
 
-      // 2. Count pages in parallel and update page count as soon as pdf-lib finishes
-      parsePdfPageCount(file).then(count => {
-        setFiles(prev => prev.map(f => f.id === tempId ? { ...f, pages: count } : f));
-      }).catch(() => {});
+      setFiles((prev) => [...prev, newFileItem]);
 
-      // 3. Supabase Direct Upload Pipeline (Handles PDFs of ANY size natively)
-      (async () => {
-        let fileUrl = '';
+      // Calculate PDF Pages locally using pdf-lib
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const { PDFDocument } = await import('pdf-lib');
+        const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+        const count = pdfDoc.getPageCount();
+        
+        setFiles((prev) => prev.map((f) => f.id === tempId ? { ...f, pages: count } : f));
+      } catch (err) {
+        console.warn('Local PDF page count estimation failed, default to 1:', err);
+      }
 
-        try {
-          // Fake progress interval while waiting for Supabase (goes up to 90%)
-          let currentProgress = 0;
-          const progressInterval = setInterval(() => {
-            currentProgress += (90 - currentProgress) * 0.15;
-            setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: Math.round(currentProgress) } : f));
-          }, 300);
-
-          const ext = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
-          
-          const { data, error } = await supabase.storage
-            .from('prints')
-            .upload(fileName, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-
-          clearInterval(progressInterval);
-
-          if (error) {
-            throw error;
-          }
-
-          // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('prints')
-            .getPublicUrl(fileName);
-
-          fileUrl = publicUrl;
-          
-          // Register the URL with the backend so checkout validation passes
-          let pagesCount = 1;
-          try {
-            pagesCount = await parsePdfPageCount(file);
-          } catch (e) {}
-
-          await api.post('/print/register-pdf', {
-            url: fileUrl,
-            fileName: file.name,
-            pagesCount
-          });
-
-          setFiles(prev => prev.map(f => f.id === tempId ? { ...f, uploadProgress: 100 } : f));
-
-        } catch (err) {
-          console.error('Supabase upload error:', err);
-          showToast(`Failed to upload ${file.name}. Please try again.`, 'error');
-        } finally {
-          // ALWAYS mark upload as completed!
-          setFiles(prev => prev.map(f => f.id === tempId
-            ? { ...f, pdfFileUrl: fileUrl, uploading: false }
-            : f
-          ));
-        }
-      })();
+      // Upload Cloudinary asynchronously
+      uploadPdfToCloudinary(file, tempId);
     }
 
-    // Reset file input so same file can be re-selected if needed
-    e.target.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const updateFileSpec = (id, key, value) => {
-    setFiles(prev => prev.map(f => f.id === id ? { ...f, [key]: value } : f));
+  const uploadPdfToCloudinary = async (file, tempId) => {
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const { data } = await api.post('/print-orders/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setFiles((prev) => prev.map((f) => f.id === tempId ? { ...f, uploadProgress: percent } : f));
+        }
+      });
+
+      setFiles((prev) => prev.map((f) => 
+        f.id === tempId ? { 
+          ...f, 
+          fileUrl: data.fileUrl, 
+          publicId: data.publicId, 
+          uploading: false 
+        } : f
+      ));
+    } catch (err) {
+      console.error('PDF Cloudinary upload error:', err);
+      showToast(`Failed to upload ${file.name}. Please try again.`, 'error');
+      setFiles((prev) => prev.filter((f) => f.id !== tempId));
+    }
+  };
+
+  const updateFileSpec = (id, key, val) => {
+    setFiles((prev) => prev.map((f) => f.id === id ? { ...f, [key]: val } : f));
   };
 
   const removeFile = (id) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  // Pricing calculations
+  const calculateFileSubtotal = (file) => {
+    const totalPages = file.pages * file.sets;
+    const perPagePrice = file.colorType === 'color' ? 3.50 : 1.30;
+    const printCost = totalPages * perPagePrice;
+    const bindingCost = file.binding === 'spiral' ? 30.00 * file.sets : 0;
+    return printCost + bindingCost;
+  };
+
+  const totalFiles = files.length;
+  const totalPages = files.reduce((acc, f) => acc + (f.pages * f.sets), 0);
+  const totalSheets = files.reduce((acc, f) => {
+    const effectivePages = f.layout === 'four-pages' ? Math.ceil(f.pages / 4) : f.pages;
+    const sheetsPerSet = (f.layout === 'both-side' || f.layout === 'four-pages') ? Math.ceil(effectivePages / 2) : effectivePages;
+    return acc + (sheetsPerSet * f.sets);
+  }, 0);
+
+  const totalSets = files.reduce((acc, f) => acc + f.sets, 0);
+  const subtotal = files.reduce((acc, f) => acc + calculateFileSubtotal(f), 0);
+  const totalPayable = subtotal;
+
+  const generateUpiReferenceCode = () => {
+    const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+    const randDigits = Math.floor(1000 + Math.random() * 9000);
+    return `EM-PR-${dateStr}-${randDigits}`;
   };
 
   const handleProceedToPayment = () => {
-    if (files.length === 0) {
+    if (!studentName || !registrationNumber || !contactNumber || !department || !section) {
+      showToast('Please fill in all student & delivery details.', 'error');
+      return;
+    }
+
+    if (!files.length) {
       showToast('Please upload at least one PDF file.', 'error');
       return;
     }
+
     if (files.some(f => f.uploading)) {
-      showToast('Please wait until all files finish uploading.', 'error');
-      return;
-    }
-    if (!department.trim() || !section.trim()) {
-      showToast('Please fill in your department and section.', 'error');
-      return;
-    }
-    if (!deliveryDate) {
-      showToast('Please select a delivery date.', 'error');
-      return;
-    }
-    if (dateError) {
-      showToast(`Cannot checkout: delivery date must be at least 2 days away. Earliest available date is ${earliestAllowedDate}.`, 'error');
+      showToast('Please wait for all PDF files to finish uploading.', 'info');
       return;
     }
 
-    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
+    if (dateError) {
+      showToast(`Selected date must be at least 2 days away. Earliest available date is ${earliestAllowedDate}.`, 'error');
+      return;
     }
-    setUpiRefCode(`EM-${code}`);
+
+    setUpiRefCode(generateUpiReferenceCode());
     setIsPaymentModalOpen(true);
   };
 
-  // Upload Payment Screenshot
-  const handleScreenshotChange = async (e) => {
+  const handleScreenshotChange = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      showToast('Only image files are allowed as payment receipt proof.', 'error');
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setPaymentScreenshotPreview(previewUrl);
-
-    try {
-      const formData = new FormData();
-      formData.append('screenshot', file);
-      
-      const response = await api.post('/print/upload-screenshot', formData, {
-        headers: { 'Content-Type': undefined },
-        timeout: 60 * 1000 // 1 minute for screenshots
-      });
-      setPaymentScreenshot(response.data.url);
-    } catch (err) {
-      showToast('Receipt upload failed. Please try again.', 'error');
+    if (file) {
+      setPaymentScreenshot(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPaymentScreenshotPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Submit Order
   const handleVerifySubmit = async () => {
-    if (submittingOrder) return;
     if (!paymentScreenshot) {
-      showToast('Please upload the payment transaction receipt screenshot.', 'error');
+      showToast('Please upload a valid payment receipt screenshot.', 'error');
       return;
     }
 
     setSubmittingOrder(true);
     try {
-      const mappedFiles = files.map(f => ({
-        pdfFileUrl: f.pdfFileUrl,
+      const formData = new FormData();
+      formData.append('studentName', studentName);
+      formData.append('registrationNumber', registrationNumber);
+      formData.append('contactNumber', contactNumber);
+      formData.append('department', department);
+      formData.append('section', section);
+      formData.append('deliveryDate', deliveryDate);
+      formData.append('paymentRefCode', upiRefCode);
+      formData.append('totalPayable', totalPayable);
+      
+      formData.append('documents', JSON.stringify(files.map(f => ({
+        fileUrl: f.fileUrl,
+        publicId: f.publicId,
         fileName: f.fileName,
-        pagesCount: f.pages,
+        pages: f.pages,
+        sets: f.sets,
         layout: f.layout,
         colorType: f.colorType,
         binding: f.binding,
-        sets: f.sets,
         instructions: f.instructions,
         subtotal: calculateFileSubtotal(f)
-      }));
+      }))));
 
-      const payload = {
-        studentName,
-        registrationNumber,
-        contactNumber,
-        section,
-        department,
-        files: mappedFiles,
-        paymentScreenshotUrl: paymentScreenshot,
-        upiReference: upiRefCode,
-        deliveryDate,
-        totalPrice: totalPayable
-      };
+      formData.append('paymentScreenshot', paymentScreenshot);
 
-      await api.post('/print/order', payload);
-      showToast('Print order submitted successfully!', 'success');
+      const { data } = await api.post('/print-orders', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      showToast('Print Order placed successfully!', 'success');
       setIsPaymentModalOpen(false);
       navigate('/orders');
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to place print order', 'error');
+      console.error('Order submission error:', err);
+      showToast(err.response?.data?.message || 'Failed to submit order. Please try again.', 'error');
     } finally {
       setSubmittingOrder(false);
     }
   };
 
-  const isViit = user?.college === "Vignan's Institute of Information Technology (VIIT)";
-
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans antialiased text-gray-700 pb-24">
+    <div className="print-studio-page">
       
-      {/* ── HEADER ── */}
-      <header className="h-[64px] md:h-[80px] border-b border-[#EBEBEB] bg-white sticky top-0 z-40">
-        <div className="max-w-[1280px] h-full mx-auto px-4 md:px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 md:gap-3.5">
+      {/* HEADER */}
+      <header className="print-studio-header">
+        <div className="print-studio-header-inner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button 
               onClick={() => navigate('/vendors')}
-              className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-[#EBEBEB] flex items-center justify-center hover:bg-[#FAFAFA] transition-colors"
+              className="profile-icon-btn"
+              style={{ border: '1px solid #EBEBEB' }}
             >
-              <ArrowLeft className="w-4.5 h-4.5 md:w-5 md:h-5 text-gray-750 stroke-[2]" />
+              <ArrowLeft style={{ width: '20px', height: '20px', color: '#1f2937', strokeWidth: 2 }} />
             </button>
-            <div className="text-left">
-              <h1 className="text-[15px] md:text-[17.5px] font-bold text-gray-800 tracking-tight leading-tight">EM Printf Hub</h1>
-              <p className="text-[10.5px] md:text-[11.5px] text-[#6D5DF6] font-bold mt-0.5">Print Studio</p>
+            <div style={{ textAlign: 'left' }}>
+              <h1 style={{ fontSize: '17.5px', fontWeight: 700, color: '#1f2937', margin: 0, lineHeight: 1.2 }}>EM Printf Hub</h1>
+              <p style={{ fontSize: '11.5px', color: '#6D5DF6', fontWeight: 700, margin: '2px 0 0 0' }}>Print Studio</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4.5">
-            <a href="tel:9391461855" className="flex items-center gap-1.5 text-[12px] md:text-[13.5px] font-semibold text-gray-650 hover:text-[#6D5DF6] transition-all">
-              <Headset className="w-4 h-4 md:w-4.5 md:h-4.5 text-gray-500" /> Help
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <a href="tel:9391461855" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: 600, color: '#4b5563', textDecoration: 'none' }}>
+              <Headset style={{ width: '18px', height: '18px', color: '#6b7280' }} /> Help
             </a>
             
-            {/* WhatsApp Contact pill card — hidden on small mobile */}
             <a 
               href="https://wa.me/9391461855" 
               target="_blank" 
               rel="noreferrer"
-              className="hidden sm:flex h-11 px-4 rounded-2xl border border-[#EBEBEB] bg-white text-gray-750 items-center gap-3 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98]"
+              style={{ display: 'flex', height: '44px', paddingLeft: '1rem', paddingRight: '1rem', borderRadius: '16px', border: '1px solid #EBEBEB', backgroundColor: '#ffffff', color: '#1f2937', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
             >
-              <svg className="w-[18px] h-[18px] text-emerald-500 fill-current" viewBox="0 0 24 24">
+              <svg style={{ width: '18px', height: '18px', fill: '#10b981' }} viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.067.002-2.69-1.04-5.218-2.93-7.108C16.66 1.54 14.135.495 11.454.495c-5.553 0-10.07 4.515-10.074 10.069-.001 1.73.454 3.42 1.316 4.921l-.974 3.56 3.652-.958zm13.11-6.177c-.3-.15-1.782-.88-2.057-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.495-1.78-1.67-2.08-.175-.3-.02-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.588-.492-.51-.675-.52-.172-.007-.37-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.782-.728 2.032-1.43.25-.702.25-1.303.175-1.43-.075-.127-.275-.202-.575-.352z"/>
               </svg>
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-[10px] text-gray-500 font-semibold">Contact Us</span>
-                <span className="text-[13px] text-gray-700 font-bold mt-1">9391461855</span>
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1 }}>
+                <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 600 }}>Contact Us</span>
+                <span style={{ fontSize: '13px', color: '#374151', fontWeight: 700, marginTop: '2px' }}>9391461855</span>
               </div>
-            </a>
-
-            {/* WhatsApp circle icon — shown only on small mobile */}
-            <a 
-              href="https://wa.me/9391461855" 
-              target="_blank" 
-              rel="noreferrer"
-              className="sm:hidden w-9 h-9 rounded-full border border-[#EBEBEB] bg-white flex items-center justify-center hover:bg-gray-50 transition-all"
-            >
-              <svg className="w-[18px] h-[18px] text-emerald-500 fill-current" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.067.002-2.69-1.04-5.218-2.93-7.108C16.66 1.54 14.135.495 11.454.495c-5.553 0-10.07 4.515-10.074 10.069-.001 1.73.454 3.42 1.316 4.921l-.974 3.56 3.652-.958zm13.11-6.177c-.3-.15-1.782-.88-2.057-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.495-1.78-1.67-2.08-.175-.3-.02-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.588-.492-.51-.675-.52-.172-.007-.37-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.782-.728 2.032-1.43.25-.702.25-1.303.175-1.43-.075-.127-.275-.202-.575-.352z"/>
-              </svg>
             </a>
           </div>
         </div>
       </header>
 
-      <main className="max-w-[1280px] mx-auto px-4 md:px-6 mt-6 md:mt-8 space-y-5 md:space-y-6">
+      <main className="print-studio-main">
         
-        {/* ── HERO BANNER ── */}
-        <div className="w-full">
+        {/* HERO BANNER */}
+        <div style={{ width: '100%' }}>
           <img 
             src="/images/em_print_studio_banner.png" 
             alt="Printf Hub Classroom Delivery Banner" 
-            className="w-full h-auto block rounded-[24px]"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
+            className="print-studio-banner-img"
+            onError={(e) => { e.target.style.display = 'none'; }}
           />
         </div>
 
-        {/* ── ALERT BAR ── */}
-        <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3.5 md:p-4.5 flex items-start md:items-center gap-2.5 md:gap-3.5 shadow-sm text-left">
-          <XCircle className="w-5.5 h-5.5 text-rose-500 shrink-0" />
-          <p className="text-[13px] text-rose-700 leading-relaxed font-semibold">
-            Outside VIIT? Please contact us on <span className="font-extrabold text-rose-900 underline">9391461855</span> for manual checkout. We will assist you personally!
+        {/* ALERT BAR */}
+        <div className="print-alert-bar">
+          <XCircle style={{ width: '22px', height: '22px', color: '#f43f5e', flexShrink: 0 }} />
+          <p className="print-alert-text">
+            Outside VIIT? Please contact us on <span style={{ fontWeight: 800, textDecoration: 'underline' }}>9391461855</span> for manual checkout. We will assist you personally!
           </p>
         </div>
 
         {!isViit ? (
-          /* Restriction Card */
-          <div className="bg-white rounded-[24px] border border-[#EBEBEB] p-8 text-center shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
-            <XCircle className="w-14 h-14 text-rose-500 mx-auto mb-4" />
-            <h2 className="text-[18px] font-bold text-gray-800 mb-2">VIIT Eligibility Restricted</h2>
-            <p className="text-[13.5px] text-[#6B7280] max-w-[460px] mx-auto mb-6 leading-relaxed font-semibold">
+          <div className="print-card" style={{ textAlign: 'center', padding: '2rem' }}>
+            <XCircle style={{ width: '56px', height: '56px', color: '#f43f5e', margin: '0 auto 1rem auto' }} />
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem' }}>VIIT Eligibility Restricted</h2>
+            <p style={{ fontSize: '13.5px', color: '#6B7280', maxWidth: '460px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, fontWeight: 600 }}>
               Automated in-classroom delivery is currently limited to Vignan's Institute of Information Technology (VIIT) students.
             </p>
             <a 
               href="tel:9391461855" 
-              className="inline-flex items-center gap-2 bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md active:scale-95"
+              className="print-pay-btn"
+              style={{ width: 'auto', paddingLeft: '1.5rem', paddingRight: '1.5rem', display: 'inline-flex' }}
             >
               Contact Coordinator
             </a>
           </div>
         ) : (
-          /* Main Portal Ordering Interface */
-          <div className="space-y-6">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             
-            {/* ── SECTION: YOUR DETAILS ── */}
-            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
-              <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
-                <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+            {/* SECTION: YOUR DETAILS */}
+            <div className="print-card">
+              <div className="print-card-header">
+                <div className="print-card-icon-badge">
+                  <svg style={{ width: '16px', height: '16px', fill: 'currentColor' }} viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-[15.5px] font-bold text-gray-800">
-                  Your Details <span className="text-[#9CA3AF] font-bold text-[13.5px] ml-1">(Auto-filled)</span>
+                <h3 className="print-card-title">
+                  Your Details <span style={{ color: '#9CA3AF', fontSize: '13.5px', fontWeight: 700, marginLeft: '4px' }}>(Auto-filled)</span>
                 </h3>
               </div>
 
-              {/* Styled Display Box / Editable Fields */}
               {useMyDetails ? (
-                <div className="border border-[#ECECEC] rounded-[16px] p-3.5 bg-[#FAFAFA]">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Name:</span>
-                      <span className="text-[13px] font-bold text-gray-800">{studentName || 'Not Set'}</span>
+                <div className="print-details-box">
+                  <div className="print-details-row">
+                    <div className="print-details-item">
+                      <span className="print-details-label">Name:</span>
+                      <span className="print-details-val">{studentName || 'Not Set'}</span>
                     </div>
-                    <div className="hidden sm:block w-px h-4 bg-gray-200"></div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Reg:</span>
-                      <span className="text-[13px] font-bold text-gray-800">{registrationNumber || 'Not Set'}</span>
+                    <div className="print-divider" />
+                    <div className="print-details-item">
+                      <span className="print-details-label">Reg:</span>
+                      <span className="print-details-val">{registrationNumber || 'Not Set'}</span>
                     </div>
-                    <div className="hidden sm:block w-px h-4 bg-gray-200"></div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase">Phone:</span>
-                      <span className="text-[13px] font-bold text-gray-800">{contactNumber || 'Not Set'}</span>
+                    <div className="print-divider" />
+                    <div className="print-details-item">
+                      <span className="print-details-label">Phone:</span>
+                      <span className="print-details-val">{contactNumber || 'Not Set'}</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Student Name</label>
+                <div className="print-field-grid cols-3">
+                  <div className="print-field-group">
+                    <label className="print-field-label">Student Name</label>
                     <input 
                       type="text" 
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none bg-white font-semibold"
+                      className="print-field-input"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Reg. No.</label>
+                  <div className="print-field-group">
+                    <label className="print-field-label">Reg. No.</label>
                     <input 
                       type="text" 
                       value={registrationNumber}
                       onChange={(e) => setRegistrationNumber(e.target.value)}
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none bg-white font-semibold"
+                      className="print-field-input"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Phone</label>
+                  <div className="print-field-group">
+                    <label className="print-field-label">Phone</label>
                     <input 
                       type="text" 
                       value={contactNumber}
                       onChange={(e) => setContactNumber(e.target.value)}
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none bg-white font-semibold"
+                      className="print-field-input"
                     />
                   </div>
                 </div>
               )}
 
-              {/* Toggles */}
-              <div className="flex flex-wrap items-center gap-6 mt-5 border-t border-[#F5F5F5] pt-4.5">
-                <label className="flex items-center gap-2 cursor-pointer text-[13.5px] font-extrabold">
+              <div className="print-checkbox-row">
+                <label className="print-checkbox-label">
                   <input 
                     type="checkbox" 
                     checked={useMyDetails} 
                     onChange={(e) => handleUseMyDetails(e.target.checked)}
-                    className="w-4.5 h-4.5 rounded text-[#6D5DF6] focus:ring-[#6D5DF6] border-gray-300"
+                    style={{ width: '18px', height: '18px', accentColor: '#6D5DF6' }}
                   />
                   Use my details
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer text-[13.5px] font-extrabold">
+                <label className="print-checkbox-label">
                   <input 
                     type="checkbox" 
                     checked={deliverToAnother} 
                     onChange={(e) => handleDeliverToAnother(e.target.checked)}
-                    className="w-4.5 h-4.5 rounded text-[#6D5DF6] focus:ring-[#6D5DF6] border-gray-300"
+                    style={{ width: '18px', height: '18px', accentColor: '#6D5DF6' }}
                   />
                   Deliver to another student
                 </label>
               </div>
             </div>
 
-            {/* ── SECTION: DELIVERY DETAILS ── */}
-            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
-              <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
-                <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
-                  <svg className="w-4.5 h-4.5 stroke-[2.2] text-white fill-none" viewBox="0 0 24 24">
+            {/* SECTION: DELIVERY DETAILS */}
+            <div className="print-card">
+              <div className="print-card-header">
+                <div className="print-card-icon-badge">
+                  <svg style={{ width: '18px', height: '18px', stroke: '#ffffff', fill: 'none', strokeWidth: 2.2 }} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
                   </svg>
                 </div>
-                <h3 className="text-[15.5px] font-bold text-gray-800">Delivery Details</h3>
+                <h3 className="print-card-title">Delivery Details</h3>
               </div>
 
-              <div className="flex flex-col gap-6">
-                {/* Row 1: Dept, Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Department</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="print-field-grid cols-2">
+                  <div className="print-field-group">
+                    <label className="print-field-label">Department</label>
                     <input 
                       type="text" 
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
                       placeholder="e.g. CSE, MECH, ECE"
                       required
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none font-semibold bg-white"
+                      className="print-field-input"
                     />
                   </div>
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Section</label>
+                  <div className="print-field-group">
+                    <label className="print-field-label">Section</label>
                     <input 
                       type="text" 
                       value={section}
                       onChange={(e) => setSection(e.target.value)}
                       placeholder="e.g. CSE-1, AI-2, ECE-1"
                       required
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none font-semibold bg-white"
+                      className="print-field-input"
                     />
                   </div>
                 </div>
 
-                {/* Row 2: Date */}
-                <div className="grid grid-cols-1 gap-6">
-                  <div>
-                    <label className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-1">Delivery Date</label>
+                <div className="print-field-grid">
+                  <div className="print-field-group">
+                    <label className="print-field-label">Delivery Date</label>
                     <input 
                       type="date" 
                       value={deliveryDate}
                       onChange={handleDateChange}
                       min={todayDateString}
                       required
-                      className="w-full h-11 px-4 text-[13px] border border-[#EBEBEB] rounded-xl focus:border-[#6D5DF6] focus:outline-none font-semibold bg-white cursor-pointer"
+                      className="print-field-input"
+                      style={{ cursor: 'pointer' }}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Warning Block */}
               {dateError && (
-                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4.5 flex items-start gap-3 mt-6">
-                  <AlertTriangle className="w-5.5 h-5.5 text-rose-500 shrink-0 mt-0.5" />
+                <div className="print-alert-bar" style={{ marginTop: '1.5rem' }}>
+                  <AlertTriangle style={{ width: '22px', height: '22px', color: '#f43f5e', flexShrink: 0 }} />
                   <div>
-                    <h5 className="text-[13px] font-bold text-rose-700">Selected date must be at least 2 days away. Earliest available date is {earliestAllowedDate}.</h5>
-                    <p className="text-[12px] text-rose-600 mt-0.5 leading-normal">
-                      Please contact <span className="font-extrabold underline text-rose-800">9391461855</span> for urgent printing.
+                    <h5 style={{ fontSize: '13px', fontWeight: 700, color: '#be123c', margin: 0 }}>Selected date must be at least 2 days away. Earliest available date is {earliestAllowedDate}.</h5>
+                    <p style={{ fontSize: '12px', color: '#e11d48', marginTop: '2px', margin: 0 }}>
+                      Please contact <span style={{ fontWeight: 800, textDecoration: 'underline' }}>9391461855</span> for urgent printing.
                     </p>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* ── SECTION: UPLOAD PDF FILES ── */}
-            <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
-              <div className="flex items-center gap-3 border-b border-[#F5F5F5] pb-4.5 mb-5">
-                <div className="w-8 h-8 rounded-full bg-[#6D5DF6] text-white flex items-center justify-center">
-                  <svg className="w-4.5 h-4.5 stroke-[2.2] text-white fill-none" viewBox="0 0 24 24">
+            {/* SECTION: UPLOAD PDF FILES */}
+            <div className="print-card">
+              <div className="print-card-header">
+                <div className="print-card-icon-badge">
+                  <svg style={{ width: '18px', height: '18px', stroke: '#ffffff', fill: 'none', strokeWidth: 2.2 }} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                   </svg>
                 </div>
-                <h3 className="text-[15.5px] font-bold text-gray-800">Upload Your PDFs</h3>
+                <h3 className="print-card-title">Upload Your PDFs</h3>
               </div>
 
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#6D5DF6]/30 hover:border-[#6D5DF6] rounded-[16px] md:rounded-[20px] p-5 md:p-8 text-center bg-[#FAF9FF] relative hover:bg-[#F3EFFF] transition-all group cursor-pointer"
+                className="print-dropzone"
               >
                 <input 
                   type="file" 
@@ -650,42 +550,42 @@ export const PrintStudio = () => {
                   accept=".pdf" 
                   multiple
                   onChange={handleFileChange}
-                  className="hidden"
+                  style={{ display: 'none' }}
                 />
-                <UploadCloud className="w-12 h-12 text-[#6D5DF6] mx-auto mb-3 transition-transform group-hover:-translate-y-1" />
-                <p className="text-[14px] font-semibold text-gray-800">
+                <UploadCloud style={{ width: '48px', height: '48px', color: '#6D5DF6', margin: '0 auto 0.75rem auto' }} />
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
                   Drag & drop PDF files here
                 </p>
-                <p className="text-[12px] text-[#6B7280] mt-1">or <span className="text-[#6D5DF6] font-bold hover:underline">Browse Files</span></p>
-                <p className="text-[10px] text-[#9CA3AF] mt-2 font-semibold">You can upload multiple PDF files.</p>
+                <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px', margin: 0 }}>or <span style={{ color: '#6D5DF6', fontWeight: 700 }}>Browse Files</span></p>
+                <p style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '8px', fontWeight: 600, margin: 0 }}>You can upload multiple PDF files.</p>
               </div>
 
               {/* Uploaded Files Cards Stack */}
-              <div className="mt-6 space-y-5">
+              <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 {files.map((fileItem) => (
-                  <div key={fileItem.id} className="border border-[#EBEBEB] rounded-[18px] md:rounded-[24px] p-4 md:p-5.5 bg-white flex flex-col gap-4 md:gap-5 shadow-sm relative text-left">
+                  <div key={fileItem.id} className="print-file-item">
                     
-                    {/* Header: file details */}
-                    <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-4 gap-3">
-                      <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                        <div className="w-11 h-11 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-center text-rose-500 flex-shrink-0">
-                          <FileText className="w-6.5 h-6.5" />
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F5F5F5', paddingBottom: '1rem', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', flex: 1, minWidth: 0 }}>
+                        <div style={{ width: '44px', height: '44px', backgroundColor: '#fff1f2', border: '1px solid #ffe4e6', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f43f5e', flexShrink: 0 }}>
+                          <FileText style={{ width: '26px', height: '26px' }} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-[14.5px] font-bold text-gray-800 truncate">
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{ fontSize: '14.5px', fontWeight: 700, color: '#1f2937', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {fileItem.fileName}
                           </h4>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-[11.5px] text-[#6B7280] font-bold">Pages:</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                            <span style={{ fontSize: '11.5px', color: '#6B7280', fontWeight: 700 }}>Pages:</span>
                             <input 
                               type="number"
                               min="1"
                               value={fileItem.pages}
                               onChange={(e) => updateFileSpec(fileItem.id, 'pages', Math.max(1, parseInt(e.target.value) || 1))}
-                              className="w-12 h-5.5 px-1 text-[11px] border border-[#EBEBEB] rounded-lg focus:border-[#6D5DF6] focus:outline-none font-bold text-center bg-gray-50 text-gray-700"
+                              style={{ width: '48px', height: '22px', padding: '0 4px', fontSize: '11px', border: '1px solid #EBEBEB', borderRadius: '8px', fontWeight: 700, textAlign: 'center', backgroundColor: '#f9fafb', color: '#374151' }}
                             />
                             {fileItem.uploading && (
-                              <span className="text-[11.5px] text-[#6D5DF6] font-bold ml-1.5 animate-pulse">
+                              <span style={{ fontSize: '11.5px', color: '#6D5DF6', fontWeight: 700, marginLeft: '6px' }}>
                                 • Uploading... {fileItem.uploadProgress ? `${fileItem.uploadProgress}%` : ''}
                               </span>
                             )}
@@ -695,40 +595,41 @@ export const PrintStudio = () => {
 
                       <button 
                         onClick={() => removeFile(fileItem.id)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-50 transition-colors flex-shrink-0"
+                        className="profile-icon-btn"
+                        style={{ width: '32px', height: '32px' }}
                       >
-                        <Trash2 className="w-4.5 h-4.5" />
+                        <Trash2 style={{ width: '18px', height: '18px', color: '#f43f5e' }} />
                       </button>
                     </div>
 
                     {/* Stepper copies counter */}
-                    <div className="flex items-center gap-4">
-                      <span className="text-[13.5px] font-extrabold text-gray-700">Copies (Sets)</span>
-                      <div className="flex items-center border border-[#EBEBEB] rounded-xl bg-white p-1">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#374151' }}>Copies (Sets)</span>
+                      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #EBEBEB', borderRadius: '12px', backgroundColor: '#ffffff', padding: '4px' }}>
                         <button 
                           type="button" 
                           onClick={() => updateFileSpec(fileItem.id, 'sets', Math.max(1, fileItem.sets - 1))}
-                          className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#6D5DF6]"
+                          style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <Minus style={{ width: '14px', height: '14px' }} />
                         </button>
-                        <span className="w-10 text-center text-[13.5px] font-bold text-gray-800">
+                        <span style={{ width: '40px', textAlign: 'center', fontSize: '13.5px', fontWeight: 700, color: '#1f2937' }}>
                           {fileItem.sets}
                         </span>
                         <button 
                           type="button" 
                           onClick={() => updateFileSpec(fileItem.id, 'sets', fileItem.sets + 1)}
-                          className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#6D5DF6]"
+                          style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', background: 'none', border: 'none', cursor: 'pointer' }}
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Plus style={{ width: '14px', height: '14px' }} />
                         </button>
                       </div>
                     </div>
 
                     {/* Layout option cards */}
                     <div>
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-2.5 tracking-wider">Layout</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <span className="print-field-label">Layout</span>
+                      <div className="print-options-grid cols-3">
                         {[
                           { key: 'single-side', title: 'Single-sided', price: '₹0.00' },
                           { key: 'both-side', title: 'Double-sided', price: '₹0.00' },
@@ -737,21 +638,15 @@ export const PrintStudio = () => {
                           <div 
                             key={item.key}
                             onClick={() => updateFileSpec(fileItem.id, 'layout', item.key)}
-                            className={`border rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-all ${
-                              fileItem.layout === item.key 
-                                ? 'border-[#6D5DF6] bg-[#6D5DF6]/5' 
-                                : 'border-[#EBEBEB] bg-white hover:bg-gray-50'
-                            }`}
+                            className={`print-option-card ${fileItem.layout === item.key ? 'selected' : ''}`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
-                                fileItem.layout === item.key ? 'border-[#6D5DF6]' : 'border-gray-300'
-                              }`}>
-                                {fileItem.layout === item.key && <div className="w-2.5 h-2.5 bg-[#6D5DF6] rounded-full" />}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ width: '18px', height: '18px', borderRadius: '9999px', border: `1px solid ${fileItem.layout === item.key ? '#6D5DF6' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {fileItem.layout === item.key && <div style={{ width: '10px', height: '10px', backgroundColor: '#6D5DF6', borderRadius: '9999px' }} />}
                               </div>
-                              <span className="text-[12.5px] font-bold text-gray-800">{item.title}</span>
+                              <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1f2937' }}>{item.title}</span>
                             </div>
-                            <span className="text-[10.5px] font-bold text-[#9CA3AF]">{item.price}</span>
+                            <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#9CA3AF' }}>{item.price}</span>
                           </div>
                         ))}
                       </div>
@@ -759,8 +654,8 @@ export const PrintStudio = () => {
 
                     {/* Ink / Color options */}
                     <div>
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-2.5 tracking-wider">Ink / Color</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <span className="print-field-label">Ink / Color</span>
+                      <div className="print-options-grid cols-2">
                         {[
                           { key: 'bw', title: 'Black & White', desc: '₹1.30 / page' },
                           { key: 'color', title: 'Color', desc: '₹3.50 / page' }
@@ -768,21 +663,15 @@ export const PrintStudio = () => {
                           <div 
                             key={item.key}
                             onClick={() => updateFileSpec(fileItem.id, 'colorType', item.key)}
-                            className={`border rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-all ${
-                              fileItem.colorType === item.key 
-                                ? 'border-[#6D5DF6] bg-[#6D5DF6]/5' 
-                                : 'border-[#EBEBEB] bg-white hover:bg-gray-50'
-                            }`}
+                            className={`print-option-card ${fileItem.colorType === item.key ? 'selected' : ''}`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
-                                fileItem.colorType === item.key ? 'border-[#6D5DF6]' : 'border-gray-300'
-                              }`}>
-                                {fileItem.colorType === item.key && <div className="w-2.5 h-2.5 bg-[#6D5DF6] rounded-full" />}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ width: '18px', height: '18px', borderRadius: '9999px', border: `1px solid ${fileItem.colorType === item.key ? '#6D5DF6' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {fileItem.colorType === item.key && <div style={{ width: '10px', height: '10px', backgroundColor: '#6D5DF6', borderRadius: '9999px' }} />}
                               </div>
-                              <span className="text-[12.5px] font-bold text-gray-800">{item.title}</span>
+                              <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1f2937' }}>{item.title}</span>
                             </div>
-                            <span className="text-[11px] font-bold text-[#9CA3AF]">{item.desc}</span>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{item.desc}</span>
                           </div>
                         ))}
                       </div>
@@ -790,8 +679,8 @@ export const PrintStudio = () => {
 
                     {/* Binding Options */}
                     <div>
-                      <span className="text-[11px] font-extrabold text-[#9CA3AF] uppercase block mb-2.5 tracking-wider">Binding</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <span className="print-field-label">Binding</span>
+                      <div className="print-options-grid cols-2">
                         {[
                           { key: 'none', title: 'None', price: '₹0.00' },
                           { key: 'spiral', title: 'Spiral Binding', price: '₹30.00' }
@@ -799,44 +688,39 @@ export const PrintStudio = () => {
                           <div 
                             key={item.key}
                             onClick={() => updateFileSpec(fileItem.id, 'binding', item.key)}
-                            className={`border rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-all ${
-                              fileItem.binding === item.key 
-                                ? 'border-[#6D5DF6] bg-[#6D5DF6]/5' 
-                                : 'border-[#EBEBEB] bg-white hover:bg-gray-50'
-                            }`}
+                            className={`print-option-card ${fileItem.binding === item.key ? 'selected' : ''}`}
                           >
-                            <div className="flex items-center gap-2.5">
-                              <div className={`w-4.5 h-4.5 rounded-full border flex items-center justify-center ${
-                                fileItem.binding === item.key ? 'border-[#6D5DF6]' : 'border-gray-300'
-                              }`}>
-                                {fileItem.binding === item.key && <div className="w-2.5 h-2.5 bg-[#6D5DF6] rounded-full" />}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ width: '18px', height: '18px', borderRadius: '9999px', border: `1px solid ${fileItem.binding === item.key ? '#6D5DF6' : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {fileItem.binding === item.key && <div style={{ width: '10px', height: '10px', backgroundColor: '#6D5DF6', borderRadius: '9999px' }} />}
                               </div>
-                              <span className="text-[12.5px] font-bold text-gray-800">{item.title}</span>
+                              <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1f2937' }}>{item.title}</span>
                             </div>
-                            <span className="text-[11px] font-bold text-[#9CA3AF]">{item.price}</span>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{item.price}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Specific instruction box */}
-                    <div className="mt-1">
-                      <label className="text-[12.5px] font-bold text-gray-800 uppercase block mb-1.5">
-                        Specific Instructions <span className="text-rose-500 font-extrabold">*</span>
+                    <div style={{ marginTop: '4px' }}>
+                      <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#1f2937', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+                        Specific Instructions <span style={{ color: '#f43f5e', fontWeight: 800 }}>*</span>
                       </label>
                       <textarea 
                         rows={2}
                         value={fileItem.instructions}
                         onChange={(e) => updateFileSpec(fileItem.id, 'instructions', e.target.value)}
                         placeholder="Describe how you want your document to be printed..."
-                        className="w-full py-2 px-3.5 text-[12.5px] border border-[#EBEBEB] bg-white rounded-xl focus:border-[#6D5DF6] focus:outline-none font-semibold resize-none leading-relaxed"
+                        className="print-field-input"
+                        style={{ height: 'auto', paddingTop: '8px', paddingBottom: '8px', resize: 'none', lineHeight: 1.5 }}
                       />
                     </div>
 
                     {/* Live card subtotal */}
-                    <div className="flex justify-end items-center mt-2.5 pt-3 border-t border-[#F5F5F5]">
-                      <span className="text-[13px] text-[#6B7280] font-semibold">Subtotal:</span>
-                      <span className="text-[18.5px] font-black text-[#6D5DF6] ml-2">
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '10px', paddingTop: '12px', borderTop: '1px solid #F5F5F5' }}>
+                      <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 600 }}>Subtotal:</span>
+                      <span style={{ fontSize: '18.5px', fontWeight: 900, color: '#6D5DF6', marginLeft: '8px' }}>
                         ₹{calculateFileSubtotal(fileItem).toFixed(2)}
                       </span>
                     </div>
@@ -845,68 +729,67 @@ export const PrintStudio = () => {
                 ))}
               </div>
 
-              {/* Add more button */}
               <button 
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full mt-5 h-12 border border-[#6D5DF6] text-[#6D5DF6] hover:bg-[#6D5DF6]/5 font-bold text-[13.5px] rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99] bg-white"
+                style={{ width: '100%', marginTop: '1.25rem', height: '48px', border: '1px solid #6D5DF6', color: '#6D5DF6', backgroundColor: '#ffffff', fontWeight: 700, fontSize: '13.5px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}
               >
-                <Plus className="w-4.5 h-4.5" /> Add More PDF Files
+                <Plus style={{ width: '18px', height: '18px' }} /> Add More PDF Files
               </button>
             </div>
 
-            {/* ── BOTTOM SECTIONS GRID ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 items-start text-left">
+            {/* BOTTOM SECTIONS GRID */}
+            <div className="print-bottom-grid">
               
               {/* Order Summary Receipt */}
-              <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
-                <div className="flex items-center gap-2 border-b border-[#F5F5F5] pb-4 mb-4">
-                  <FileText className="w-5 h-5 text-[#6D5DF6]" />
-                  <h3 className="text-[15.5px] font-bold text-gray-800">Order Summary</h3>
+              <div className="print-card">
+                <div className="print-card-header">
+                  <FileText style={{ width: '20px', height: '20px', color: '#6D5DF6' }} />
+                  <h3 className="print-card-title">Order Summary</h3>
                 </div>
                 
-                <div className="flex flex-col gap-3 text-[13.5px] font-semibold text-[#6B7280]">
-                  <div className="flex justify-between items-center">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="print-summary-row">
                     <span>Total Files</span>
-                    <span className="text-gray-700 font-bold">{totalFiles}</span>
+                    <span style={{ color: '#374151', fontWeight: 700 }}>{totalFiles}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="print-summary-row">
                     <span>Total Pages</span>
-                    <span className="text-gray-700 font-bold">{totalPages}</span>
+                    <span style={{ color: '#374151', fontWeight: 700 }}>{totalPages}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="print-summary-row">
                     <span>Total Papers (Sheets)</span>
-                    <span className="text-gray-700 font-bold">{totalSheets}</span>
+                    <span style={{ color: '#374151', fontWeight: 700 }}>{totalSheets}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="print-summary-row">
                     <span>Total Sets</span>
-                    <span className="text-gray-700 font-bold">{totalSets}</span>
+                    <span style={{ color: '#374151', fontWeight: 700 }}>{totalSets}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="print-summary-row">
                     <span>Subtotal</span>
-                    <span className="text-gray-700 font-bold">₹{subtotal.toFixed(2)}</span>
+                    <span style={{ color: '#374151', fontWeight: 700 }}>₹{subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="print-summary-row">
                     <span>Delivery Charge</span>
-                    <span className="text-emerald-600 font-black">FREE</span>
+                    <span style={{ color: '#059669', fontWeight: 900 }}>FREE</span>
                   </div>
 
-                  <div className="border-t border-[#F5F5F5] pt-4 mt-2 flex justify-between items-center text-[15px] font-bold">
-                    <span className="text-gray-700">Total Payable</span>
-                    <span className="text-[#6D5DF6] text-[20px]">₹{totalPayable.toFixed(2)}</span>
+                  <div className="print-summary-total">
+                    <span style={{ color: '#374151' }}>Total Payable</span>
+                    <span style={{ color: '#6D5DF6', fontSize: '20px' }}>₹{totalPayable.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Payment Checkout Panel */}
-              <div className="bg-white rounded-[20px] md:rounded-[24px] border border-[#EBEBEB] p-4 md:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-[#F5F5F5] pb-4">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-4.5 h-4.5 text-[#6D5DF6]" />
-                    <h3 className="text-[15.5px] font-bold text-gray-800">Payment</h3>
+              <div className="print-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="print-card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Lock style={{ width: '18px', height: '18px', color: '#6D5DF6' }} />
+                    <h3 className="print-card-title">Payment</h3>
                   </div>
-                  <div className="flex items-center gap-1 bg-[#EEF9F2] text-emerald-600 font-extrabold text-[10px] uppercase px-2.5 py-0.5 rounded-full border border-emerald-100">
-                    <ShieldCheck className="w-3.5 h-3.5 fill-emerald-600 stroke-white" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#EEF9F2', color: '#059669', fontWeight: 800, fontSize: '10px', textTransform: 'uppercase', padding: '2px 10px', borderRadius: '9999px', border: '1px solid #a7f3d0' }}>
+                    <ShieldCheck style={{ width: '14px', height: '14px', fill: '#059669', stroke: '#ffffff' }} />
                     Secure
                   </div>
                 </div>
@@ -915,19 +798,19 @@ export const PrintStudio = () => {
                   type="button"
                   onClick={handleProceedToPayment}
                   disabled={files.length === 0 || dateError || files.some(f => f.uploading)}
-                  className="w-full h-12 bg-[#6D5DF6] hover:bg-[#5C4EE5] disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md shadow-[#6D5DF6]/15"
+                  className="print-pay-btn"
                 >
-                  <Lock className="w-4 h-4" /> Proceed to Payment
+                  <Lock style={{ width: '16px', height: '16px' }} /> Proceed to Payment
                 </button>
 
-                <p className="text-[12px] text-[#9CA3AF] text-center font-bold">
+                <p style={{ fontSize: '12px', color: '#9CA3AF', textAlign: 'center', fontWeight: 700, margin: 0 }}>
                   You will be able to review & pay in the next step.
                 </p>
 
                 {dateError && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-3.5 flex items-start gap-2.5 mt-2">
-                    <Info className="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-[11.5px] text-amber-700 leading-normal font-semibold">
+                  <div className="print-alert-bar" style={{ backgroundColor: '#fffbeb', borderColor: '#fde68a', marginTop: '8px' }}>
+                    <Info style={{ width: '18px', height: '18px', color: '#d97706', flexShrink: 0 }} />
+                    <p style={{ fontSize: '11.5px', color: '#b45309', margin: 0, fontWeight: 600 }}>
                       You won't be able to complete the order if the delivery date is less than 2 days away. Earliest available date is {earliestAllowedDate}.
                     </p>
                   </div>
@@ -941,43 +824,43 @@ export const PrintStudio = () => {
 
       </main>
 
-      {/* ── PAYMENT MODAL ── */}
+      {/* PAYMENT MODAL */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[60] bg-[#0F172A]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-[#F8FAFC] rounded-t-[24px] sm:rounded-[24px] max-w-[420px] w-full p-5 sm:p-7 shadow-[0_20px_60px_rgba(15,23,42,0.12)] relative border border-[#E5E7EB] animate-scaleIn text-left max-h-[85vh] overflow-y-auto scrollbar-none flex flex-col gap-4 sm:gap-5 pb-8">
+        <div className="print-modal-overlay">
+          <div className="print-modal-card animate-scaleIn">
             
             {/* Header */}
-            <div className="text-center">
-              <h3 className="text-[32px] font-bold text-[#111827] tracking-tight leading-none">
+            <div style={{ textAlign: 'center' }}>
+              <h3 style={{ fontSize: '28px', fontWeight: 700, color: '#111827', margin: 0 }}>
                 Verify Payment
               </h3>
-              <p className="text-[14px] text-[#6B7280] font-medium mt-1.5">
+              <p style={{ fontSize: '14px', color: '#6B7280', fontWeight: 500, marginTop: '6px', margin: 0 }}>
                 Scan QR • Verify • Print
               </p>
             </div>
 
             {/* QR Section */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-[200px] h-[200px] bg-white border border-[#C7B8FF] rounded-[20px] flex items-center justify-center p-4.5 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '200px', height: '200px', backgroundColor: '#ffffff', border: '1px solid #C7B8FF', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '18px', boxShadow: '0 8px 24px rgba(15,23,42,0.05)' }}>
                 <img 
                   src="/images/payment_qr.jpg" 
                   alt="Payment QR Code" 
-                  className="w-full h-full object-contain rounded-xl"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '12px' }}
                 />
               </div>
-              <div className="flex items-center gap-1.5 text-[#6B7280]">
-                <ShieldCheck className="w-4.5 h-4.5 text-[#6D5DF6]" />
-                <span className="text-[14px] font-semibold">Scan to pay with any UPI app</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6B7280' }}>
+                <ShieldCheck style={{ width: '18px', height: '18px', color: '#6D5DF6' }} />
+                <span style={{ fontSize: '14px', fontWeight: 600 }}>Scan to pay with any UPI app</span>
               </div>
             </div>
 
             {/* PhonePe Details Card */}
-            <div className="bg-white border border-[#C7B8FF] rounded-[18px] p-4 flex items-center justify-between shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-              <div className="flex flex-col text-left">
-                <span className="text-[14px] font-medium text-[#6B7280]">PhonePe Number</span>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-[22px] font-extrabold text-[#6D5DF6] tracking-wide">6302085125</span>
-                  <span className="text-[14px] font-semibold text-[#6B7280]">(praneeth)</span>
+            <div style={{ backgroundColor: '#ffffff', border: '1px solid #C7B8FF', borderRadius: '18px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: '#6B7280' }}>PhonePe Number</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+                  <span style={{ fontSize: '22px', fontWeight: 800, color: '#6D5DF6' }}>6302085125</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#6B7280' }}>(praneeth)</span>
                 </div>
               </div>
               <button
@@ -986,21 +869,22 @@ export const PrintStudio = () => {
                   navigator.clipboard.writeText("6302085125");
                   showToast("PhonePe Number copied to clipboard!", "success");
                 }}
-                className="w-11 h-11 bg-white border border-[#C7B8FF] text-[#6D5DF6] hover:bg-[#FAF9FF] active:scale-[0.95] rounded-xl flex items-center justify-center transition-all shadow-sm"
+                className="profile-icon-btn"
+                style={{ width: '44px', height: '44px', border: '1px solid #C7B8FF' }}
                 title="Copy PhonePe Number"
               >
-                <Copy className="w-5 h-5" />
+                <Copy style={{ width: '20px', height: '20px', color: '#6D5DF6' }} />
               </button>
             </div>
 
             {/* Reference Card */}
-            <div className="bg-[#FAF9FF] border border-[#C7B8FF] rounded-[18px] p-4 flex items-center justify-between shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-              <div className="flex flex-col text-left">
-                <span className="text-[14px] font-medium text-[#6B7280]">Reference / Payment Code</span>
-                <span className="text-[28px] font-extrabold text-[#6D5DF6] tracking-wider mt-1 block">
+            <div style={{ backgroundColor: '#FAF9FF', border: '1px solid #C7B8FF', borderRadius: '18px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: '#6B7280' }}>Reference / Payment Code</span>
+                <span style={{ fontSize: '28px', fontWeight: 800, color: '#6D5DF6', letterSpacing: '0.05em', marginTop: '4px', display: 'block' }}>
                   {upiRefCode}
                 </span>
-                <p className="text-[12.5px] text-[#6B7280] leading-normal mt-1.5 font-medium">
+                <p style={{ fontSize: '12.5px', color: '#6B7280', margin: '6px 0 0 0', fontWeight: 500 }}>
                   Enter this reference in the notes while making payment
                 </p>
               </div>
@@ -1010,42 +894,42 @@ export const PrintStudio = () => {
                   navigator.clipboard.writeText(upiRefCode);
                   showToast("Payment Reference Code copied to clipboard!", "success");
                 }}
-                className="w-11 h-11 bg-white border border-[#C7B8FF] text-[#6D5DF6] hover:bg-[#FAF9FF] active:scale-[0.95] rounded-xl flex items-center justify-center transition-all shadow-sm shrink-0 ml-3"
+                className="profile-icon-btn"
+                style={{ width: '44px', height: '44px', border: '1px solid #C7B8FF', flexShrink: 0, marginLeft: '12px' }}
                 title="Copy Reference Code"
               >
-                <Copy className="w-5 h-5" />
+                <Copy style={{ width: '20px', height: '20px', color: '#6D5DF6' }} />
               </button>
             </div>
 
             {/* Upload Section */}
-            <div className="flex flex-col gap-2.5">
-              <label className="text-[16px] font-bold text-[#111827] block">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <label style={{ fontSize: '16px', fontWeight: 700, color: '#111827', display: 'block' }}>
                 Upload Payment Screenshot
               </label>
               
               {!paymentScreenshotPreview ? (
-                <div className="border-2 border-dashed border-[#C7B8FF] hover:border-[#6D5DF6] rounded-[20px] p-6 text-center bg-[#FAF9FF] relative hover:bg-[#F3EFFF] transition-all cursor-pointer group">
+                <div className="print-dropzone" style={{ padding: '1.5rem' }}>
                   <input 
                     type="file" 
                     accept="image/*" 
                     onChange={handleScreenshotChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
                   />
-                  <UploadCloud className="w-10 h-10 text-[#6D5DF6] mx-auto mb-2 transition-transform group-hover:-translate-y-0.5" />
-                  <p className="text-[14px] font-bold text-gray-800">Upload receipt screenshot</p>
-                  <p className="text-[11px] text-[#6B7280] mt-0.5">JPEG, PNG, WebP image formats</p>
+                  <UploadCloud style={{ width: '40px', height: '40px', color: '#6D5DF6', margin: '0 auto 8px auto' }} />
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', margin: 0 }}>Upload receipt screenshot</p>
+                  <p style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px', margin: 0 }}>JPEG, PNG, WebP image formats</p>
                 </div>
               ) : (
-                <div className="border border-[#C7B8FF] rounded-[20px] p-3 bg-white flex flex-col gap-3 relative shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 border border-[#E5E7EB] relative flex items-center justify-center">
+                <div style={{ border: '1px solid #C7B8FF', borderRadius: '20px', padding: '12px', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ aspectRatio: '4/3', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#f3f4f6', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <img 
                       src={paymentScreenshotPreview} 
                       alt="Receipt preview" 
-                      className="w-full h-full object-contain" 
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
                     />
-                    {/* Green Tick Badge in bottom-right */}
-                    <div className="absolute bottom-2.5 right-2.5 w-6 h-6 bg-[#22C55E] rounded-full flex items-center justify-center shadow-md">
-                      <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" />
+                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '24px', height: '24px', backgroundColor: '#22C55E', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Check style={{ width: '14px', height: '14px', color: '#ffffff', strokeWidth: 3.5 }} />
                     </div>
                   </div>
                   <button 
@@ -1054,7 +938,7 @@ export const PrintStudio = () => {
                       setPaymentScreenshot(null);
                       setPaymentScreenshotPreview('');
                     }}
-                    className="w-full h-9.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[12px] rounded-xl transition-colors active:scale-[0.98]"
+                    style={{ width: '100%', height: '38px', backgroundColor: '#fff1f2', color: '#e11d48', fontWeight: 700, fontSize: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}
                   >
                     Remove Receipt and Re-upload
                   </button>
@@ -1063,19 +947,19 @@ export const PrintStudio = () => {
             </div>
 
             {/* Validation Alert */}
-            <div className="bg-[#FEF2F2] border border-[#FEE2E2] rounded-[16px] p-3.5 flex items-center justify-center gap-2.5 text-[#EF4444] shadow-sm">
-              <ShieldAlert className="w-5 h-5 text-[#EF4444] shrink-0" />
-              <span className="text-[13px] font-bold tracking-wide">
+            <div className="print-alert-bar" style={{ backgroundColor: '#fef2f2', borderColor: '#fee2e2', justifyContent: 'center' }}>
+              <ShieldAlert style={{ width: '20px', height: '20px', color: '#ef4444', flexShrink: 0 }} />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444' }}>
                 Ensure the screenshot is clear and valid
               </span>
             </div>
 
             {/* Bottom Actions Buttons */}
-            <div className="flex gap-3 mt-1">
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
               <button 
                 type="button"
                 onClick={() => setIsPaymentModalOpen(false)}
-                className="flex-1 h-[54px] bg-white border border-[#E5E7EB] text-[#111827] hover:bg-[#F9FAFB] active:scale-[0.98] font-bold text-[14px] rounded-[16px] transition-all shadow-sm"
+                style={{ flex: 1, height: '54px', backgroundColor: '#ffffff', border: '1px solid #E5E7EB', color: '#111827', fontWeight: 700, fontSize: '14px', borderRadius: '16px', cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -1084,13 +968,14 @@ export const PrintStudio = () => {
                 type="button"
                 onClick={handleVerifySubmit}
                 disabled={submittingOrder || !paymentScreenshot}
-                className="flex-1 h-[54px] bg-[#6D5DF6] hover:bg-[#5C4EE5] disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-[16px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
+                className="print-pay-btn"
+                style={{ flex: 1, height: '54px', borderRadius: '16px' }}
               >
                 {submittingOrder ? (
                   'Submitting...'
                 ) : (
                   <>
-                    <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+                    <ShieldCheck style={{ width: '20px', height: '20px', strokeWidth: 2.2 }} />
                     Verify Payment
                   </>
                 )}

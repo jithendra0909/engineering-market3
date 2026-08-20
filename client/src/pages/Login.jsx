@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import './Login.css';
 
 export const Login = () => {
   const { login, showToast } = useAuth();
@@ -40,62 +41,62 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-5 py-12">
-      <div className="w-full max-w-[400px]">
+    <div className="auth-page-wrapper">
+      <div className="auth-card-container">
 
         {/* Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="auth-logo-row">
           <Link to="/">
             <Logo size={40} showText={false} />
           </Link>
         </div>
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-[20px] font-bold text-[#111827] tracking-tight">Welcome back</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Sign in to your Engineering Market account</p>
+        <div className="auth-header">
+          <h1 className="auth-title">Welcome back</h1>
+          <p className="auth-subtitle">Sign in to your Engineering Market account</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="auth-form">
           {/* Email */}
-          <div>
-            <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+          <div className="auth-field">
+            <label className="auth-label">Email</label>
+            <div className="auth-input-wrapper">
+              <Mail className="auth-input-icon" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.email@gmail.com"
-                className="w-full h-12 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+                className="auth-input"
               />
             </div>
           </div>
 
           {/* Password */}
-          <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="text-[12px] font-semibold text-[#6B7280] block">Password</label>
-              <Link to="/forgot-password" className="text-[11px] font-semibold text-[#6C4EFF] hover:underline">
+          <div className="auth-field">
+            <div className="auth-label-row">
+              <label className="auth-label" style={{ marginBottom: 0 }}>Password</label>
+              <Link to="/forgot-password" className="auth-forgot-link">
                 Forgot Password?
               </Link>
             </div>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+            <div className="auth-input-wrapper">
+              <Lock className="auth-input-icon" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full h-12 pl-11 pr-12 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+                className="auth-input has-toggle"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
+                className="auth-eye-btn"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
               </button>
             </div>
           </div>
@@ -104,20 +105,20 @@ export const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] rounded-full shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+            className="auth-submit-btn"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="auth-btn-spinner animate-spin" />
             ) : (
-              <>Sign In <ArrowRight className="w-4 h-4" /></>
+              <>Sign In <ArrowRight style={{ width: '16px', height: '16px' }} /></>
             )}
           </button>
         </form>
 
         {/* Sign up link */}
-        <p className="text-center text-[13px] text-[#9CA3AF] mt-6">
+        <p className="auth-footer-text">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-[#6C4EFF] font-semibold hover:underline">
+          <Link to="/signup" className="auth-purple-link">
             Sign Up
           </Link>
         </p>

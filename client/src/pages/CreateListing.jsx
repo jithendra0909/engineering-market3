@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ChevronLeft, Upload, X, Plus } from 'lucide-react';
+import { ChevronLeft, X, Plus } from 'lucide-react';
 import api from '../api/axios';
+import './CreateListing.css';
 
 const CATEGORIES = ['Textbooks', 'Electronics', 'Stationery', 'Clothing', 'Hostel Essentials', 'Lab Equipment', 'Projects', 'Other'];
 const CONDITIONS = ['Brand New', 'Like New', 'Good', 'Fair'];
@@ -68,7 +69,6 @@ export const CreateListing = () => {
       formData.append('marketType', marketType);
       formData.append('whatsappNumber', whatsappNumber);
 
-      // Compress images before appending to avoid Vercel 4.5MB payload limits
       const compressImage = (file) => {
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -105,13 +105,12 @@ export const CreateListing = () => {
                   lastModified: Date.now()
                 });
                 resolve(compressedFile);
-              }, 'image/jpeg', 0.7); // 70% quality JPEG
+              }, 'image/jpeg', 0.7);
             };
           };
         });
       };
 
-      // Compress and append all images
       const compressedImages = await Promise.all(images.map(img => compressImage(img)));
       compressedImages.forEach(img => formData.append('images', img));
 
@@ -128,40 +127,33 @@ export const CreateListing = () => {
     }
   };
 
-  const inputClass = "w-full h-12 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all";
-  const labelClass = "text-[12px] font-semibold text-[#6B7280] block mb-1.5";
-
   return (
-    <div className="max-w-[600px] mx-auto px-5 pt-5 pb-28 lg:pb-12">
+    <div className="create-page-container">
 
       {/* Back */}
-      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#6C4EFF] transition-colors mb-5">
-        <ChevronLeft className="w-4 h-4" /> Back
+      <button onClick={() => navigate(-1)} className="create-back-btn">
+        <ChevronLeft style={{ width: '16px', height: '16px' }} /> Back
       </button>
 
-      <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight mb-1">
+      <h1 className="create-title">
         {listingType === 'donate' ? 'Donate an Item' : 'Sell an Item'}
       </h1>
-      <p className="text-[12px] text-[#9CA3AF] mb-6 leading-relaxed">
+      <p className="create-subtitle">
         {listingType === 'donate' ? 'Give items to students in need.' : 'List your item for other students to buy.'}
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="create-form">
 
         {/* Listing Type Toggle */}
-        <div>
-          <label className={labelClass}>Listing Type</label>
-          <div className="flex gap-2">
+        <div className="create-field">
+          <label className="create-label">Listing Type</label>
+          <div className="create-toggle-row">
             {['sell', 'donate'].map(t => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setListingType(t)}
-                className={`flex-1 py-[9px] rounded-full text-[12px] font-semibold transition-all border ${
-                  listingType === t
-                    ? 'bg-[#6C4EFF] text-white border-[#6C4EFF]'
-                    : 'bg-[#FAFAFF] border-[#E9E6F8] text-[#6B7280] hover:bg-[#F4F1FF]'
-                }`}
+                className={`create-toggle-btn ${listingType === t ? 'active' : ''}`}
               >
                 {t === 'sell' ? 'Sell' : 'Donate'}
               </button>
@@ -170,43 +162,43 @@ export const CreateListing = () => {
         </div>
 
         {/* Title */}
-        <div>
-          <label className={labelClass}>Title *</label>
-          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Data Structures Using C Textbook" className={inputClass} />
+        <div className="create-field">
+          <label className="create-label">Title *</label>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Data Structures Using C Textbook" className="create-input" />
         </div>
 
         {/* Description */}
-        <div>
-          <label className={labelClass}>Description *</label>
+        <div className="create-field">
+          <label className="create-label">Description *</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe your item, its condition, and why you're selling/donating..."
             rows={4}
-            className="w-full px-4 py-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all resize-none"
+            className="create-textarea"
           />
         </div>
 
         {/* Price (only for sell) */}
         {listingType === 'sell' && (
-          <div>
-            <label className={labelClass}>Price (₹) *</label>
-            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="250" min="1" className={inputClass} />
+          <div className="create-field">
+            <label className="create-label">Price (₹) *</label>
+            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="250" min="1" className="create-input" />
           </div>
         )}
 
         {/* Category + Condition */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelClass}>Category *</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className={`${inputClass} appearance-none cursor-pointer`}>
+        <div className="create-grid-2">
+          <div className="create-field">
+            <label className="create-label">Category *</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="create-select">
               <option value="">Select</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div>
-            <label className={labelClass}>Condition *</label>
-            <select value={condition} onChange={(e) => setCondition(e.target.value)} className={`${inputClass} appearance-none cursor-pointer`}>
+          <div className="create-field">
+            <label className="create-label">Condition *</label>
+            <select value={condition} onChange={(e) => setCondition(e.target.value)} className="create-select">
               <option value="">Select</option>
               {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -214,53 +206,49 @@ export const CreateListing = () => {
         </div>
 
         {/* Market Type */}
-        <div>
-          <label className={labelClass}>Market</label>
-          <div className="flex gap-2">
+        <div className="create-field">
+          <label className="create-label">Market</label>
+          <div className="create-market-cards">
             {MARKET_TYPES.map(m => (
               <button
                 key={m.value}
                 type="button"
                 onClick={() => setMarketType(m.value)}
-                className={`flex-1 py-3 px-3 rounded-[14px] text-left transition-all border ${
-                  marketType === m.value
-                    ? 'bg-[#F4F1FF] border-[#6C4EFF]/30'
-                    : 'bg-[#FAFAFF] border-[#E9E6F8] hover:bg-[#F4F1FF]'
-                }`}
+                className={`create-market-card-btn ${marketType === m.value ? 'active' : ''}`}
               >
-                <p className={`text-[12px] font-bold ${marketType === m.value ? 'text-[#6C4EFF]' : 'text-[#111827]'}`}>{m.label}</p>
-                <p className="text-[10px] text-[#9CA3AF] mt-0.5">{m.desc}</p>
+                <p className={`create-market-label ${marketType === m.value ? 'active' : ''}`}>{m.label}</p>
+                <p className="create-market-desc">{m.desc}</p>
               </button>
             ))}
           </div>
         </div>
 
         {/* WhatsApp */}
-        <div>
-          <label className={labelClass}>WhatsApp for Contact</label>
-          <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+91 9876543210" className={inputClass} />
+        <div className="create-field">
+          <label className="create-label">WhatsApp for Contact</label>
+          <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+91 9876543210" className="create-input" />
         </div>
 
         {/* Images */}
-        <div>
-          <label className={labelClass}>Photos * (max 5)</label>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+        <div className="create-field">
+          <label className="create-label">Photos * (max 5)</label>
+          <div className="create-photos-row no-scrollbar">
             {previews.map((p, idx) => (
-              <div key={idx} className="relative w-20 h-20 flex-shrink-0 rounded-[12px] overflow-hidden border border-[#E9E6F8]">
-                <img src={p} alt="" className="w-full h-full object-cover" />
+              <div key={idx} className="create-photo-item">
+                <img src={p} alt="" className="create-photo-img" />
                 <button
                   type="button"
                   onClick={() => removeImage(idx)}
-                  className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center text-white"
+                  className="create-photo-remove"
                 >
-                  <X className="w-3 h-3" />
+                  <X style={{ width: '12px', height: '12px' }} />
                 </button>
               </div>
             ))}
             {images.length < 5 && (
-              <label className="w-20 h-20 flex-shrink-0 rounded-[12px] border-2 border-dashed border-[#E9E6F8] flex items-center justify-center cursor-pointer hover:border-[#6C4EFF]/30 hover:bg-[#FAFAFF] transition-all">
-                <Plus className="w-5 h-5 text-[#9CA3AF]" />
-                <input type="file" accept="image/*" multiple onChange={handleImageAdd} className="hidden" />
+              <label className="create-photo-add-btn">
+                <Plus style={{ width: '20px', height: '20px', color: '#9CA3AF' }} />
+                <input type="file" accept="image/*" multiple onChange={handleImageAdd} style={{ display: 'none' }} />
               </label>
             )}
           </div>
@@ -270,10 +258,10 @@ export const CreateListing = () => {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full h-12 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] rounded-full shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+          className="create-submit-btn"
         >
           {submitting ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="auth-btn-spinner animate-spin" />
           ) : (
             <>Publish Listing</>
           )}

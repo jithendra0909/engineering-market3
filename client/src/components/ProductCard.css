@@ -1,0 +1,138 @@
+.product-card {
+  display: block;
+  background-color: #ffffff;
+  border: 1px solid rgba(233, 230, 248, 0.7);
+  border-radius: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: all 300ms ease;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.product-card-image-wrapper {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background-color: #FAFAFF;
+  overflow: hidden;
+}
+
+.product-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 500ms ease;
+}
+
+.product-card:hover .product-card-image {
+  transform: scale(1.03);
+}
+
+.product-card-heart-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.product-card-heart-btn:hover {
+  transform: scale(1.1);
+}
+
+.product-card-heart-btn:active {
+  transform: scale(0.95);
+}
+
+.product-card-heart-icon {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+  transition: color 0.2s ease, fill 0.2s ease;
+  color: #9CA3AF;
+}
+
+.product-card-heart-icon.saved {
+  fill: #6C4EFF;
+  color: #6C4EFF;
+}
+
+.product-card-donate-badge {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  background-color: #6C4EFF;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 0.625rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.product-card-info {
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.product-card-title {
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.375;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.product-card:hover .product-card-title {
+  color: #6C4EFF;
+}
+
+.product-card-price {
+  font-weight: 700;
+  color: #111827;
+  font-size: 14px;
+  margin: 0;
+}
+
+.product-card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #9CA3AF;
+  margin-top: 0.125rem;
+}
+
+.product-card-pin-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
+
+.product-card-college {
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

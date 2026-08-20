@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './IntroSplash.css';
 
 const IntroSplash = () => {
   const checkInitialSplash = () => {

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, MessageSquare, Plus, X, Store, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import './MobileBottomNav.css';
 
 export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
   const navigate = useNavigate();
@@ -41,54 +42,52 @@ export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
   };
 
   const tabClass = (path) =>
-    `flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all relative ${
-      isActive(path) ? 'text-[#6C4EFF]' : 'text-[#9CA3AF]'
-    }`;
+    `mobile-nav-tab ${isActive(path) ? 'active' : ''}`;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+    <div className="mobile-bottom-nav">
       {/* Frosted glass bar */}
-      <div className="relative bg-white/90 backdrop-blur-xl border-t border-[#E9E6F8]/60 h-[68px] pb-safe flex items-center">
+      <div className="mobile-bottom-nav-bar">
         
         {/* Home */}
         <button onClick={() => handleTabClick('/')} className={tabClass('/')}>
-          <Home className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Home</span>
+          <Home className="mobile-nav-icon" />
+          <span className="mobile-nav-label">Home</span>
         </button>
 
         {/* Chat */}
         <button onClick={() => handleTabClick('/chat')} className={tabClass('/chat')}>
-          <MessageSquare className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Chat</span>
+          <MessageSquare className="mobile-nav-icon" />
+          <span className="mobile-nav-label">Chat</span>
           {unreadCount > 0 && (
-            <span className="absolute top-2.5 right-6 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+            <span className="mobile-nav-badge" />
           )}
         </button>
 
         {/* Center FAB — raised purple circle */}
-        <div className="flex-1 flex items-center justify-center relative">
+        <div className="mobile-nav-center-slot">
           <button
             onClick={() => setIsCreateOpen(!isCreateOpen)}
-            className="absolute -top-5 w-[52px] h-[52px] bg-[#6C4EFF] hover:bg-[#8A72FF] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(108,78,255,0.35)] active:scale-95 transition-all z-10"
+            className="mobile-nav-fab"
           >
             {isCreateOpen ? (
-              <X className="w-6 h-6 stroke-[2.5]" />
+              <X className="mobile-nav-fab-icon" />
             ) : (
-              <Plus className="w-6 h-6 stroke-[2.5]" />
+              <Plus className="mobile-nav-fab-icon" />
             )}
           </button>
         </div>
 
         {/* Vendors */}
         <button onClick={() => handleTabClick('/vendors')} className={tabClass('/vendors')}>
-          <Store className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Vendors</span>
+          <Store className="mobile-nav-icon" />
+          <span className="mobile-nav-label">Vendors</span>
         </button>
 
         {/* Profile */}
         <button onClick={() => handleTabClick('/profile')} className={tabClass('/profile')}>
-          <User className="w-[22px] h-[22px] stroke-[1.8]" />
-          <span className="text-[10px] font-semibold">Profile</span>
+          <User className="mobile-nav-icon" />
+          <span className="mobile-nav-label">Profile</span>
         </button>
       </div>
     </div>

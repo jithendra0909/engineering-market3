@@ -1,0 +1,333 @@
+.gift-studio-page {
+  position: relative;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+.gift-studio-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(233, 230, 248, 0.6);
+}
+
+.gift-studio-header-inner {
+  max-width: 1360px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gift-studio-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.gift-studio-back-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid #E9E6F8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.gift-studio-back-btn:hover {
+  background-color: #F4F1FF;
+  border-color: rgba(108, 78, 255, 0.3);
+}
+
+.gift-studio-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #F4F1FF;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(233, 230, 248, 0.6);
+  font-size: 14px;
+  font-weight: 700;
+  color: #6C4EFF;
+}
+
+.gift-studio-vendor-info {
+  min-width: 0;
+}
+
+.gift-studio-vendor-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #111827;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.gift-studio-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.gift-studio-price-guide-btn {
+  height: 2rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  border-radius: 9999px;
+  background-color: #F4F1FF;
+  border: 1px solid rgba(108, 78, 255, 0.2);
+  color: #6C4EFF;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.gift-studio-price-guide-btn:hover {
+  background-color: #6C4EFF;
+  color: #ffffff;
+}
+
+.gift-studio-icon-btn {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid #E9E6F8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gift-studio-icon-btn:hover {
+  color: #6C4EFF;
+  border-color: rgba(108, 78, 255, 0.3);
+}
+
+.gift-studio-cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 1rem;
+  height: 1rem;
+  background-color: #6C4EFF;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gift-studio-main {
+  max-width: 1360px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 7rem;
+}
+
+@media (min-width: 1024px) {
+  .gift-studio-main {
+    padding-bottom: 3rem;
+  }
+}
+
+.gift-studio-hero-section {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .gift-studio-hero-section {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-top: 1.5rem;
+  }
+}
+
+.gift-studio-hero-card {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  user-select: none;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: box-shadow 300ms ease;
+}
+
+.gift-studio-hero-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.gift-studio-hero-img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  transition: transform 500ms ease;
+}
+
+.gift-studio-hero-card:hover .gift-studio-hero-img {
+  transform: scale(1.01);
+}
+
+.gift-studio-benefits-section {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-top: 1.25rem;
+}
+
+.gift-studio-benefits-card {
+  background-color: #ffffff;
+  border: 1px solid rgba(233, 230, 248, 0.7);
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.gift-studio-benefit-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.375rem;
+}
+
+.gift-studio-benefit-icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #F4F1FF;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gift-studio-benefit-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.gift-studio-categories-section {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-top: 1.75rem;
+}
+
+.gift-studio-categories-grid {
+  display: flex;
+  gap: 1rem;
+}
+
+.gift-studio-cat-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.gift-studio-cat-icon-box {
+  width: 4rem;
+  height: 4rem;
+  background-color: #F4F1FF;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(233, 230, 248, 0.6);
+  transition: all 0.2s ease;
+}
+
+.gift-studio-cat-btn:hover .gift-studio-cat-icon-box {
+  border-color: rgba(108, 78, 255, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.gift-studio-cat-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.gift-studio-fab-cart {
+  position: fixed;
+  bottom: 80px;
+  right: 1rem;
+  z-index: 30;
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: #6C4EFF;
+  color: #ffffff;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(108, 78, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .gift-studio-fab-cart {
+    display: none;
+  }
+}
+
+.gift-studio-fab-cart:active {
+  transform: scale(0.95);
+}
+
+.gift-studio-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: #f43f5e;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

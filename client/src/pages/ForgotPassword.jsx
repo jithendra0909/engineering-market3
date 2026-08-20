@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Mail, ArrowLeft, ArrowRight } from 'lucide-react';
 import api from '../api/axios';
+import './Login.css';
 
 export const ForgotPassword = () => {
   const { showToast } = useAuth();
@@ -40,10 +41,10 @@ export const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-5 py-12">
-      <div className="w-full max-w-[400px]">
+    <div className="auth-page-wrapper">
+      <div className="auth-card-container">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="auth-logo-row">
           <Link to="/">
             <Logo size={40} showText={false} />
           </Link>
@@ -52,24 +53,24 @@ export const ForgotPassword = () => {
         {!submitted ? (
           <>
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-[24px] font-bold text-[#111827]">Reset Password</h1>
-              <p className="text-[13px] text-[#9CA3AF] mt-1">Enter your email address to receive a secure link to reset your password</p>
+            <div className="auth-header">
+              <h1 className="auth-title" style={{ fontSize: '24px' }}>Reset Password</h1>
+              <p className="auth-subtitle">Enter your email address to receive a secure link to reset your password</p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="auth-form">
               {/* Email */}
-              <div>
-                <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+              <div className="auth-field">
+                <label className="auth-label">Email Address</label>
+                <div className="auth-input-wrapper">
+                  <Mail className="auth-input-icon" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your.email@gmail.com"
-                    className="w-full h-12 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+                    className="auth-input"
                   />
                 </div>
               </div>
@@ -78,33 +79,33 @@ export const ForgotPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] rounded-full shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                className="auth-submit-btn"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="auth-btn-spinner animate-spin" />
                 ) : (
-                  <>Send Reset Link <ArrowRight className="w-4 h-4" /></>
+                  <>Send Reset Link <ArrowRight style={{ width: '16px', height: '16px' }} /></>
                 )}
               </button>
             </form>
           </>
         ) : (
-          <div className="text-center bg-[#FAFAFF] border border-[#E9E6F8] rounded-3xl p-6 shadow-sm">
-            <h3 className="font-bold text-[18px] text-[#111827] mb-2">Check Your Email</h3>
-            <p className="text-[13px] text-[#6B7280] leading-relaxed mb-4">
+          <div style={{ textAlign: 'center', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <h3 style={{ fontWeight: 700, fontSize: '18px', color: '#111827', margin: '0 0 0.5rem 0' }}>Check Your Email</h3>
+            <p style={{ fontSize: '13px', color: '#6B7280', lineHeight: 1.625, margin: '0 0 1rem 0' }}>
               A secure password reset link has been generated. If the account exists, you will receive an email shortly.
             </p>
             {debugUrl && (
-              <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-left">
-                <p className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider mb-1">Development Debug Link:</p>
-                <p className="text-[11px] text-[#6B7280] break-all select-all font-mono leading-tight mb-3">
+              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '16px', textAlign: 'left' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 0.25rem 0' }}>Development Debug Link:</p>
+                <p style={{ fontSize: '11px', color: '#6B7280', wordBreak: 'break-all', userSelect: 'all', fontFamily: 'monospace', lineHeight: 1.25, margin: '0 0 0.75rem 0' }}>
                   {debugUrl}
                 </p>
                 <a
                   href={debugUrl}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#6C4EFF] hover:underline"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '12px', fontWeight: 700, color: '#6C4EFF', textDecoration: 'none' }}
                 >
-                  Click here to go to Reset Page <ArrowRight className="w-3.5 h-3.5" />
+                  Click here to go to Reset Page <ArrowRight style={{ width: '14px', height: '14px' }} />
                 </a>
               </div>
             )}
@@ -112,9 +113,9 @@ export const ForgotPassword = () => {
         )}
 
         {/* Back to Login link */}
-        <div className="text-center mt-8">
-          <Link to="/login" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#6C4EFF] hover:underline">
-            <ArrowLeft className="w-4 h-4" /> Back to Log In
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '13px', fontWeight: 600, color: '#6C4EFF', textDecoration: 'none' }}>
+            <ArrowLeft style={{ width: '16px', height: '16px' }} /> Back to Log In
           </Link>
         </div>
       </div>

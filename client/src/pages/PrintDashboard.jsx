@@ -11,16 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-
-const getMediaUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-    return path;
-  }
-  const isDev = !import.meta.env.PROD;
-  const serverBase = isDev ? 'http://localhost:5000' : '';
-  return `${serverBase}${path}`;
-};
+import './PrintDashboard.css';
 
 export const PrintDashboard = () => {
   const navigate = useNavigate();
@@ -36,9 +27,7 @@ export const PrintDashboard = () => {
   const [selectedClassroom, setSelectedClassroom] = useState(null);
   const [selectedScreenshot, setSelectedScreenshot] = useState(null);
   
-  // Track which files are currently downloading
   const [downloadingFiles, setDownloadingFiles] = useState(new Set());
-  // Track expanded order cards for "show full details" toggle
   const [expandedOrders, setExpandedOrders] = useState(new Set());
 
   const fetchAllOrders = async () => {
@@ -87,16 +76,13 @@ export const PrintDashboard = () => {
     });
   };
 
-  // ─── PDF DOWNLOAD SYSTEM (Supabase + Legacy Proxy) ───
   const fetchPdfBlob = async (url, mode, fileName) => {
-    // If it's a Supabase URL, fetch it directly (bypassing backend)
     if (url.includes('supabase.co')) {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch from Supabase');
       return await response.blob();
     }
     
-    // Legacy GridFS / Cloudinary proxy
     if (url.startsWith('/api/print/file/')) {
       let endpoint = url.replace('/api', '');
       if (mode === 'download') endpoint += '?download=true';
@@ -181,7 +167,6 @@ export const PrintDashboard = () => {
     });
   };
 
-  // ─── HELPERS ───
   const verificationQueue = orders.filter(o => o.status === 'pending');
   const activeJobs = orders.filter(o => o.status === 'printing');
   const deliveryLogs = orders.filter(o => o.status === 'out-for-delivery');
@@ -209,7 +194,6 @@ export const PrintDashboard = () => {
   };
   const filteredActiveJobs = getFilteredActiveJobs();
 
-  // Calculate effective sheets needed for a file
   const calcSheets = (file) => {
     const pages = file.pagesCount || 1;
     const sets = file.sets || 1;
@@ -218,7 +202,6 @@ export const PrintDashboard = () => {
     return pages * sets;
   };
 
-  // ─── REUSABLE: Detailed File Card ───
   const FileDetailCard = ({ file, idx }) => {
     const isDownloading = downloadingFiles.has(file.pdfFileUrl);
     const sheetsNeeded = calcSheets(file);
@@ -230,109 +213,87 @@ export const PrintDashboard = () => {
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: idx * 0.05 }}
-        className="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden"
+        className="print-dash-file-card"
       >
         {/* File Header */}
-        <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
-                <FileText className="w-4.5 h-4.5 text-rose-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-gray-800 truncate leading-tight" title={file.fileName}>
-                  {file.fileName}
-                </p>
-                <p className="text-[11px] text-gray-400 font-medium mt-0.5">
-                  File {idx + 1} • ₹{file.subtotal?.toFixed(2) || '—'}
-                </p>
-              </div>
+        <div className="print-dash-file-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+            <div className="print-dash-file-icon-box">
+              <FileText style={{ width: '18px', height: '18px', color: '#f43f5e' }} />
             </div>
-            <div className="text-right shrink-0">
-              <span className="bg-[#6D5DF6]/10 text-[#6D5DF6] text-[11px] font-extrabold px-2.5 py-1 rounded-lg inline-block">
-                {file.sets} {file.sets === 1 ? 'Copy' : 'Copies'}
-              </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="print-dash-file-title" title={file.fileName}>
+                {file.fileName}
+              </p>
+              <p className="print-dash-file-sub">
+                File {idx + 1} • ₹{file.subtotal?.toFixed(2) || '—'}
+              </p>
             </div>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <span className="print-dash-badge-purple">
+              {file.sets} {file.sets === 1 ? 'Copy' : 'Copies'}
+            </span>
           </div>
         </div>
         
         {/* Print Specifications Grid */}
-        <div className="px-4 py-3 space-y-3">
-          {/* Specs Row 1: Key numbers */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-blue-50 rounded-xl p-2.5 text-center border border-blue-100">
-              <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wide">Pages</p>
-              <p className="text-[16px] font-black text-blue-700 leading-tight">{file.pagesCount}</p>
+        <div className="print-dash-file-body">
+          <div className="print-dash-stat-grid">
+            <div className="print-dash-stat-box blue">
+              <p className="print-dash-stat-title">Pages</p>
+              <p className="print-dash-stat-val">{file.pagesCount}</p>
             </div>
-            <div className="bg-purple-50 rounded-xl p-2.5 text-center border border-purple-100">
-              <p className="text-[10px] text-purple-500 font-bold uppercase tracking-wide">Total Print</p>
-              <p className="text-[16px] font-black text-purple-700 leading-tight">{totalPages}</p>
+            <div className="print-dash-stat-box purple">
+              <p className="print-dash-stat-title">Total Print</p>
+              <p className="print-dash-stat-val">{totalPages}</p>
             </div>
-            <div className="bg-emerald-50 rounded-xl p-2.5 text-center border border-emerald-100">
-              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">Sheets</p>
-              <p className="text-[16px] font-black text-emerald-700 leading-tight">{sheetsNeeded}</p>
+            <div className="print-dash-stat-box emerald">
+              <p className="print-dash-stat-title">Sheets</p>
+              <p className="print-dash-stat-val">{sheetsNeeded}</p>
             </div>
           </div>
           
-          {/* Specs Row 2: Print settings badges */}
-          <div className="flex flex-wrap gap-1.5">
-            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
-              file.colorType === 'color' 
-                ? 'bg-amber-50 text-amber-800 border-amber-200' 
-                : 'bg-gray-50 text-gray-700 border-gray-200'
-            }`}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <span style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, border: '1px solid', backgroundColor: file.colorType === 'color' ? '#fffbeb' : '#f9fafb', color: file.colorType === 'color' ? '#92400e' : '#374151', borderColor: file.colorType === 'color' ? '#fde68a' : '#e5e7eb' }}>
               {file.colorType === 'color' ? '🎨 Color' : '⬛ B&W'}
             </span>
-            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
-              file.layout === 'both-side'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : file.layout === 'four-pages'
-                ? 'bg-violet-50 text-violet-800 border-violet-200'
-                : 'bg-sky-50 text-sky-800 border-sky-200'
-            }`}>
+            <span style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, border: '1px solid', backgroundColor: file.layout === 'both-side' ? '#ecfdf5' : (file.layout === 'four-pages' ? '#faf5ff' : '#f0f9ff'), color: file.layout === 'both-side' ? '#065f46' : (file.layout === 'four-pages' ? '#6b21a8' : '#075985'), borderColor: file.layout === 'both-side' ? '#a7f3d0' : (file.layout === 'four-pages' ? '#e9d5ff' : '#bae6fd') }}>
               {file.layout === 'both-side' ? '🔄 Double-Sided' : file.layout === 'four-pages' ? '📊 4-in-1' : '📄 Single-Sided'}
             </span>
-            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
-              file.binding === 'spiral'
-                ? 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                : 'bg-gray-50 text-gray-500 border-gray-200'
-            }`}>
+            <span style={{ padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, border: '1px solid', backgroundColor: file.binding === 'spiral' ? '#e0e7ff' : '#f9fafb', color: file.binding === 'spiral' ? '#3730a3' : '#6b7280', borderColor: file.binding === 'spiral' ? '#c7d2fe' : '#e5e7eb' }}>
               {file.binding === 'spiral' ? '🌀 Spiral Bind' : '📎 No Binding'}
             </span>
           </div>
           
-          {/* Student instructions */}
           {file.instructions && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11.5px] text-amber-900 font-semibold leading-relaxed">
-              <span className="font-extrabold text-amber-700">📝 Student Note:</span> {file.instructions}
+            <div className="print-dash-note-box">
+              <span style={{ fontWeight: 800, color: '#b45309' }}>📝 Student Note:</span> {file.instructions}
             </div>
           )}
         </div>
         
         {/* Action Buttons */}
-        <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+        <div className="print-dash-file-footer">
           <button
             onClick={() => handleOpenPrintFile(file.pdfFileUrl, file.fileName)}
-            className="h-10 rounded-xl border-2 border-gray-200 text-gray-700 hover:border-[#6D5DF6] hover:text-[#6D5DF6] text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97]"
+            className="print-dash-btn-outline"
           >
-            <ExternalLink className="w-4 h-4" /> Open PDF
+            <ExternalLink style={{ width: '16px', height: '16px' }} /> Open PDF
           </button>
           <button
             onClick={() => handleDownloadFile(file.pdfFileUrl, file.fileName)}
             disabled={isDownloading}
-            className={`h-10 rounded-xl text-white text-[11.5px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] ${
-              isDownloading 
-                ? 'bg-gray-400 cursor-wait' 
-                : 'bg-[#6D5DF6] hover:bg-[#5C4EE5] shadow-sm'
-            }`}
+            className="print-dash-btn-primary"
+            style={{ opacity: isDownloading ? 0.6 : 1 }}
           >
             {isDownloading ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Downloading…
+                <RefreshCw style={{ width: '16px', height: '16px' }} className="animate-spin" /> Downloading…
               </>
             ) : (
               <>
-                <Download className="w-4 h-4" /> Download
+                <Download style={{ width: '16px', height: '16px' }} /> Download
               </>
             )}
           </button>
@@ -341,7 +302,6 @@ export const PrintDashboard = () => {
     );
   };
 
-  // ─── REUSABLE: Order Info Grid ───
   const OrderInfoGrid = ({ order, compact = false }) => {
     const totalPages = order.files?.reduce((acc, f) => acc + (f.pagesCount * f.sets), 0) || 0;
     const totalSheets = order.files?.reduce((acc, f) => acc + calcSheets(f), 0) || 0;
@@ -349,46 +309,46 @@ export const PrintDashboard = () => {
     const hasBinding = order.files?.some(f => f.binding === 'spiral');
     
     return (
-      <div className={`grid gap-y-3 gap-x-3 text-[12.5px] ${compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
+      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '12px', fontSize: '12.5px' }}>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">👤 Student</span>
-          <span className="text-gray-800 font-bold">{order.studentName}</span>
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>👤 Student</span>
+          <span style={{ color: '#1f2937', fontWeight: 700 }}>{order.studentName}</span>
         </div>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">🆔 Reg. Number</span>
-          <span className="text-gray-800 font-semibold">{order.registrationNumber || '—'}</span>
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>🆔 Reg. Number</span>
+          <span style={{ color: '#1f2937', fontWeight: 600 }}>{order.registrationNumber || '—'}</span>
         </div>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">📞 Contact</span>
-          <a href={`tel:${order.contactNumber}`} className="text-[#6D5DF6] font-bold hover:underline">
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📞 Contact</span>
+          <a href={`tel:${order.contactNumber}`} style={{ color: '#6D5DF6', fontWeight: 700, textDecoration: 'none' }}>
             {order.contactNumber}
           </a>
         </div>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">🏫 Dept / Section</span>
-          <span className="text-gray-800 font-semibold">{order.department} • Section {order.section}</span>
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>🏫 Dept / Section</span>
+          <span style={{ color: '#1f2937', fontWeight: 600 }}>{order.department} • Section {order.section}</span>
         </div>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">📅 Delivery Date</span>
-          <span className="text-gray-800 font-semibold">{order.deliveryDate ? formatDate(order.deliveryDate) : '—'}</span>
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📅 Delivery Date</span>
+          <span style={{ color: '#1f2937', fontWeight: 600 }}>{order.deliveryDate ? formatDate(order.deliveryDate) : '—'}</span>
         </div>
         <div>
-          <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">💰 Total Paid</span>
-          <span className="text-[#6D5DF6] font-black text-[15px]">₹{order.totalPrice?.toFixed(2)}</span>
+          <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>💰 Total Paid</span>
+          <span style={{ color: '#6D5DF6', fontWeight: 900, fontSize: '15px' }}>₹{order.totalPrice?.toFixed(2)}</span>
         </div>
         {!compact && (
           <>
             <div>
-              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">📄 Total Pages</span>
-              <span className="text-gray-800 font-bold text-[14px]">{totalPages}</span>
+              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📄 Total Pages</span>
+              <span style={{ color: '#1f2937', fontWeight: 700, fontSize: '14px' }}>{totalPages}</span>
             </div>
             <div>
-              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">📋 Total Sheets</span>
-              <span className="text-gray-800 font-bold text-[14px]">{totalSheets}</span>
+              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📋 Total Sheets</span>
+              <span style={{ color: '#1f2937', fontWeight: 700, fontSize: '14px' }}>{totalSheets}</span>
             </div>
             <div>
-              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase tracking-wide">🏷️ Print Type</span>
-              <span className="text-gray-700 font-semibold text-[12px]">
+              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>🏷️ Print Type</span>
+              <span style={{ color: '#374151', fontWeight: 600, fontSize: '12px' }}>
                 {hasColor ? '🎨 Color' : '⬛ B&W'}{hasBinding ? ' • 🌀 Spiral' : ''}
               </span>
             </div>
@@ -398,62 +358,58 @@ export const PrintDashboard = () => {
     );
   };
 
-  // ─── REUSABLE: UPI & Screenshot Section ───
   const PaymentProof = ({ order }) => (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200 space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-wider">💳 Payment Verification</span>
+    <div className="print-dash-payment-box">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '10px', color: '#059669', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>💳 Payment Verification</span>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <span className="text-[10px] text-gray-500 font-bold block uppercase">UPI Reference</span>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="bg-white border border-emerald-200 text-emerald-700 font-bold px-3 py-1 rounded-lg text-[12px] font-mono tracking-wide">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>UPI Reference</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+            <span style={{ backgroundColor: '#ffffff', border: '1px solid #a7f3d0', color: '#047857', fontWeight: 700, padding: '4px 12px', borderRadius: '8px', fontSize: '12px', fontFamily: 'monospace' }}>
               {order.upiReference}
             </span>
             <button 
               onClick={() => copyToClipboard(order.upiReference, 'UPI reference')}
-              className="text-gray-400 hover:text-emerald-600 transition-colors p-1"
+              className="profile-icon-btn"
+              style={{ width: '28px', height: '28px' }}
             >
-              <Copy className="w-3.5 h-3.5" />
+              <Copy style={{ width: '14px', height: '14px', color: '#9ca3af' }} />
             </button>
           </div>
         </div>
         {order.paymentScreenshotUrl && (
           <button 
             onClick={() => setSelectedScreenshot(order.paymentScreenshotUrl)}
-            className="w-14 h-14 bg-white border-2 border-emerald-200 rounded-xl overflow-hidden shrink-0 hover:border-[#6D5DF6] transition-colors group relative"
+            style={{ width: '56px', height: '56px', backgroundColor: '#ffffff', border: '2px solid #a7f3d0', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, cursor: 'pointer', padding: 0 }}
           >
-            <img src={order.paymentScreenshotUrl} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-              <Eye className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
+            <img src={order.paymentScreenshotUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </button>
         )}
       </div>
     </div>
   );
 
-  // ─── REUSABLE: Files Section with Download All ───
   const FilesSection = ({ order }) => (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-gray-400" />
-          <span className="text-[11px] text-gray-500 font-extrabold uppercase tracking-wider">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Layers style={{ width: '16px', height: '16px', color: '#9ca3af' }} />
+          <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 800, textTransform: 'uppercase' }}>
             Files to Print ({order.files?.length})
           </span>
         </div>
         {order.files?.length > 1 && (
           <button
             onClick={() => downloadAllFiles(order.files)}
-            className="text-[11px] font-bold text-[#6D5DF6] hover:text-[#5C4EE5] flex items-center gap-1 hover:underline transition-colors"
+            style={{ fontSize: '11px', fontWeight: 700, color: '#6D5DF6', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            <Download className="w-3.5 h-3.5" /> Download All
+            <Download style={{ width: '14px', height: '14px' }} /> Download All
           </button>
         )}
       </div>
-      <div className="space-y-3">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {order.files?.map((file, idx) => (
           <FileDetailCard key={idx} file={file} idx={idx} />
         ))}
@@ -462,43 +418,45 @@ export const PrintDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans antialiased text-[#111827] pb-32">
+    <div className="print-dash-page">
       
-      {/* ── HEADER ── */}
-      <header className="h-[80px] bg-white border-b border-[#E5E7EB] sticky top-0 z-40 px-4 sm:px-6">
-        <div className="max-w-[640px] h-full mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* HEADER */}
+      <header className="print-dash-header">
+        <div className="print-dash-header-inner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button 
               onClick={() => navigate('/vendors/print-studio')} 
-              className="w-11 h-11 rounded-full border border-[#E5E7EB] flex items-center justify-center hover:bg-[#F8FAFC] transition-colors active:scale-95"
+              className="profile-icon-btn"
+              style={{ width: '44px', height: '44px', border: '1px solid #E5E7EB' }}
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600 stroke-[2.5]" />
+              <ArrowLeft style={{ width: '20px', height: '20px', color: '#4b5563', strokeWidth: 2.5 }} />
             </button>
-            <div className="w-[1px] h-6 bg-gray-200" />
-            <div className="text-left">
-              <h1 className="text-[15px] sm:text-[16px] font-bold text-[#111827] tracking-tight leading-none">EM Print Studio</h1>
-              <p className="text-[11px] text-[#6B7280] font-medium mt-1 leading-none">Print Dashboard</p>
+            <div style={{ width: '1px', height: '24px', backgroundColor: '#e5e7eb' }} />
+            <div style={{ textAlign: 'left' }}>
+              <h1 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1 }}>EM Print Studio</h1>
+              <p style={{ fontSize: '11px', color: '#6B7280', fontWeight: 500, marginTop: '4px', margin: 0 }}>Print Dashboard</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button 
               onClick={fetchAllOrders}
-              className="w-10 h-10 rounded-full border border-[#E5E7EB] flex items-center justify-center bg-white text-gray-500 hover:text-[#6D5DF6] transition-colors active:scale-95"
+              className="profile-icon-btn"
+              style={{ width: '40px', height: '40px', border: '1px solid #E5E7EB', backgroundColor: '#ffffff' }}
             >
-              <RefreshCw className="w-4.5 h-4.5" />
+              <RefreshCw style={{ width: '18px', height: '18px', color: '#6b7280' }} />
             </button>
-            <div className="w-10 h-10 rounded-full bg-[#FAF9FF] border border-[#6D5DF6]/20 flex items-center justify-center text-[#6D5DF6] font-bold text-[13px] select-none">
+            <div style={{ width: '40px', height: '40px', borderRadius: '9999px', backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6D5DF6', fontWeight: 700, fontSize: '13px' }}>
               EP
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-[640px] mx-auto px-4 sm:px-6 mt-6 space-y-6">
+      <main className="print-dash-main">
 
-        {/* ── SEGMENTED TABS ── */}
-        <div className="bg-white border border-[#E5E7EB] rounded-[22px] p-1.5 flex shadow-sm select-none">
+        {/* SEGMENTED TABS */}
+        <div className="print-dash-tabs">
           {[
             { id: 'verification', label: 'Verify', count: verificationQueue.length },
             { id: 'active', label: 'Active', count: activeJobs.length },
@@ -509,16 +467,10 @@ export const PrintDashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 text-[12px] sm:text-[12.5px] font-bold rounded-[20px] transition-all flex flex-col items-center justify-center gap-0.5 border ${
-                  isSelected 
-                    ? 'bg-[#6D5DF6]/8 border-[#6D5DF6]/30 text-[#6D5DF6]' 
-                    : 'bg-white border-transparent text-[#6B7280] hover:text-[#111827]'
-                }`}
+                className={`print-dash-tab-btn ${isSelected ? 'selected' : ''}`}
               >
                 <span>{tab.label}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  isSelected ? 'bg-[#6D5DF6] text-white' : 'bg-gray-100 text-gray-500'
-                }`}>
+                <span className={`print-dash-tab-badge ${isSelected ? 'selected' : 'unselected'}`}>
                   {tab.count}
                 </span>
               </button>
@@ -526,86 +478,80 @@ export const PrintDashboard = () => {
           })}
         </div>
 
-        {/* ── TAB CONTENT ── */}
-        <div className="space-y-6">
+        {/* TAB CONTENT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              SECTION 1: VERIFICATION QUEUE
-             ═══════════════════════════════════════════════════════════════════ */}
+          {/* VERIFICATION QUEUE */}
           {activeTab === 'verification' && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
-              <div className="text-left">
-                <h2 className="text-[17px] font-bold text-[#111827] tracking-tight">Verification Queue</h2>
-                <p className="text-[12px] text-[#6B7280] font-medium leading-none mt-1">Verify payments and start printing</p>
+              <div style={{ textAlign: 'left' }}>
+                <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#111827', margin: 0 }}>Verification Queue</h2>
+                <p style={{ fontSize: '12px', color: '#6B7280', fontWeight: 500, marginTop: '4px', margin: 0 }}>Verify payments and start printing</p>
               </div>
 
               {verificationQueue.length === 0 ? (
-                <div className="bg-white rounded-[22px] border border-[#E5E7EB] p-12 text-center shadow-sm">
-                  <div className="w-14 h-14 bg-emerald-50 border border-emerald-100 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-6 h-6 stroke-[3]" />
+                <div className="print-dash-order-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ width: '56px', height: '56px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#059669', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <Check style={{ width: '24px', height: '24px', strokeWidth: 3 }} />
                   </div>
-                  <h3 className="text-[15.5px] font-bold text-gray-800">All Payments Verified</h3>
-                  <p className="text-[12px] text-gray-500 mt-1">Verification queue is completely clear!</p>
+                  <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: '#1f2937', margin: 0 }}>All Payments Verified</h3>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', margin: 0 }}>Verification queue is completely clear!</p>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {(showAllVerification ? verificationQueue : verificationQueue.slice(0, 3)).map(order => {
                     const isExpanded = expandedOrders.has(order._id);
                     return (
                       <motion.div 
                         key={order._id}
                         layout
-                        className="bg-white border border-[#E5E7EB] rounded-[22px] shadow-[0_10px_30px_rgba(15,23,42,0.04)] hover:shadow-lg transition-all text-left overflow-hidden"
+                        className="print-dash-order-card"
                       >
-                        {/* Order Header */}
-                        <div className="p-5 pb-4 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6D5DF6]/15 rounded-xl flex items-center justify-center text-[#6D5DF6] shrink-0">
-                                <FileText className="w-5 h-5" />
+                        <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{ width: '40px', height: '40px', backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6D5DF6', flexShrink: 0 }}>
+                                <FileText style={{ width: '20px', height: '20px' }} />
                               </div>
                               <div>
-                                <span className="text-[10px] text-[#6B7280] font-bold block uppercase leading-none">Order ID</span>
-                                <span className="text-[14px] font-bold text-gray-800 leading-none mt-1 block">
+                                <span style={{ fontSize: '10px', color: '#6B7280', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Order ID</span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', display: 'block', marginTop: '2px' }}>
                                   {`EM-${new Date(order.createdAt).getFullYear()}-${order._id.substring(order._id.length - 8).toUpperCase()}`}
                                 </span>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-[#6B7280] font-bold block uppercase leading-none">Placed At</span>
-                              <span className="text-[12.5px] font-semibold text-gray-700 leading-none mt-1 block">
+                            <div style={{ textAlign: 'right' }}>
+                              <span style={{ fontSize: '10px', color: '#6B7280', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Placed At</span>
+                              <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginTop: '2px' }}>
                                 {formatTime(order.createdAt)}
                               </span>
                             </div>
                           </div>
 
-                          {/* Quick Summary (always visible) */}
-                          <div className="grid grid-cols-2 gap-y-3 gap-x-3 border-t border-[#F3F4F6] pt-4 text-[12.5px]">
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', borderTop: '1px solid #F3F4F6', paddingTop: '1rem', fontSize: '12.5px' }}>
                             <div>
-                              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">👤 Student</span>
-                              <span className="text-gray-800 font-bold">{order.studentName}</span>
+                              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>👤 Student</span>
+                              <span style={{ color: '#1f2937', fontWeight: 700 }}>{order.studentName}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">💰 Amount</span>
-                              <span className="text-[#6D5DF6] font-black text-[15px]">₹{order.totalPrice?.toFixed(2)}</span>
+                              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>💰 Amount</span>
+                              <span style={{ color: '#6D5DF6', fontWeight: 900, fontSize: '15px' }}>₹{order.totalPrice?.toFixed(2)}</span>
                             </div>
                           </div>
 
-                          {/* Expand toggle for full details */}
                           <button
                             onClick={() => toggleExpanded(order._id)}
-                            className="w-full flex items-center justify-center gap-1.5 text-[11.5px] font-bold text-gray-400 hover:text-[#6D5DF6] py-1.5 transition-colors"
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', paddingTop: '6px' }}
                           >
                             {isExpanded ? 'Hide' : 'Show'} Full Details
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            <ChevronDown style={{ width: '14px', height: '14px', transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
                           </button>
                         </div>
 
-                        {/* Expanded Details */}
                         <AnimatePresence>
                           {isExpanded && (
                             <motion.div
@@ -613,31 +559,25 @@ export const PrintDashboard = () => {
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.25 }}
-                              className="overflow-hidden"
+                              style={{ overflow: 'hidden' }}
                             >
-                              <div className="px-5 pb-5 space-y-4">
-                                {/* Full Info Grid */}
-                                <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E5E7EB]">
+                              <div style={{ padding: '0 1.25rem 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', padding: '1rem', border: '1px solid #E5E7EB' }}>
                                   <OrderInfoGrid order={order} />
                                 </div>
-
-                                {/* Payment Proof */}
                                 <PaymentProof order={order} />
-
-                                {/* Files */}
                                 <FilesSection order={order} />
                               </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
 
-                        {/* Action Button */}
-                        <div className="px-5 pb-5">
+                        <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
                           <button
                             onClick={() => updateStatus(order._id, 'printing')}
-                            className="w-full h-[52px] rounded-[16px] border-2 border-[#6D5DF6] text-[#6D5DF6] font-bold text-[13.5px] bg-white hover:bg-[#6D5DF6] hover:text-white transition-all select-none active:scale-[0.98] flex items-center justify-center gap-1.5"
+                            style={{ width: '100%', height: '52px', borderRadius: '16px', border: '2px solid #6D5DF6', color: '#6D5DF6', fontWeight: 700, fontSize: '13.5px', backgroundColor: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                           >
-                            <CheckSquare className="w-4.5 h-4.5 stroke-[2.5]" />
+                            <CheckSquare style={{ width: '18px', height: '18px' }} />
                             Verify Payment & Start Printing
                           </button>
                         </div>
@@ -648,10 +588,10 @@ export const PrintDashboard = () => {
                   {verificationQueue.length > 3 && (
                     <button
                       onClick={() => setShowAllVerification(!showAllVerification)}
-                      className="w-full h-[50px] bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center gap-1.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 transition-colors shadow-sm"
+                      style={{ width: '100%', height: '50px', backgroundColor: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#4b5563', cursor: 'pointer' }}
                     >
                       <span>{showAllVerification ? 'View Less' : `View All (${verificationQueue.length})`}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAllVerification ? 'rotate-180' : ''}`} />
+                      <ChevronDown style={{ width: '16px', height: '16px', transform: showAllVerification ? 'rotate(180deg)' : 'none' }} />
                     </button>
                   )}
                 </div>
@@ -659,31 +599,25 @@ export const PrintDashboard = () => {
             </motion.div>
           )}
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              SECTION 2: ACTIVE JOBS
-             ═══════════════════════════════════════════════════════════════════ */}
+          {/* ACTIVE JOBS */}
           {activeTab === 'active' && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
-              <div className="text-left">
-                <h2 className="text-[17px] font-bold text-[#111827] tracking-tight">Active Job Queue</h2>
-                <p className="text-[12px] text-[#6B7280] font-medium leading-none mt-1">Print and prepare orders for delivery</p>
+              <div style={{ textAlign: 'left' }}>
+                <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#111827', margin: 0 }}>Active Job Queue</h2>
+                <p style={{ fontSize: '12px', color: '#6B7280', fontWeight: 500, marginTop: '4px', margin: 0 }}>Print and prepare orders for delivery</p>
               </div>
 
               {/* Classroom Chips */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none scrollbar-none">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button 
                   onClick={() => setSelectedClassroom(null)}
-                  className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 transition-all active:scale-95 ${
-                    !selectedClassroom 
-                      ? 'bg-[#6D5DF6] border-[#6D5DF6] text-white shadow-sm' 
-                      : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:text-[#111827]'
-                  }`}
+                  style={{ padding: '10px', borderRadius: '12px', border: `1px solid ${!selectedClassroom ? '#6D5DF6' : '#E5E7EB'}`, backgroundColor: !selectedClassroom ? '#6D5DF6' : '#ffffff', color: !selectedClassroom ? '#ffffff' : '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
                 >
-                  <Grid className="w-4.5 h-4.5" />
+                  <Grid style={{ width: '18px', height: '18px' }} />
                 </button>
                 {classroomChips.map(cName => {
                   const count = getClassroomCount(cName);
@@ -692,16 +626,10 @@ export const PrintDashboard = () => {
                     <button
                       key={cName}
                       onClick={() => setSelectedClassroom(isSelected ? null : cName)}
-                      className={`h-[38px] px-4 rounded-xl border text-[12.5px] font-bold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 ${
-                        isSelected 
-                          ? 'bg-[#6D5DF6] border-[#6D5DF6] text-white shadow-sm' 
-                          : 'bg-white border-[#E5E7EB] text-gray-700 hover:text-gray-900'
-                      }`}
+                      style={{ height: '38px', paddingLeft: '1rem', paddingRight: '1rem', borderRadius: '12px', border: `1px solid ${isSelected ? '#6D5DF6' : '#E5E7EB'}`, backgroundColor: isSelected ? '#6D5DF6' : '#ffffff', color: isSelected ? '#ffffff' : '#374151', fontSize: '12.5px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, cursor: 'pointer' }}
                     >
                       <span>{cName}</span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
-                      }`}>
+                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '9999px', backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : '#f3f4f6', color: isSelected ? '#ffffff' : '#6b7280' }}>
                         {count}
                       </span>
                     </button>
@@ -710,15 +638,15 @@ export const PrintDashboard = () => {
               </div>
 
               {filteredActiveJobs.length === 0 ? (
-                <div className="bg-white rounded-[22px] border border-[#E5E7EB] p-12 text-center shadow-sm">
-                  <div className="w-14 h-14 bg-gray-50 border border-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Printer className="w-6 h-6" />
+                <div className="print-dash-order-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ width: '56px', height: '56px', backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', color: '#9ca3af', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <Printer style={{ width: '24px', height: '24px' }} />
                   </div>
-                  <h3 className="text-[15.5px] font-bold text-gray-800">No Active Jobs</h3>
-                  <p className="text-[12px] text-gray-500 mt-1">No printing jobs match the active selection.</p>
+                  <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: '#1f2937', margin: 0 }}>No Active Jobs</h3>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', margin: 0 }}>No printing jobs match the active selection.</p>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {(showAllActive ? filteredActiveJobs : filteredActiveJobs.slice(0, 3)).map(order => {
                     const isExpanded = expandedOrders.has(order._id);
                     const totalPages = order.files?.reduce((acc, f) => acc + (f.pagesCount * f.sets), 0) || 0;
@@ -728,69 +656,65 @@ export const PrintDashboard = () => {
                       <motion.div 
                         key={order._id}
                         layout
-                        className="bg-white border border-[#E5E7EB] rounded-[22px] shadow-[0_10px_30px_rgba(15,23,42,0.04)] hover:shadow-lg transition-all text-left overflow-hidden"
+                        className="print-dash-order-card"
                       >
-                        {/* Active Job Header with print summary */}
-                        <div className="p-5 pb-4 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6D5DF6]/15 rounded-xl flex items-center justify-center text-[#6D5DF6]">
-                                <Play className="w-4.5 h-4.5 animate-pulse" />
+                        <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{ width: '40px', height: '40px', backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6D5DF6' }}>
+                                <Play style={{ width: '18px', height: '18px' }} className="animate-pulse" />
                               </div>
                               <div>
-                                <span className="text-[10px] text-[#6B7280] font-bold block uppercase leading-none">Order ID</span>
-                                <span className="text-[14px] font-bold text-gray-800 leading-none mt-1 block">
+                                <span style={{ fontSize: '10px', color: '#6B7280', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Order ID</span>
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', display: 'block', marginTop: '2px' }}>
                                   {`EM-${new Date(order.createdAt).getFullYear()}-${order._id.substring(order._id.length - 8).toUpperCase()}`}
                                 </span>
                               </div>
                             </div>
-                            <span className="bg-[#FAF9FF] border border-[#6D5DF6]/20 text-[#6D5DF6] font-bold text-[10.5px] px-2.5 py-0.5 rounded-full select-none animate-pulse">
+                            <span style={{ backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.2)', color: '#6D5DF6', fontWeight: 700, fontSize: '10.5px', padding: '2px 10px', borderRadius: '9999px' }}>
                               Printing Active
                             </span>
                           </div>
 
-                          {/* Quick Print Summary Cards */}
-                          <div className="grid grid-cols-4 gap-2">
-                            <div className="bg-blue-50 rounded-xl p-2 text-center border border-blue-100">
-                              <p className="text-[9px] text-blue-500 font-bold uppercase">Files</p>
-                              <p className="text-[15px] font-black text-blue-700">{order.files?.length}</p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                            <div className="print-dash-stat-box blue">
+                              <p className="print-dash-stat-title">Files</p>
+                              <p style={{ fontSize: '15px', fontWeight: 900, margin: 0 }}>{order.files?.length}</p>
                             </div>
-                            <div className="bg-purple-50 rounded-xl p-2 text-center border border-purple-100">
-                              <p className="text-[9px] text-purple-500 font-bold uppercase">Pages</p>
-                              <p className="text-[15px] font-black text-purple-700">{totalPages}</p>
+                            <div className="print-dash-stat-box purple">
+                              <p className="print-dash-stat-title">Pages</p>
+                              <p style={{ fontSize: '15px', fontWeight: 900, margin: 0 }}>{totalPages}</p>
                             </div>
-                            <div className="bg-emerald-50 rounded-xl p-2 text-center border border-emerald-100">
-                              <p className="text-[9px] text-emerald-500 font-bold uppercase">Sheets</p>
-                              <p className="text-[15px] font-black text-emerald-700">{totalSheets}</p>
+                            <div className="print-dash-stat-box emerald">
+                              <p className="print-dash-stat-title">Sheets</p>
+                              <p style={{ fontSize: '15px', fontWeight: 900, margin: 0 }}>{totalSheets}</p>
                             </div>
-                            <div className="bg-amber-50 rounded-xl p-2 text-center border border-amber-100">
-                              <p className="text-[9px] text-amber-500 font-bold uppercase">Paid</p>
-                              <p className="text-[14px] font-black text-amber-700">₹{order.totalPrice?.toFixed(0)}</p>
+                            <div className="print-dash-stat-box" style={{ backgroundColor: '#fffbeb', borderColor: '#fde68a', color: '#b45309' }}>
+                              <p className="print-dash-stat-title">Paid</p>
+                              <p style={{ fontSize: '14px', fontWeight: 900, margin: 0 }}>₹{order.totalPrice?.toFixed(0)}</p>
                             </div>
                           </div>
 
-                          {/* Quick student info */}
-                          <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 border-t border-[#F3F4F6] pt-3 text-[12.5px]">
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', borderTop: '1px solid #F3F4F6', paddingTop: '12px', fontSize: '12.5px' }}>
                             <div>
-                              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">👤 Student</span>
-                              <span className="text-gray-800 font-bold">{order.studentName}</span>
+                              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>👤 Student</span>
+                              <span style={{ color: '#1f2937', fontWeight: 700 }}>{order.studentName}</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">🏫 Destination</span>
-                              <span className="text-gray-800 font-semibold">{order.department} • Room {order.section}</span>
+                              <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>🏫 Destination</span>
+                              <span style={{ color: '#1f2937', fontWeight: 600 }}>{order.department} • Room {order.section}</span>
                             </div>
                           </div>
 
                           <button
                             onClick={() => toggleExpanded(order._id)}
-                            className="w-full flex items-center justify-center gap-1.5 text-[11.5px] font-bold text-gray-400 hover:text-[#6D5DF6] py-1 transition-colors"
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', paddingTop: '4px' }}
                           >
                             {isExpanded ? 'Hide' : 'Show'} Full Details & Files
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            <ChevronDown style={{ width: '14px', height: '14px', transform: isExpanded ? 'rotate(180deg)' : 'none' }} />
                           </button>
                         </div>
 
-                        {/* Expanded: Full Details + All Files */}
                         <AnimatePresence>
                           {isExpanded && (
                             <motion.div
@@ -798,10 +722,10 @@ export const PrintDashboard = () => {
                               animate={{ height: 'auto', opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.25 }}
-                              className="overflow-hidden"
+                              style={{ overflow: 'hidden' }}
                             >
-                              <div className="px-5 pb-5 space-y-4">
-                                <div className="bg-[#F8FAFC] rounded-2xl p-4 border border-[#E5E7EB]">
+                              <div style={{ padding: '0 1.25rem 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', padding: '1rem', border: '1px solid #E5E7EB' }}>
                                   <OrderInfoGrid order={order} />
                                 </div>
                                 <FilesSection order={order} />
@@ -810,20 +734,21 @@ export const PrintDashboard = () => {
                           )}
                         </AnimatePresence>
 
-                        {/* Always show Download All + Dispatch buttons */}
-                        <div className="px-5 pb-5 space-y-2.5">
+                        <div style={{ padding: '0 1.25rem 1.25rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                           <button
                             onClick={() => downloadAllFiles(order.files)}
-                            className="w-full h-[44px] rounded-[14px] border-2 border-gray-200 text-gray-700 hover:border-[#6D5DF6] hover:text-[#6D5DF6] font-bold text-[12.5px] transition-all select-none active:scale-[0.98] flex items-center justify-center gap-1.5"
+                            className="print-dash-btn-outline"
+                            style={{ height: '44px', borderRadius: '14px' }}
                           >
-                            <Download className="w-4 h-4" />
+                            <Download style={{ width: '16px', height: '16px' }} />
                             Download All {order.files?.length} File(s)
                           </button>
                           <button
                             onClick={() => updateStatus(order._id, 'out-for-delivery')}
-                            className="w-full h-[52px] rounded-[16px] bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold text-[13.5px] transition-all select-none active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-sm"
+                            className="print-dash-btn-primary"
+                            style={{ height: '52px', borderRadius: '16px', fontSize: '13.5px' }}
                           >
-                            <Truck className="w-4.5 h-4.5" />
+                            <Truck style={{ width: '18px', height: '18px' }} />
                             Dispatch Order to Runner
                           </button>
                         </div>
@@ -834,10 +759,10 @@ export const PrintDashboard = () => {
                   {filteredActiveJobs.length > 3 && (
                     <button
                       onClick={() => setShowAllActive(!showAllActive)}
-                      className="w-full h-[50px] bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center gap-1.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 transition-colors shadow-sm"
+                      style={{ width: '100%', height: '50px', backgroundColor: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#4b5563', cursor: 'pointer' }}
                     >
                       <span>{showAllActive ? 'View Less' : `View All Active Jobs (${filteredActiveJobs.length})`}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAllActive ? 'rotate-180' : ''}`} />
+                      <ChevronDown style={{ width: '16px', height: '16px', transform: showAllActive ? 'rotate(180deg)' : 'none' }} />
                     </button>
                   )}
                 </div>
@@ -845,102 +770,101 @@ export const PrintDashboard = () => {
             </motion.div>
           )}
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              SECTION 3: DELIVERY LOGS
-             ═══════════════════════════════════════════════════════════════════ */}
+          {/* DELIVERY LOGS */}
           {activeTab === 'delivery' && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
-              <div className="text-left">
-                <h2 className="text-[17px] font-bold text-[#111827] tracking-tight">Delivery Logs</h2>
-                <p className="text-[12px] text-[#6B7280] font-medium leading-none mt-1">Orders on the way to classrooms</p>
+              <div style={{ textAlign: 'left' }}>
+                <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#111827', margin: 0 }}>Delivery Logs</h2>
+                <p style={{ fontSize: '12px', color: '#6B7280', fontWeight: 500, marginTop: '4px', margin: 0 }}>Orders on the way to classrooms</p>
               </div>
 
               {deliveryLogs.length === 0 ? (
-                <div className="bg-white rounded-[22px] border border-[#E5E7EB] p-12 text-center shadow-sm">
-                  <div className="w-14 h-14 bg-gray-50 border border-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Truck className="w-6 h-6" />
+                <div className="print-dash-order-card" style={{ padding: '3rem', textAlign: 'center' }}>
+                  <div style={{ width: '56px', height: '56px', backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', color: '#9ca3af', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+                    <Truck style={{ width: '24px', height: '24px' }} />
                   </div>
-                  <h3 className="text-[15.5px] font-bold text-gray-800">No Dispatched Deliveries</h3>
-                  <p className="text-[12px] text-gray-500 mt-1">All printing orders are currently in-house.</p>
+                  <h3 style={{ fontSize: '15.5px', fontWeight: 700, color: '#1f2937', margin: 0 }}>No Dispatched Deliveries</h3>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px', margin: 0 }}>All printing orders are currently in-house.</p>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {(showAllDelivery ? deliveryLogs : deliveryLogs.slice(0, 3)).map(order => {
                     const totalPages = order.files?.reduce((acc, f) => acc + (f.pagesCount * f.sets), 0) || 0;
                     return (
                       <div 
                         key={order._id} 
-                        className="bg-white border border-[#E5E7EB] rounded-[22px] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] hover:shadow-lg transition-all text-left space-y-4"
+                        className="print-dash-order-card"
+                        style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center text-amber-600">
-                              <Truck className="w-5 h-5" />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706' }}>
+                              <Truck style={{ width: '20px', height: '20px' }} />
                             </div>
                             <div>
-                              <span className="text-[10px] text-[#6B7280] font-bold block uppercase leading-none">Order ID</span>
-                              <span className="text-[14px] font-bold text-gray-800 leading-none mt-1 block">
+                              <span style={{ fontSize: '10px', color: '#6B7280', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Order ID</span>
+                              <span style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', display: 'block', marginTop: '2px' }}>
                                 {`EM-${new Date(order.createdAt).getFullYear()}-${order._id.substring(order._id.length - 8).toUpperCase()}`}
                               </span>
                             </div>
                           </div>
-                          <span className="bg-[#FFFBEB] text-amber-800 font-bold text-[10.5px] px-2.5 py-0.5 rounded-full select-none border border-amber-100">
+                          <span style={{ backgroundColor: '#fffbeb', color: '#92400e', fontWeight: 700, fontSize: '10.5px', padding: '2px 10px', borderRadius: '9999px', border: '1px solid #fde68a' }}>
                             Out For Delivery
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-y-3 gap-x-3 border-t border-b border-[#F3F4F6] py-3.5 text-[12.5px]">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', borderTop: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6', paddingTop: '14px', paddingBottom: '14px', fontSize: '12.5px' }}>
                           <div>
-                            <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">👤 Student</span>
-                            <span className="text-gray-800 font-bold">{order.studentName}</span>
+                            <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>👤 Student</span>
+                            <span style={{ color: '#1f2937', fontWeight: 700 }}>{order.studentName}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">🏫 Destination</span>
-                            <span className="text-gray-800 font-semibold">{order.department} • Room {order.section}</span>
+                            <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>🏫 Destination</span>
+                            <span style={{ color: '#1f2937', fontWeight: 600 }}>{order.department} • Room {order.section}</span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">📄 Volume</span>
-                            <span className="text-gray-700 font-medium">
+                            <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📄 Volume</span>
+                            <span style={{ color: '#374151', fontWeight: 500 }}>
                               {order.files?.length} files • {totalPages} pages
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] text-[#9CA3AF] font-bold block uppercase">📞 Contact</span>
-                            <a href={`tel:${order.contactNumber}`} className="text-[#6D5DF6] font-bold hover:underline">
+                            <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>📞 Contact</span>
+                            <a href={`tel:${order.contactNumber}`} style={{ color: '#6D5DF6', fontWeight: 700, textDecoration: 'none' }}>
                               {order.contactNumber}
                             </a>
                           </div>
                         </div>
 
-                        {/* Runner details */}
-                        <div className="flex items-center justify-between bg-slate-50 border border-gray-100 rounded-xl p-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 text-[12px] font-bold uppercase select-none">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: '#e0e7ff', border: '1px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4338ca', fontSize: '12px', fontWeight: 700 }}>
                               R
                             </div>
-                            <div className="text-left">
-                              <span className="text-[10px] text-gray-400 block font-bold leading-none uppercase">Assigned Runner</span>
-                              <span className="text-[12.5px] font-bold text-gray-800 leading-none mt-1 block">Ramesh</span>
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ fontSize: '10px', color: '#9ca3af', display: 'block', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Runner</span>
+                              <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#1f2937', display: 'block', marginTop: '2px' }}>Ramesh</span>
                             </div>
                           </div>
                           <a 
                             href="tel:9391461855" 
-                            className="w-9 h-9 rounded-lg bg-white border border-[#E5E7EB] hover:text-[#6D5DF6] hover:border-[#6D5DF6] flex items-center justify-center transition-colors shadow-sm"
+                            className="profile-icon-btn"
+                            style={{ width: '36px', height: '36px', border: '1px solid #E5E7EB', backgroundColor: '#ffffff' }}
                             title="Call Runner Ramesh"
                           >
-                            <Phone className="w-4 h-4" />
+                            <Phone style={{ width: '16px', height: '16px' }} />
                           </a>
                         </div>
 
                         <button
                           onClick={() => updateStatus(order._id, 'delivered')}
-                          className="w-full h-[52px] rounded-[16px] border-2 border-[#6D5DF6] text-[#6D5DF6] font-bold text-[13.5px] bg-white hover:bg-[#6D5DF6] hover:text-white transition-all select-none active:scale-[0.98] flex items-center justify-center gap-1.5"
+                          style={{ width: '100%', height: '52px', borderRadius: '16px', border: '2px solid #6D5DF6', color: '#6D5DF6', fontWeight: 700, fontSize: '13.5px', backgroundColor: '#ffffff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         >
-                          <CheckCircle className="w-4.5 h-4.5 stroke-[2.5]" />
+                          <CheckCircle style={{ width: '18px', height: '18px' }} />
                           Confirm Handover
                         </button>
                       </div>
@@ -950,10 +874,10 @@ export const PrintDashboard = () => {
                   {deliveryLogs.length > 3 && (
                     <button
                       onClick={() => setShowAllDelivery(!showAllDelivery)}
-                      className="w-full h-[50px] bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center gap-1.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 transition-colors shadow-sm"
+                      style={{ width: '100%', height: '50px', backgroundColor: '#ffffff', border: '1px solid #E5E7EB', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#4b5563', cursor: 'pointer' }}
                     >
                       <span>{showAllDelivery ? 'View Less' : `View All Delivery Logs (${deliveryLogs.length})`}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAllDelivery ? 'rotate-180' : ''}`} />
+                      <ChevronDown style={{ width: '16px', height: '16px', transform: showAllDelivery ? 'rotate(180deg)' : 'none' }} />
                     </button>
                   )}
                 </div>
@@ -965,7 +889,7 @@ export const PrintDashboard = () => {
 
       </main>
 
-      {/* ── SCREENSHOT LIGHTBOX ── */}
+      {/* SCREENSHOT LIGHTBOX */}
       <AnimatePresence>
         {selectedScreenshot && (
           <motion.div 
@@ -973,19 +897,19 @@ export const PrintDashboard = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedScreenshot(null)}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+            style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', cursor: 'zoom-out' }}
           >
             <motion.div 
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.95 }}
-              className="max-w-[500px] w-full max-h-[80vh] bg-white rounded-3xl overflow-hidden p-2 relative shadow-2xl"
+              style={{ maxWidth: '500px', width: '100%', maxHeight: '80vh', backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', padding: '8px', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}
               onClick={(e) => e.stopPropagation()}
             >
               <img 
                 src={selectedScreenshot} 
                 alt="Receipt screenshot verification detail" 
-                className="w-full max-h-[75vh] object-contain rounded-2xl block" 
+                style={{ width: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '16px', display: 'block' }} 
               />
             </motion.div>
           </motion.div>

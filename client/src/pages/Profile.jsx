@@ -8,6 +8,7 @@ import {
   ClipboardList, LayoutDashboard
 } from 'lucide-react';
 import api from '../api/axios';
+import './Profile.css';
 
 const DEPARTMENTS = [
   'Computer Science and Engineering',
@@ -92,7 +93,6 @@ export const Profile = () => {
       formData.append('college', editCollege);
 
       if (editIdCardFile) {
-        // Compress ID image
         const compressImage = (file) => {
           return new Promise((resolve) => {
             const reader = new FileReader();
@@ -140,9 +140,7 @@ export const Profile = () => {
       }
 
       const { data } = await api.put('/auth/profile', formData, {
-        headers: {
-          'Content-Type': undefined
-        }
+        headers: { 'Content-Type': undefined }
       });
 
       updateProfile(data);
@@ -222,90 +220,85 @@ export const Profile = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const getStatusConfig = () => {
     const status = user?.verificationStatus || 'pending';
     switch (status) {
       case 'approved':
-        return { icon: ShieldCheck, label: 'Verified', color: 'text-emerald-600', bg: 'bg-[#EEF9F2]', border: 'border-emerald-200', bannerText: 'Your account is verified', bannerSub: 'You can now buy, sell, donate and connect with other students.' };
+        return { icon: ShieldCheck, label: 'Verified', color: '#059669', bg: '#EEF9F2', border: '#a7f3d0', bannerText: 'Your account is verified', bannerSub: 'You can now buy, sell, donate and connect with other students.' };
       case 'rejected':
-        return { icon: XCircle, label: 'Rejected', color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200', bannerText: 'Verification rejected', bannerSub: 'Please contact support or re-submit your ID card.' };
+        return { icon: XCircle, label: 'Rejected', color: '#e11d48', bg: '#fff1f2', border: '#ffe4e6', bannerText: 'Verification rejected', bannerSub: 'Please contact support or re-submit your ID card.' };
       default:
-        return { icon: Clock, label: 'Pending', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', bannerText: 'Verification pending', bannerSub: 'Your ID card is being reviewed by the admin team.' };
+        return { icon: Clock, label: 'Pending', color: '#d97706', bg: '#fffbeb', border: '#fde68a', bannerText: 'Verification pending', bannerSub: 'Your ID card is being reviewed by the admin team.' };
     }
   };
 
   const statusConfig = getStatusConfig();
   const StatusIcon = statusConfig.icon;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   if (activeTab === 'listings') {
     return (
-      <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
-        <div className="flex items-center gap-3 py-4 lg:py-6 border-b border-[#ECECEC] mb-5">
-          <button onClick={() => setActiveTab(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] transition-colors">
-            <ChevronLeft className="w-5 h-5 text-[#111827] stroke-[2.5]" />
+      <div className="profile-subview-container">
+        <div className="profile-subview-header">
+          <button onClick={() => setActiveTab(null)} className="profile-icon-btn">
+            <ChevronLeft style={{ width: '20px', height: '20px', color: '#111827', strokeWidth: 2.5 }} />
           </button>
-          <h1 className="text-[20px] font-bold text-[#111827]">My Listings</h1>
+          <h1 className="profile-subview-title">My Listings</h1>
         </div>
 
         {activeItems.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
-            <Tag className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
-            <p className="font-bold text-[#111827]">No active listings</p>
-            <p className="text-[12px] text-[#9CA3AF] mt-1">Your active listings for sale or donation will appear here.</p>
+          <div className="profile-empty-state">
+            <Tag className="profile-empty-icon" />
+            <p className="profile-empty-title">No active listings</p>
+            <p className="profile-empty-sub">Your active listings for sale or donation will appear here.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="profile-items-list">
             {activeItems.map((listing) => {
-              const expired = listing.expiresAt && new Date(listing.expiresAt).getTime() <= Date.now();
-              const diff = listing.expiresAt ? new Date(listing.expiresAt).getTime() - Date.now() : 0;
-              const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+              const daysLeft = listing.expiresAt
+                ? Math.ceil((new Date(listing.expiresAt) - new Date()) / (1000 * 60 * 60 * 24))
+                : 30;
+              const expired = daysLeft <= 0;
 
               return (
-                <div key={listing._id} className="bg-white border border-[#ECECEC] rounded-[20px] p-4 flex gap-4">
-                  {/* Image */}
+                <div key={listing._id} className="profile-item-card">
                   <div 
                     onClick={() => navigate(`/listing/${listing._id}`)}
-                    className="w-20 h-20 bg-[#FAFAFF] rounded-[14px] overflow-hidden border border-[#E9E6F8]/70 flex-shrink-0 cursor-pointer"
+                    className="profile-item-img-box"
                   >
                     <img
                       src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'}
                       alt=""
-                      className="w-full h-full object-cover"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   </div>
 
-                  {/* Details */}
                   <div 
                     onClick={() => navigate(`/listing/${listing._id}`)}
-                    className="flex-1 min-w-0 flex flex-col justify-between cursor-pointer"
+                    className="profile-item-details"
                   >
                     <div>
-                      <h4 className="font-bold text-[14px] text-[#111827] truncate">{listing.title}</h4>
-                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        <span className="text-[12px] font-bold text-[#111827]">
+                      <h4 className="profile-item-title">{listing.title}</h4>
+                      <div className="profile-item-meta">
+                        <span className="profile-item-price">
                           {listing.listingType === 'donate' ? 'Free' : `₹${listing.price}`}
                         </span>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                          listing.status === 'sold'
-                            ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                            : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                        }`}>
+                        <span className={`profile-item-badge ${listing.status === 'sold' ? 'sold' : 'available'}`}>
                           {listing.status}
                         </span>
                         {expired && listing.status === 'available' && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wider">
+                          <span className="profile-item-badge expired">
                             Expired
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <p className={`text-[11px] font-medium ${expired && listing.status === 'available' ? 'text-rose-500 font-semibold' : 'text-[#9CA3AF]'}`}>
+                    <p className="profile-item-status-text" style={{ color: expired && listing.status === 'available' ? '#e11d48' : '#9CA3AF' }}>
                       {listing.status === 'sold'
                         ? 'Item marked as sold'
                         : (expired
@@ -316,39 +309,32 @@ export const Profile = () => {
                     </p>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col justify-between items-end flex-shrink-0 gap-2">
-                    {/* Delete action */}
+                  <div className="profile-item-actions">
                     <button
                       onClick={() => handleDelete(listing._id)}
-                      className="w-8 h-8 rounded-full border border-[#ECECEC] flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-colors"
+                      className="profile-icon-btn"
+                      style={{ border: '1px solid #ECECEC' }}
                       title="Delete Listing"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 style={{ width: '14px', height: '14px', color: '#f43f5e' }} />
                     </button>
 
-                    <div className="flex gap-2">
-                      {/* Mark as Sold */}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
                       {listing.status === 'available' && (
                         <button
                           onClick={() => handleMarkSold(listing._id)}
-                          className="px-3 py-1.5 bg-[#EEF9F2] text-emerald-600 border border-emerald-100 rounded-full text-[11px] font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                          style={{ padding: '6px 12px', backgroundColor: '#EEF9F2', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '9999px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 animate-pulse" /> Mark Sold
+                          <CheckCircle2 style={{ width: '14px', height: '14px' }} /> Mark Sold
                         </button>
                       )}
 
-                      {/* Renew */}
                       {listing.status === 'available' && (
                         <button
                           onClick={() => handleRenew(listing._id)}
-                          className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors flex items-center gap-1 ${
-                            expired
-                              ? 'bg-[#6D4AFF] text-white hover:bg-[#5939D5]'
-                              : 'bg-[#F7F4FF] text-[#6D4AFF] border border-[#E8E0F8] hover:bg-[#E8E0F8]'
-                          }`}
+                          style={{ padding: '6px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: expired ? '#6D4AFF' : '#F7F4FF', color: expired ? '#ffffff' : '#6D4AFF', border: expired ? 'none' : '1px solid #E8E0F8' }}
                         >
-                          <RefreshCw className="w-3 h-3" /> Renew
+                          <RefreshCw style={{ width: '12px', height: '12px' }} /> Renew
                         </button>
                       )}
                     </div>
@@ -364,58 +350,59 @@ export const Profile = () => {
 
   if (activeTab === 'sold') {
     return (
-      <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
-        <div className="flex items-center gap-3 py-4 lg:py-6 border-b border-[#ECECEC] mb-5">
-          <button onClick={() => setActiveTab(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] transition-colors">
-            <ChevronLeft className="w-5 h-5 text-[#111827] stroke-[2.5]" />
+      <div className="profile-subview-container">
+        <div className="profile-subview-header">
+          <button onClick={() => setActiveTab(null)} className="profile-icon-btn">
+            <ChevronLeft style={{ width: '20px', height: '20px', color: '#111827', strokeWidth: 2.5 }} />
           </button>
-          <h1 className="text-[20px] font-bold text-[#111827]">Sold Items</h1>
+          <h1 className="profile-subview-title">Sold Items</h1>
         </div>
 
         {soldItems.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
-            <CheckCircle2 className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
-            <p className="font-bold text-[#111827]">No sold items yet</p>
-            <p className="text-[12px] text-[#9CA3AF] mt-1">Items you mark as sold will appear here.</p>
+          <div className="profile-empty-state">
+            <CheckCircle2 className="profile-empty-icon" />
+            <p className="profile-empty-title">No sold items yet</p>
+            <p className="profile-empty-sub">Items you mark as sold will appear here.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="profile-items-list">
             {soldItems.map((listing) => (
-              <div key={listing._id} className="bg-white border border-[#ECECEC] rounded-[20px] p-4 flex gap-4">
+              <div key={listing._id} className="profile-item-card">
                 <div 
                   onClick={() => navigate(`/listing/${listing._id}`)}
-                  className="w-20 h-20 bg-[#FAFAFF] rounded-[14px] overflow-hidden border border-[#E9E6F8]/70 flex-shrink-0 cursor-pointer"
+                  className="profile-item-img-box"
                 >
                   <img
                     src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'}
                     alt=""
-                    className="w-full h-full object-cover"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 </div>
                 <div 
                   onClick={() => navigate(`/listing/${listing._id}`)}
-                  className="flex-1 min-w-0 flex flex-col justify-between cursor-pointer"
+                  className="profile-item-details"
                 >
                   <div>
-                    <h4 className="font-bold text-[14px] text-[#111827] truncate">{listing.title}</h4>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      <span className="text-[12px] font-bold text-[#111827]">
+                    <h4 className="profile-item-title">{listing.title}</h4>
+                    <div className="profile-item-meta">
+                      <span className="profile-item-price">
                         {listing.listingType === 'donate' ? 'Free' : `₹${listing.price}`}
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider">
+                      <span className="profile-item-badge sold">
                         Sold
                       </span>
                     </div>
                   </div>
-                  <p className="text-[11px] text-[#9CA3AF] font-medium">Item marked as sold</p>
+                  <p className="profile-item-status-text">Item marked as sold</p>
                 </div>
-                <div className="flex flex-col justify-between items-end flex-shrink-0">
+                <div className="profile-item-actions">
                   <button
                     onClick={() => handleDelete(listing._id)}
-                    className="w-8 h-8 rounded-full border border-[#ECECEC] flex items-center justify-center text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-colors"
+                    className="profile-icon-btn"
+                    style={{ border: '1px solid #ECECEC' }}
                     title="Delete Listing"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 style={{ width: '14px', height: '14px', color: '#f43f5e' }} />
                   </button>
                 </div>
               </div>
@@ -428,43 +415,43 @@ export const Profile = () => {
 
   if (activeTab === 'saved') {
     return (
-      <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
-        <div className="flex items-center gap-3 py-4 lg:py-6 border-b border-[#ECECEC] mb-5">
-          <button onClick={() => setActiveTab(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] transition-colors">
-            <ChevronLeft className="w-5 h-5 text-[#111827] stroke-[2.5]" />
+      <div className="profile-subview-container">
+        <div className="profile-subview-header">
+          <button onClick={() => setActiveTab(null)} className="profile-icon-btn">
+            <ChevronLeft style={{ width: '20px', height: '20px', color: '#111827', strokeWidth: 2.5 }} />
           </button>
-          <h1 className="text-[20px] font-bold text-[#111827]">Saved Items</h1>
+          <h1 className="profile-subview-title">Saved Items</h1>
         </div>
 
         {savedListings.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
-            <Heart className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
-            <p className="font-bold text-[#111827]">No saved items</p>
-            <p className="text-[12px] text-[#9CA3AF] mt-1">Tap the heart icon on any listing to save it.</p>
+          <div className="profile-empty-state">
+            <Heart className="profile-empty-icon" />
+            <p className="profile-empty-title">No saved items</p>
+            <p className="profile-empty-sub">Tap the heart icon on any listing to save it.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="profile-items-list">
             {savedListings.map((listing) => (
-              <div key={listing._id} className="bg-white border border-[#ECECEC] rounded-[20px] p-4 flex gap-4">
-                <div className="w-20 h-20 bg-[#FAFAFF] rounded-[14px] overflow-hidden border border-[#E9E6F8]/70 flex-shrink-0 cursor-pointer" onClick={() => navigate(`/listing/${listing._id}`)}>
-                  <img src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'} alt="" className="w-full h-full object-cover" />
+              <div key={listing._id} className="profile-item-card">
+                <div className="profile-item-img-box" onClick={() => navigate(`/listing/${listing._id}`)}>
+                  <img src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-between cursor-pointer" onClick={() => navigate(`/listing/${listing._id}`)}>
+                <div className="profile-item-details" onClick={() => navigate(`/listing/${listing._id}`)}>
                   <div>
-                    <h4 className="font-bold text-[14px] text-[#111827] truncate hover:text-[#6D4AFF] transition-colors">{listing.title}</h4>
-                    <p className="text-[12px] font-bold text-[#111827] mt-1">
+                    <h4 className="profile-item-title">{listing.title}</h4>
+                    <p className="profile-item-price" style={{ marginTop: '4px' }}>
                       {listing.listingType === 'donate' ? 'Free' : `₹${listing.price}`}
                     </p>
                   </div>
-                  <p className="text-[11px] text-[#9CA3AF] truncate">{listing.sellerCollege}</p>
+                  <p className="profile-item-status-text">{listing.sellerCollege}</p>
                 </div>
-                <div className="flex items-center justify-center flex-shrink-0">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <button
                     onClick={() => handleUnsave(listing._id)}
-                    className="w-9 h-9 rounded-full bg-[#FFF0F0] text-rose-500 border border-rose-100 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+                    style={{ width: '36px', height: '36px', borderRadius: '9999px', backgroundColor: '#FFF0F0', color: '#f43f5e', border: '1px solid #ffe4e6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     title="Unsave"
                   >
-                    <Heart className="w-4 h-4 fill-rose-500 stroke-none" />
+                    <Heart style={{ width: '16px', height: '16px', fill: '#f43f5e', stroke: 'none' }} />
                   </button>
                 </div>
               </div>
@@ -478,35 +465,35 @@ export const Profile = () => {
   if (activeTab === 'donations') {
     const myDonations = myListings.filter(l => l.listingType === 'donate');
     return (
-      <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
-        <div className="flex items-center gap-3 py-4 lg:py-6 border-b border-[#ECECEC] mb-5">
-          <button onClick={() => setActiveTab(null)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] transition-colors">
-            <ChevronLeft className="w-5 h-5 text-[#111827] stroke-[2.5]" />
+      <div className="profile-subview-container">
+        <div className="profile-subview-header">
+          <button onClick={() => setActiveTab(null)} className="profile-icon-btn">
+            <ChevronLeft style={{ width: '20px', height: '20px', color: '#111827', strokeWidth: 2.5 }} />
           </button>
-          <h1 className="text-[20px] font-bold text-[#111827]">My Donations</h1>
+          <h1 className="profile-subview-title">My Donations</h1>
         </div>
 
         {myDonations.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#ECECEC] rounded-[24px]">
-            <Gift className="w-10 h-10 text-[#B8A5E3] mx-auto mb-3" />
-            <p className="font-bold text-[#111827]">No donations yet</p>
-            <p className="text-[12px] text-[#9CA3AF] mt-1">Items you list as "Donate" will appear here.</p>
+          <div className="profile-empty-state">
+            <Gift className="profile-empty-icon" />
+            <p className="profile-empty-title">No donations yet</p>
+            <p className="profile-empty-sub">Items you list as "Donate" will appear here.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="profile-items-list">
             {myDonations.map((listing) => (
-              <div key={listing._id} className="bg-white border border-[#ECECEC] rounded-[20px] p-4 flex gap-4 cursor-pointer" onClick={() => navigate(`/listing/${listing._id}`)}>
-                <div className="w-20 h-20 bg-[#FAFAFF] rounded-[14px] overflow-hidden border border-[#E9E6F8]/70 flex-shrink-0">
-                  <img src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'} alt="" className="w-full h-full object-cover" />
+              <div key={listing._id} className="profile-item-card" onClick={() => navigate(`/listing/${listing._id}`)}>
+                <div className="profile-item-img-box">
+                  <img src={listing.images?.[0] || '/images/file_00000000968c71f8895e41375cd51838.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                <div className="profile-item-details">
                   <div>
-                    <h4 className="font-bold text-[14px] text-[#111827] truncate">{listing.title}</h4>
-                    <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F4F1FF] text-[#6D4AFF] mt-1">
+                    <h4 className="profile-item-title">{listing.title}</h4>
+                    <span style={{ display: 'inline-block', fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '9999px', backgroundColor: '#F4F1FF', color: '#6D4AFF', marginTop: '4px' }}>
                       Donation
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#9CA3AF]">{listing.sellerCollege}</p>
+                  <p className="profile-item-status-text">{listing.sellerCollege}</p>
                 </div>
               </div>
             ))}
@@ -517,148 +504,133 @@ export const Profile = () => {
   }
 
   return (
-    <div className="max-w-[560px] mx-auto px-5 pt-2 pb-28 lg:pb-12">
+    <div className="profile-page-container">
 
-      {/* ═══════════════════════════════════════
-          PAGE HEADER (mobile)
-          ═══════════════════════════════════════ */}
-      <div className="flex items-center justify-between py-4 lg:py-6">
-        <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight">Profile</h1>
-        <div className="flex items-center gap-1">
+      {/* PAGE HEADER */}
+      <div className="profile-header-bar">
+        <h1 className="profile-header-title">Profile</h1>
+        <div className="profile-header-actions">
           <button 
             onClick={() => showToast('Profile settings are managed by campus administration.', 'info')}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#111827] hover:bg-[#F7F4FF] transition-colors"
+            className="profile-icon-btn"
           >
-            <Settings className="w-[20px] h-[20px] stroke-[1.8]" />
+            <Settings style={{ width: '20px', height: '20px', strokeWidth: 1.8 }} />
           </button>
           <button 
             onClick={() => navigate('/notifications')}
-            className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#111827] hover:bg-[#F7F4FF] transition-colors"
+            className="profile-icon-btn"
           >
-            <Bell className="w-[20px] h-[20px] stroke-[1.8]" />
+            <Bell style={{ width: '20px', height: '20px', strokeWidth: 1.8 }} />
             {unreadNotificationsCount > 0 && (
-              <span className="absolute top-[6px] right-[6px] w-[7px] h-[7px] bg-rose-500 rounded-full border-[1.5px] border-white" />
+              <span className="profile-badge-dot" />
             )}
           </button>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          PROFILE CARD
-          ═══════════════════════════════════════ */}
-      <div className="bg-white border border-[#ECECEC] rounded-[24px] p-6 mb-3">
-        <div className="flex items-start gap-4">
+      {/* PROFILE CARD */}
+      <div className="profile-card">
+        <div className="profile-card-content">
 
-          {/* Avatar with camera icon */}
-          <div className="relative flex-shrink-0">
-            <div className="w-[72px] h-[72px] rounded-full bg-[#E8E0F8] flex items-center justify-center overflow-hidden">
+          {/* Avatar */}
+          <div className="profile-avatar-wrapper">
+            <div className="profile-avatar-img-box">
               {user?.profileImageUrl ? (
-                <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                <img src={user.profileImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <UserIcon className="w-9 h-9 text-[#B8A5E3] stroke-[1.5]" />
+                <UserIcon style={{ width: '36px', height: '36px', color: '#B8A5E3', strokeWidth: 1.5 }} />
               )}
             </div>
-            <button className="absolute -bottom-0.5 -left-0.5 w-[26px] h-[26px] bg-white rounded-full border border-[#ECECEC] flex items-center justify-center shadow-sm hover:bg-[#F7F4FF] transition-colors">
-              <Camera className="w-[13px] h-[13px] text-[#6B7280] stroke-[2]" />
+            <button className="profile-camera-btn">
+              <Camera style={{ width: '13px', height: '13px', color: '#6B7280', strokeWidth: 2 }} />
             </button>
           </div>
 
           {/* User info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h2 className="text-[17px] font-bold text-[#111827] truncate">{user?.fullName}</h2>
+          <div className="profile-user-info">
+            <div className="profile-name-row">
+              <h2 className="profile-user-name">{user?.fullName}</h2>
               {isVerified && (
-                <BadgeCheck className="w-[18px] h-[18px] text-[#6D4AFF] flex-shrink-0 fill-[#6D4AFF] stroke-white" />
+                <BadgeCheck style={{ width: '18px', height: '18px', color: '#6D4AFF', fill: '#6D4AFF', flexShrink: 0 }} />
               )}
             </div>
-            <p className="text-[13px] text-[#6B7280] mt-0.5">{user?.department} • {user?.year}</p>
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <MapPin className="w-[13px] h-[13px] text-[#9CA3AF] flex-shrink-0 stroke-[2]" />
-              <p className="text-[12px] text-[#9CA3AF] truncate">{user?.college}</p>
+            <p className="profile-user-dept">{user?.department} • {user?.year}</p>
+            <div className="profile-user-location">
+              <MapPin style={{ width: '13px', height: '13px', color: '#9CA3AF', strokeWidth: 2, flexShrink: 0 }} />
+              <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.college}</p>
             </div>
 
             {/* Edit Profile button */}
             <button 
               onClick={() => setShowInfoModal(true)}
-              className="inline-flex items-center gap-1.5 mt-3 px-4 py-[6px] border border-[#ECECEC] rounded-full text-[12px] font-semibold text-[#111827] hover:bg-[#F7F4FF] hover:border-[#D9D5EC] transition-all active:scale-[0.97]"
+              className="profile-edit-btn"
             >
-              <Pen className="w-[12px] h-[12px] stroke-[2]" />
+              <Pen style={{ width: '12px', height: '12px', strokeWidth: 2 }} />
               Edit Profile
             </button>
           </div>
 
-          {/* Chevron */}
-          <ChevronRight className="w-5 h-5 text-[#D1D5DB] flex-shrink-0 mt-1" />
+          <ChevronRight style={{ width: '20px', height: '20px', color: '#D1D5DB', flexShrink: 0, marginTop: '4px' }} />
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          STATS ROW
-          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-3 border border-[#ECECEC] rounded-[20px] bg-white mb-5 divide-x divide-[#ECECEC]">
+      {/* STATS ROW */}
+      <div className="profile-stats-row">
         {[
-          { icon: Package, value: activeItems.length, label: 'Listings', color: 'text-[#6D4AFF]', key: 'listings' },
-          { icon: Heart, value: savedListings.length, label: 'Saved', color: 'text-[#6D4AFF]', key: 'saved' },
-          { icon: Gift, value: donationCount, label: 'Donations', color: 'text-[#6D4AFF]', key: 'donations' },
+          { icon: Package, value: activeItems.length, label: 'Listings', key: 'listings' },
+          { icon: Heart, value: savedListings.length, label: 'Saved', key: 'saved' },
+          { icon: Gift, value: donationCount, label: 'Donations', key: 'donations' },
         ].map((stat) => (
-          <button key={stat.label} onClick={() => setActiveTab(stat.key)} className="flex flex-col items-center py-4 gap-1 hover:bg-[#FAFAFF] transition-colors">
-            <div className="flex items-center gap-1.5">
-              <stat.icon className={`w-[16px] h-[16px] ${stat.color} stroke-[1.8]`} />
-              <span className="text-[16px] font-bold text-[#111827]">{stat.value}</span>
+          <button key={stat.label} onClick={() => setActiveTab(stat.key)} className="profile-stat-btn">
+            <div className="profile-stat-header">
+              <stat.icon style={{ width: '16px', height: '16px', color: '#6D4AFF', strokeWidth: 1.8 }} />
+              <span className="profile-stat-val">{stat.value}</span>
             </div>
-            <span className="text-[11px] text-[#9CA3AF] font-medium">{stat.label}</span>
+            <span className="profile-stat-label">{stat.label}</span>
           </button>
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════
-          VERIFICATION BANNER
-          ═══════════════════════════════════════ */}
-      <div className={`rounded-[20px] p-5 mb-6 flex items-center gap-4 border ${
-        isVerified ? 'bg-[#F7F4FF] border-[#E8E0F8]' : `${statusConfig.bg} ${statusConfig.border}`
-      }`}>
-        <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
-          isVerified ? 'bg-[#E8E0F8]' : statusConfig.bg
-        }`}>
-          <StatusIcon className={`w-5 h-5 ${statusConfig.color} stroke-[1.8]`} />
+      {/* VERIFICATION BANNER */}
+      <div className="profile-verification-banner" style={{ backgroundColor: isVerified ? '#F7F4FF' : statusConfig.bg, borderColor: isVerified ? '#E8E0F8' : statusConfig.border }}>
+        <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, backgroundColor: isVerified ? '#E8E0F8' : statusConfig.bg }}>
+          <StatusIcon style={{ width: '20px', height: '20px', color: statusConfig.color, strokeWidth: 1.8 }} />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-bold text-[#111827]">{statusConfig.bannerText}</p>
-          <p className="text-[11px] text-[#6B7280] mt-0.5 leading-relaxed">{statusConfig.bannerSub}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>{statusConfig.bannerText}</p>
+          <p style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px', lineHeight: 1.625, margin: 0 }}>{statusConfig.bannerSub}</p>
         </div>
         {isVerified && (
-          <div className="relative w-14 h-14 flex-shrink-0">
+          <div style={{ position: 'relative', width: '3.5rem', height: '3.5rem', flexShrink: 0 }}>
             <img
               src="/images/graduation-cap-3d.png"
               alt="Verified"
-              className="w-full h-full object-contain"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
-              <ShieldCheck className="w-3 h-3 text-white stroke-[2.5]" />
+            <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', width: '1.25rem', height: '1.25rem', backgroundColor: '#10b981', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldCheck style={{ width: '12px', height: '12px', color: '#ffffff', strokeWidth: 2.5 }} />
             </div>
           </div>
         )}
       </div>
 
-      {/* ═══════════════════════════════════════
-          MY ACTIVITY
-          ═══════════════════════════════════════ */}
-      <h3 className="text-[15px] font-bold text-[#111827] mb-3">My Activity</h3>
-      <div className="bg-white border border-[#ECECEC] rounded-[20px] overflow-hidden mb-6 divide-y divide-[#ECECEC]">
+      {/* MY ACTIVITY */}
+      <h3 className="profile-activity-section-title">My Activity</h3>
+      <div className="profile-activity-list">
         {[
           {
             icon: ClipboardList,
-            iconBg: 'bg-[#F3EFFF]',
-            iconColor: 'text-[#6C4EFF]',
+            iconBg: '#F3EFFF',
+            iconColor: '#6C4EFF',
             title: 'My Orders',
             sub: 'Track and view your print requests',
             action: () => navigate('/orders'),
           },
           {
             icon: Tag,
-            iconBg: 'bg-[#EEF9F2]',
-            iconColor: 'text-emerald-600',
+            iconBg: '#EEF9F2',
+            iconColor: '#059669',
             title: 'My Listings',
             sub: 'Manage your active items',
             count: activeItems.length,
@@ -666,8 +638,8 @@ export const Profile = () => {
           },
           {
             icon: CheckCircle2,
-            iconBg: 'bg-[#F0FDF4]',
-            iconColor: 'text-emerald-500',
+            iconBg: '#F0FDF4',
+            iconColor: '#10b981',
             title: 'Sold Items',
             sub: 'View items you have sold',
             count: soldItems.length,
@@ -675,8 +647,8 @@ export const Profile = () => {
           },
           {
             icon: Heart,
-            iconBg: 'bg-[#FFF4ED]',
-            iconColor: 'text-orange-400',
+            iconBg: '#FFF4ED',
+            iconColor: '#fb923c',
             title: 'Saved Items',
             sub: 'Items you have saved',
             count: savedListings.length,
@@ -684,8 +656,8 @@ export const Profile = () => {
           },
           {
             icon: Gift,
-            iconBg: 'bg-[#FFF0F0]',
-            iconColor: 'text-rose-400',
+            iconBg: '#FFF0F0',
+            iconColor: '#fb7185',
             title: 'My Donations',
             sub: 'Items you donated',
             count: donationCount,
@@ -701,189 +673,182 @@ export const Profile = () => {
                 setActiveTab(item.key);
               }
             }}
-            className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+            className="profile-activity-item"
           >
-            <div className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-              <item.icon className={`w-[18px] h-[18px] ${item.iconColor} stroke-[1.8]`} />
+            <div className="profile-activity-icon-box" style={{ backgroundColor: item.iconBg }}>
+              <item.icon style={{ width: '18px', height: '18px', color: item.iconColor, strokeWidth: 1.8 }} />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-semibold text-[#111827]">{item.title}</p>
-              <p className="text-[11px] text-[#9CA3AF] mt-0.5">{item.sub}</p>
+            <div className="profile-activity-info">
+              <p className="profile-activity-title">{item.title}</p>
+              <p className="profile-activity-sub">{item.sub}</p>
             </div>
-            <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+            <ChevronRight style={{ width: '18px', height: '18px', color: '#D1D5DB', flexShrink: 0 }} />
           </button>
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════
-          ADMIN CONTROLS
-          ═══════════════════════════════════════ */}
+      {/* ADMIN CONTROLS */}
       {(isAdmin || user?.role === 'admin') && (
         <>
-          <h3 className="text-[15px] font-bold text-[#111827] mb-3">Admin Controls</h3>
-          <div className="bg-white border border-[#ECECEC] rounded-[20px] overflow-hidden mb-6 divide-y divide-[#ECECEC]">
+          <h3 className="profile-activity-section-title">Admin Controls</h3>
+          <div className="profile-activity-list">
             <button 
               onClick={() => navigate('/admin/dashboard')}
-              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+              className="profile-activity-item"
             >
-              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6C4EFF]/15 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <LayoutDashboard className="w-[18px] h-[18px] text-[#6C4EFF] stroke-[1.8]" />
+              <div className="profile-activity-icon-box" style={{ backgroundColor: '#FAF9FF', border: '1px solid rgba(108,78,255,0.15)' }}>
+                <LayoutDashboard style={{ width: '18px', height: '18px', color: '#6C4EFF', strokeWidth: 1.8 }} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#111827]">System Admin Dashboard</p>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">Verify users, manage listings & view logs</p>
+              <div className="profile-activity-info">
+                <p className="profile-activity-title">System Admin Dashboard</p>
+                <p className="profile-activity-sub">Verify users, manage listings & view logs</p>
               </div>
-              <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+              <ChevronRight style={{ width: '18px', height: '18px', color: '#D1D5DB', flexShrink: 0 }} />
             </button>
 
             <button 
               onClick={() => navigate('/vendors/print-dashboard')}
-              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+              className="profile-activity-item"
             >
-              <div className="w-10 h-10 bg-[#FAF9FF] border border-[#6D5DF6]/15 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                <ClipboardList className="w-[18px] h-[18px] text-[#6D5DF6] stroke-[1.8]" />
+              <div className="profile-activity-icon-box" style={{ backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.15)' }}>
+                <ClipboardList style={{ width: '18px', height: '18px', color: '#6D5DF6', strokeWidth: 1.8 }} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#111827]">Print Shop Dashboard</p>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">Verify payments, download prints & checkouts</p>
+              <div className="profile-activity-info">
+                <p className="profile-activity-title">Print Shop Dashboard</p>
+                <p className="profile-activity-sub">Verify payments, download prints & checkouts</p>
               </div>
-              <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+              <ChevronRight style={{ width: '18px', height: '18px', color: '#D1D5DB', flexShrink: 0 }} />
             </button>
           </div>
         </>
       )}
 
-      {/* ═══════════════════════════════════════
-          ACCOUNT
-          ═══════════════════════════════════════ */}
-      <h3 className="text-[15px] font-bold text-[#111827] mb-3">Account</h3>
-      <div className="bg-white border border-[#ECECEC] rounded-[20px] overflow-hidden mb-6 divide-y divide-[#ECECEC]">
+      {/* ACCOUNT */}
+      <h3 className="profile-activity-section-title">Account</h3>
+      <div className="profile-activity-list">
         <button 
           onClick={() => setShowInfoModal(true)}
-          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FAFAFF] transition-colors text-left group"
+          className="profile-activity-item"
         >
-          <div className="w-10 h-10 bg-[#F7F4FF] rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-            <UserIcon className="w-[18px] h-[18px] text-[#6D4AFF] stroke-[1.8]" />
+          <div className="profile-activity-icon-box" style={{ backgroundColor: '#F7F4FF' }}>
+            <UserIcon style={{ width: '18px', height: '18px', color: '#6D4AFF', strokeWidth: 1.8 }} />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#111827]">Personal Information</p>
-            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Name, email, phone & more</p>
+          <div className="profile-activity-info">
+            <p className="profile-activity-title">Personal Information</p>
+            <p className="profile-activity-sub">Name, email, phone & more</p>
           </div>
-          <ChevronRight className="w-[18px] h-[18px] text-[#D1D5DB] flex-shrink-0 group-hover:text-[#9CA3AF] transition-colors" />
+          <ChevronRight style={{ width: '18px', height: '18px', color: '#D1D5DB', flexShrink: 0 }} />
         </button>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-4 px-5 py-4 hover:bg-rose-50/50 transition-colors text-left group"
+          className="profile-activity-item"
         >
-          <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-            <LogOut className="w-[18px] h-[18px] text-rose-500 stroke-[1.8]" />
+          <div className="profile-activity-icon-box" style={{ backgroundColor: '#fff1f2' }}>
+            <LogOut style={{ width: '18px', height: '18px', color: '#f43f5e', strokeWidth: 1.8 }} />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-rose-600">Log Out</p>
-            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Sign out of your account</p>
+          <div className="profile-activity-info">
+            <p className="profile-activity-title" style={{ color: '#e11d48' }}>Log Out</p>
+            <p className="profile-activity-sub">Sign out of your account</p>
           </div>
         </button>
       </div>
 
-      {/* ═══════════════════════════════════════
-          PERSONAL INFO MODAL
-          ═══════════════════════════════════════ */}
+      {/* PERSONAL INFO MODAL */}
       {showInfoModal && (
-        <div className="fixed inset-0 bg-[#111827]/40 backdrop-blur-sm flex items-center justify-center z-50 p-5 overflow-y-auto">
-          <div className="bg-white rounded-[28px] border border-[#ECECEC] w-full max-w-[420px] overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200 my-8">
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-[#ECECEC] flex items-center justify-between">
-              <h3 className="font-bold text-[16px] text-[#111827]">Edit Profile Details</h3>
+        <div className="profile-modal-overlay">
+          <div className="profile-modal-content animate-scaleIn">
+            <div className="profile-modal-header">
+              <h3 className="profile-modal-title">Edit Profile Details</h3>
               <button 
                 onClick={() => setShowInfoModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#F7F4FF] text-[#9CA3AF] hover:text-[#111827] transition-colors"
+                className="profile-icon-btn"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle style={{ width: '20px', height: '20px', color: '#9CA3AF' }} />
               </button>
             </div>
             
-            {/* Form */}
             <form onSubmit={handleSaveProfile}>
-              {/* Body */}
-              <div className="p-6 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+              <div className="profile-modal-body">
                 {editError && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-[12px] text-rose-600 text-[12px] font-medium">
+                  <div style={{ padding: '0.75rem', backgroundColor: '#fff1f2', border: '1px solid #ffe4e6', borderRadius: '12px', color: '#e11d48', fontSize: '12px', fontWeight: 500 }}>
                     {editError}
                   </div>
                 )}
 
                 {/* Full Name */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Full Name</label>
+                  <label className="auth-label">Full Name</label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                    className="auth-input"
                   />
                 </div>
 
                 {/* Email Address */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Email Address</label>
+                  <label className="auth-label">Email Address</label>
                   <input
                     type="email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
                     placeholder="user@domain.com"
-                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                    className="auth-input"
                   />
                 </div>
 
                 {/* WhatsApp Number */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">WhatsApp Number</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#111827]">+91</span>
+                  <label className="auth-label">WhatsApp Number</label>
+                  <div className="auth-input-wrapper">
+                    <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontSize: '13px', fontWeight: 700, color: '#111827' }}>+91</span>
                     <input
                       type="tel"
                       value={editWhatsapp}
                       onChange={(e) => setEditWhatsapp(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       placeholder="9876543210"
-                      className="w-full h-11 pl-14 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                      className="auth-input"
+                      style={{ paddingLeft: '3.5rem' }}
                     />
                   </div>
                 </div>
 
                 {/* Registration Number */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Registration Number</label>
+                  <label className="auth-label">Registration Number</label>
                   <input
                     type="text"
                     value={editRegNo}
                     onChange={(e) => setEditRegNo(e.target.value)}
                     placeholder="21BCE0001"
-                    className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all"
+                    className="auth-input"
                   />
                 </div>
 
                 {/* Department + Year */}
-                <div className="grid grid-cols-2 gap-3">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   <div>
-                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Department</label>
+                    <label className="auth-label">Department</label>
                     <select
                       value={editDept}
                       onChange={(e) => setEditDept(e.target.value)}
-                      className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                      className="auth-input"
+                      style={{ cursor: 'pointer' }}
                     >
                       <option value="">Select</option>
                       {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">Year</label>
+                    <label className="auth-label">Year</label>
                     <select
                       value={editYear}
                       onChange={(e) => setEditYear(e.target.value)}
-                      className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                      className="auth-input"
+                      style={{ cursor: 'pointer' }}
                     >
                       {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                     </select>
@@ -892,37 +857,36 @@ export const Profile = () => {
 
                 {/* College Campus */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">College Campus</label>
+                  <label className="auth-label">College Campus</label>
                   <select
                     value={editCollege}
                     onChange={(e) => setEditCollege(e.target.value)}
-                    className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[12px] text-[13px] text-[#111827] focus:bg-white focus:border-[#6D4AFF]/30 focus:outline-none transition-all appearance-none cursor-pointer"
+                    className="auth-input"
+                    style={{ cursor: 'pointer' }}
                   >
                     <option value="">Select your college</option>
                     {colleges && colleges.length > 0 ? (
                       colleges.map((c) => <option key={c._id || c.name} value={c.name}>{c.name}</option>)
                     ) : (
-                      <>
-                        <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
-                      </>
+                      <option value="Vignan's Institute of Engineering for Women (VIEW)">Vignan's Institute of Engineering for Women (VIEW)</option>
                     )}
                   </select>
                 </div>
 
                 {/* ID Card Re-upload */}
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5">
+                  <label className="auth-label">
                     {editYear === '1st Year' 
                       ? 'College ID Card or Admission Fee Receipt / Allotment Order' 
                       : 'College ID Card (Upload new image for verification)'}
                   </label>
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#E9E6F8] rounded-[16px] p-4 cursor-pointer hover:border-[#6D4AFF]/30 hover:bg-[#FAFAFF] transition-all">
+                  <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #E9E6F8', borderRadius: '16px', padding: '1rem', cursor: 'pointer', backgroundColor: '#FAFAFF' }}>
                     {editIdCardPreview ? (
-                      <img src={editIdCardPreview} alt="ID Preview" className="max-h-[120px] object-contain rounded-[10px]" />
+                      <img src={editIdCardPreview} alt="ID Preview" style={{ maxHeight: '120px', objectFit: 'contain', borderRadius: '10px' }} />
                     ) : (
-                      <div className="text-center py-4 text-[#9CA3AF] px-4">
-                        <Camera className="w-6 h-6 mx-auto mb-1.5" />
-                        <p className="text-[11px] font-semibold">
+                      <div style={{ textAlign: 'center', padding: '1rem 0', color: '#9CA3AF' }}>
+                        <Camera style={{ width: '24px', height: '24px', margin: '0 auto 6px auto' }} />
+                        <p style={{ fontSize: '11px', fontWeight: 600, margin: 0 }}>
                           {editYear === '1st Year'
                             ? 'Upload ID, fee receipt, or allotment order'
                             : 'Upload ID card'}
@@ -941,28 +905,27 @@ export const Profile = () => {
                           reader.readAsDataURL(file);
                         }
                       }}
-                      className="hidden"
+                      style={{ display: 'none' }}
                     />
                   </label>
                 </div>
               </div>
               
               {/* Footer */}
-              <div className="px-6 py-4 bg-[#FAFAFF] border-t border-[#ECECEC] flex justify-end gap-2">
+              <div className="profile-modal-footer">
                 <button 
                   type="button"
                   onClick={() => setShowInfoModal(false)}
-                  className="px-4 py-2 border border-[#ECECEC] hover:bg-[#F7F4FF] text-[#111827] font-semibold text-[12px] rounded-full transition-colors"
+                  style={{ padding: '8px 16px', border: '1px solid #ECECEC', backgroundColor: '#ffffff', color: '#111827', fontWeight: 600, fontSize: '12px', borderRadius: '9999px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={saveLoading}
-                  className="px-5 py-2 bg-[#6D4AFF] hover:bg-[#5939D5] text-white font-bold text-[12px] rounded-full transition-colors flex items-center gap-1.5 disabled:opacity-60"
+                  style={{ padding: '8px 20px', backgroundColor: '#6D4AFF', color: '#ffffff', fontWeight: 700, fontSize: '12px', borderRadius: '9999px', border: 'none', cursor: 'pointer', opacity: saveLoading ? 0.6 : 1 }}
                 >
-                  {saveLoading && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                  {user?.verificationStatus === 'rejected' ? 'Save & Re-verify' : 'Save Changes'}
+                  {saveLoading ? 'Saving...' : (user?.verificationStatus === 'rejected' ? 'Save & Re-verify' : 'Save Changes')}
                 </button>
               </div>
             </form>

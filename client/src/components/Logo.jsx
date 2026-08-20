@@ -1,15 +1,16 @@
 import React from 'react';
+import './Logo.css';
 
 export const Logo = ({ size = 34, showText = false, textClass = "" }) => {
   return (
-    <div className="flex items-center gap-2.5 flex-shrink-0">
+    <div className="logo-container">
       <svg
         width={size}
         height={size}
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
+        className="logo-svg"
       >
         <polygon
           points="50,6 88,28 88,72 50,94 12,72 12,28"
@@ -32,7 +33,7 @@ export const Logo = ({ size = 34, showText = false, textClass = "" }) => {
         </text>
       </svg>
       {showText && (
-        <span className={textClass || "text-[15px] font-bold text-[#111827] tracking-[-0.01em]"}>
+        <span className={textClass || "logo-text"}>
           Engineering Market
         </span>
       )}

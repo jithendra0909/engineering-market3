@@ -1,0 +1,52 @@
+:root {
+  /* Brand colors */
+  --brand-purple: #6D3FD6;
+  --brand-purple-dark: #4C2A96;
+  --brand-pink: #E14BA1;
+  --brand-orange: #F5924B;
+  --brand-navy-footer: #0F1024;
+
+  /* Surface colors */
+  --surface-lavender: #F3EEFC;
+  --surface-peach: #FDEFE6;
+  --surface-mint: #EAF7EF;
+  --surface-rose: #FDECEF;
+  --surface-blue: #EAF1FD;
+  --surface-amber: #FDF3E3;
+  --surface-gray: #F7F7FA;
+  --surface-white: #FFFFFF;
+
+  /* Text colors */
+  --text-primary: #14121F;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+
+  /* Border colors */
+  --border-light: #EAEAF0;
+
+  /* Status colors */
+  --status-success: #22A559;
+  --status-success-bg: #E7F7EC;
+  --status-warning: #E88A2E;
+  --status-warning-bg: #FDEEDD;
+  --status-info: #3B6FE0;
+  --status-info-bg: #E8F0FE;
+  --status-danger: #E5484D;
+  --status-danger-bg: #FDECEF;
+
+  /* Accent / Star */
+  --star-color: #FBBF24;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Poppins', 'Inter', system-ui, sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+
+  /* Border Radii */
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+}

@@ -1,0 +1,306 @@
+.print-dash-page {
+  min-height: 100vh;
+  background-color: #F8FAFC;
+  color: #111827;
+  padding-bottom: 8rem;
+}
+
+.print-dash-header {
+  height: 80px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .print-dash-header {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.print-dash-header-inner {
+  max-width: 640px;
+  height: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.print-dash-main {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .print-dash-main {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.print-dash-tabs {
+  background-color: #ffffff;
+  border: 1px solid #E5E7EB;
+  border-radius: 22px;
+  padding: 6px;
+  display: flex;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  user-select: none;
+}
+
+.print-dash-tab-btn {
+  flex: 1;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid transparent;
+  background-color: #ffffff;
+  color: #6B7280;
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .print-dash-tab-btn {
+    font-size: 12.5px;
+  }
+}
+
+.print-dash-tab-btn.selected {
+  background-color: rgba(109, 93, 246, 0.08);
+  border-color: rgba(109, 93, 246, 0.3);
+  color: #6D5DF6;
+}
+
+.print-dash-tab-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.print-dash-tab-badge.selected {
+  background-color: #6D5DF6;
+  color: #ffffff;
+}
+
+.print-dash-tab-badge.unselected {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.print-dash-order-card {
+  background-color: #ffffff;
+  border: 1px solid #E5E7EB;
+  border-radius: 22px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.04);
+  transition: all 0.2s ease;
+  text-align: left;
+  overflow: hidden;
+}
+
+.print-dash-order-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.print-dash-file-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.print-dash-file-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: linear-gradient(to right, #f8fafc, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.print-dash-file-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background-color: #fff1f2;
+  border: 1px solid #ffe4e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.print-dash-file-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.print-dash-file-sub {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.print-dash-badge-purple {
+  background-color: rgba(109, 93, 246, 0.1);
+  color: #6D5DF6;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.print-dash-file-body {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.print-dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.print-dash-stat-box {
+  border-radius: 12px;
+  padding: 0.625rem;
+  text-align: center;
+  border: 1px solid;
+}
+
+.print-dash-stat-box.blue {
+  background-color: #eff6ff;
+  border-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.print-dash-stat-box.purple {
+  background-color: #faf5ff;
+  border-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.print-dash-stat-box.emerald {
+  background-color: #ecfdf5;
+  border-color: #d1fae5;
+  color: #047857;
+}
+
+.print-dash-stat-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.print-dash-stat-val {
+  font-size: 16px;
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.print-dash-note-box {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-size: 11.5px;
+  color: #78350f;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.print-dash-file-footer {
+  padding: 0 1rem 0.75rem 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.print-dash-btn-outline {
+  height: 40px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  color: #374151;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.print-dash-btn-outline:hover {
+  border-color: #6D5DF6;
+  color: #6D5DF6;
+}
+
+.print-dash-btn-primary {
+  height: 40px;
+  border-radius: 12px;
+  background-color: #6D5DF6;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.print-dash-btn-primary:hover:not(:disabled) {
+  background-color: #5C4EE5;
+}
+
+.print-dash-payment-box {
+  background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+  border-radius: 16px;
+  padding: 1rem;
+  border: 1px solid #a7f3d0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}

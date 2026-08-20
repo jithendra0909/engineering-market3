@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ArrowUp, Sparkles, MessageSquare, Plus, CheckCircle, Clock, Play } from 'lucide-react';
 import api from '../api/axios';
+import './FeedbackRoadmap.css';
 
 const FeedbackRoadmap = () => {
   const { user, showToast } = useAuth();
@@ -35,7 +36,6 @@ const FeedbackRoadmap = () => {
   const handleUpvote = async (id) => {
     try {
       const res = await api.post(`/feedback/${id}/upvote`);
-      // Update item in local state
       setFeedbackList(prev => prev.map(item => item._id === id ? res.data : item));
     } catch (err) {
       showToast('Failed to update upvote.', 'error');
@@ -64,7 +64,6 @@ const FeedbackRoadmap = () => {
     }
   };
 
-  // Filter logic
   const filteredList = feedbackList.filter(item => {
     if (filter === 'all') return true;
     if (filter === 'feature') return item.category === 'feature';
@@ -75,28 +74,28 @@ const FeedbackRoadmap = () => {
   });
 
   return (
-    <div className="max-w-[720px] mx-auto px-4 py-8 pb-24 animate-fadeIn">
+    <div className="roadmap-container animate-fadeIn">
       {/* Title */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E9E6F8] pb-6 mb-8 text-left">
+      <div className="roadmap-header">
         <div>
-          <h1 className="text-2xl font-black text-[#111827] tracking-tight flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-[#6C4EFF]" /> Product Roadmap
+          <h1 className="roadmap-title">
+            <Sparkles style={{ width: '24px', height: '24px', color: '#6C4EFF' }} /> Product Roadmap
           </h1>
-          <p className="text-xs text-[#6B7280] mt-1.5 leading-relaxed">
+          <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '6px', lineHeight: 1.5, margin: 0 }}>
             Suggest new features, report bugs, and vote on what we should build next!
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="h-11 px-6 rounded-full bg-gradient-to-r from-[#6C4EFF] to-[#8A72FF] hover:from-[#5739E6] hover:to-[#765EE6] text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-98 self-start md:self-center"
+          style={{ height: '44px', paddingLeft: '1.5rem', paddingRight: '1.5rem', borderRadius: '9999px', backgroundColor: '#6C4EFF', color: '#ffffff', fontSize: '12px', fontWeight: 700, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}
         >
-          <Plus className="w-4 h-4" /> Suggest Feature
+          <Plus style={{ width: '16px', height: '16px' }} /> Suggest Feature
         </button>
       </div>
 
       {/* Roadmap Filters */}
-      <div className="flex flex-wrap gap-2 border-b border-[#E9E6F8] pb-4 mb-6 text-xs font-bold">
+      <div className="roadmap-filters">
         {[
           { key: 'all', label: 'All Suggestions' },
           { key: 'feature', label: '💡 Ideas' },
@@ -107,11 +106,7 @@ const FeedbackRoadmap = () => {
           <button
             key={item.key}
             onClick={() => setFilter(item.key)}
-            className={`px-3 py-1.5 rounded-full border transition-all ${
-              filter === item.key
-                ? 'bg-[#111827] border-[#111827] text-white shadow-sm'
-                : 'bg-white border-[#E9E6F8] text-[#6B7280] hover:bg-slate-50'
-            }`}
+            className={`roadmap-filter-btn ${filter === item.key ? 'active' : ''}`}
           >
             {item.label}
           </button>
@@ -120,66 +115,50 @@ const FeedbackRoadmap = () => {
 
       {/* Roadmap Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-10 h-10 border-4 border-[#6C4EFF] border-t-transparent rounded-full animate-spin" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 0' }}>
+          <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid #6C4EFF', borderTopColor: 'transparent', borderRadius: '9999px' }} />
         </div>
       ) : filteredList.length > 0 ? (
-        <div className="flex flex-col gap-4 text-left">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
           {filteredList.map((item) => {
             const hasUpvoted = item.upvotes.includes(user?._id);
 
             return (
               <div 
                 key={item._id}
-                className="bg-white border border-[#E9E6F8] rounded-[24px] p-5 flex items-start gap-4 shadow-[0_2px_8px_rgba(108,78,255,0.01)] hover:border-[#6C4EFF]/20 transition-all duration-200"
+                className="roadmap-card"
               >
                 {/* Upvote column */}
                 <button
                   onClick={() => handleUpvote(item._id)}
-                  className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center border flex-shrink-0 transition-all active:scale-95 ${
-                    hasUpvoted
-                      ? 'bg-[#F4F1FF] border-[#6C4EFF]/40 text-[#6C4EFF]'
-                      : 'bg-[#FAFAFF] border-[#E9E6F8] text-[#6B7280] hover:bg-[#F4F1FF] hover:border-[#6C4EFF]/20'
-                  }`}
+                  className={`roadmap-upvote-btn ${hasUpvoted ? 'upvoted' : ''}`}
                 >
-                  <ArrowUp className={`w-4 h-4 transition-transform ${hasUpvoted ? 'translate-y-[-1px]' : ''}`} />
-                  <span className="text-[11px] font-black mt-1 leading-none">{item.upvotes.length}</span>
+                  <ArrowUp style={{ width: '16px', height: '16px' }} />
+                  <span style={{ fontSize: '11px', fontWeight: 900, marginTop: '4px' }}>{item.upvotes.length}</span>
                 </button>
 
                 {/* Main details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
                     {/* Category tag */}
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide border ${
-                      item.category === 'feature'
-                        ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
-                        : item.category === 'bug'
-                        ? 'bg-rose-50 border-rose-100 text-rose-600'
-                        : 'bg-slate-50 border-slate-100 text-slate-600'
-                    }`}>
+                    <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid', backgroundColor: item.category === 'feature' ? '#e0e7ff' : (item.category === 'bug' ? '#fff1f2' : '#f8fafc'), color: item.category === 'feature' ? '#4338ca' : (item.category === 'bug' ? '#e11d48' : '#475569'), borderColor: item.category === 'feature' ? '#c7d2fe' : (item.category === 'bug' ? '#ffe4e6' : '#e2e8f0') }}>
                       {item.category === 'feature' ? 'Idea' : item.category === 'bug' ? 'Bug' : 'General'}
                     </span>
 
                     {/* Status tag */}
                     {item.status !== 'pending' && (
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 border ${
-                        item.status === 'completed'
-                          ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
-                          : ['planned', 'reviewing'].includes(item.status)
-                          ? 'bg-amber-50 border-amber-100 text-amber-600'
-                          : 'bg-slate-100 border-slate-200 text-slate-500'
-                      }`}>
+                      <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '9999px', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '4px', border: '1px solid', backgroundColor: item.status === 'completed' ? '#ecfdf5' : (['planned', 'reviewing'].includes(item.status) ? '#fffbeb' : '#f1f5f9'), color: item.status === 'completed' ? '#059669' : (['planned', 'reviewing'].includes(item.status) ? '#d97706' : '#64748b'), borderColor: item.status === 'completed' ? '#a7f3d0' : (['planned', 'reviewing'].includes(item.status) ? '#fde68a' : '#e2e8f0') }}>
                         {item.status === 'completed' ? (
                           <>
-                            <CheckCircle className="w-2.5 h-2.5" /> Finished
+                            <CheckCircle style={{ width: '10px', height: '10px' }} /> Finished
                           </>
                         ) : item.status === 'planned' ? (
                           <>
-                            <Play className="w-2.5 h-2.5" /> Planned
+                            <Play style={{ width: '10px', height: '10px' }} /> Planned
                           </>
                         ) : item.status === 'reviewing' ? (
                           <>
-                            <Clock className="w-2.5 h-2.5" /> In Review
+                            <Clock style={{ width: '10px', height: '10px' }} /> In Review
                           </>
                         ) : (
                           'Dismissed'
@@ -188,15 +167,15 @@ const FeedbackRoadmap = () => {
                     )}
                   </div>
 
-                  <h3 className="font-bold text-[14px] text-[#111827] mt-2 leading-snug">
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#111827', marginTop: '8px', lineHeight: 1.4, margin: '8px 0 0 0' }}>
                     {item.title}
                   </h3>
                   
-                  <p className="text-xs text-[#6B7280] mt-1.5 leading-relaxed break-words">
+                  <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '6px', lineHeight: 1.5, wordBreak: 'break-word', margin: '6px 0 0 0' }}>
                     {item.description}
                   </p>
 
-                  <div className="flex items-center gap-2 mt-4 text-[10px] text-[#9CA3AF] font-bold">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '1rem', fontSize: '10px', color: '#9CA3AF', fontWeight: 700 }}>
                     <span>Suggested by {item.user?.fullName || 'Student'}</span>
                     <span>•</span>
                     <span>{new Date(item.createdAt).toLocaleDateString()}</span>
@@ -207,12 +186,12 @@ const FeedbackRoadmap = () => {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-white border border-[#E9E6F8] rounded-[24px]">
-          <div className="w-12 h-12 rounded-full bg-[#FAFAFF] border border-[#E9E6F8] flex items-center justify-center text-gray-400 mb-4">
-            <MessageSquare className="w-6 h-6" />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 0', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #E9E6F8', borderRadius: '24px' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '9999px', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', marginBottom: '1rem' }}>
+            <MessageSquare style={{ width: '24px', height: '24px' }} />
           </div>
-          <h3 className="font-bold text-sm text-[#111827]">No requests found</h3>
-          <p className="text-xs text-[#6B7280] max-w-[280px] mt-1 leading-relaxed">
+          <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#111827', margin: 0 }}>No requests found</h3>
+          <p style={{ fontSize: '12px', color: '#6B7280', maxWidth: '280px', marginTop: '4px', lineHeight: 1.5, margin: '4px 0 0 0' }}>
             Be the first to submit a suggestion to improve the platform!
           </p>
         </div>
@@ -220,23 +199,23 @@ const FeedbackRoadmap = () => {
 
       {/* Suggestion Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          
+        <div className="profile-modal-overlay">
           <form 
             onSubmit={handleSubmitFeedback}
-            className="relative w-full max-w-[440px] bg-white rounded-3xl p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left shadow-2xl"
+            className="profile-modal-content animate-scaleIn"
+            style={{ padding: '1.5rem', gap: '1rem', textAlign: 'left' }}
           >
-            <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
-              <Plus className="w-5 h-5 text-[#6C4EFF]" /> Submit Feature Idea
+            <h3 style={{ fontWeight: 700, fontSize: '16px', color: '#111827', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <Plus style={{ width: '20px', height: '20px', color: '#6C4EFF' }} /> Submit Feature Idea
             </h3>
             
             <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5 uppercase tracking-wide">Category</label>
+              <label className="auth-label">Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 cursor-pointer"
+                className="auth-input"
+                style={{ cursor: 'pointer' }}
               >
                 <option value="feature">💡 Feature Suggestion</option>
                 <option value="bug">🐛 Bug Report</option>
@@ -245,41 +224,42 @@ const FeedbackRoadmap = () => {
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5 uppercase tracking-wide">Title</label>
+              <label className="auth-label">Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="What is your request?"
-                className="w-full h-11 px-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40"
+                className="auth-input"
                 required
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-[#6B7280] block mb-1.5 uppercase tracking-wide">Details</label>
+              <label className="auth-label">Details</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your request in detail. How will this help students?"
                 rows={4}
-                className="w-full p-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 resize-none"
+                className="auth-input"
+                style={{ height: 'auto', padding: '1rem', resize: 'none' }}
                 required
               />
             </div>
 
-            <div className="flex gap-3 mt-2">
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+                style={{ flex: 1, height: '44px', border: '1px solid #E9E6F8', color: '#6B7280', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', backgroundColor: '#ffffff', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitLoading}
-                className="flex-1 h-11 bg-gradient-to-r from-[#6C4EFF] to-[#8A72FF] hover:from-[#5739E6] hover:to-[#765EE6] text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center disabled:opacity-50"
+                style={{ flex: 1, height: '44px', backgroundColor: '#6C4EFF', color: '#ffffff', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', border: 'none', cursor: 'pointer', opacity: submitLoading ? 0.5 : 1 }}
               >
                 {submitLoading ? 'Submitting...' : 'Submit Idea'}
               </button>

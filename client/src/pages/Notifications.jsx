@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ArrowLeft, Check, Trash2, ShieldCheck, AlertCircle, MessageSquare } from 'lucide-react';
+import { Bell, ArrowLeft, Check, ShieldCheck, AlertCircle, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import './Notifications.css';
 
 export const Notifications = () => {
   const { isLoggedIn, showToast } = useAuth();
@@ -44,7 +45,6 @@ export const Notifications = () => {
       setNotifications(prev =>
         prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
       );
-      // Trigger a custom event so the Navbar can update its badge immediately!
       window.dispatchEvent(new Event('notificationsUpdated'));
     } catch (err) {
       console.error('Error marking read:', err);
@@ -76,46 +76,46 @@ export const Notifications = () => {
     switch (type) {
       case 'verification':
         return (
-          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 flex-shrink-0">
-            <ShieldCheck className="w-5 h-5 stroke-[2]" />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #a7f3d0', flexShrink: 0 }}>
+            <ShieldCheck style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
       case 'chat':
         return (
-          <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 flex-shrink-0">
-            <MessageSquare className="w-5 h-5 stroke-[2]" />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #c7d2fe', flexShrink: 0 }}>
+            <MessageSquare style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
       case 'listing':
         return (
-          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 flex-shrink-0">
-            <AlertCircle className="w-5 h-5 stroke-[2]" />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#fffbeb', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fde68a', flexShrink: 0 }}>
+            <AlertCircle style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
       default:
         return (
-          <div className="w-10 h-10 rounded-full bg-[#F4F1FF] text-[#6C4EFF] flex items-center justify-center border border-[#E9E6F8] flex-shrink-0">
-            <Bell className="w-5 h-5 stroke-[2]" />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#F4F1FF', color: '#6C4EFF', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E9E6F8', flexShrink: 0 }}>
+            <Bell style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px)] pb-[80px] bg-[#FAF9FF] px-4 py-8">
-      <div className="max-w-[600px] mx-auto bg-white rounded-3xl border border-[#E9E6F8] shadow-sm overflow-hidden">
+    <div className="notifications-page-wrapper">
+      <div className="notifications-card">
         
         {/* Header bar */}
-        <div className="px-6 py-5 border-b border-[#E9E6F8] flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="notifications-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-[#FAFAFF] rounded-xl text-[#374151] transition-colors"
+              style={{ padding: '0.5rem', backgroundColor: 'transparent', border: 'none', borderRadius: '12px', cursor: 'pointer' }}
             >
-              <ArrowLeft className="w-5 h-5 stroke-[2]" />
+              <ArrowLeft style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
             </button>
-            <h1 className="text-lg font-bold text-[#111827] flex items-center gap-2">
-              <Bell className="w-5 h-5 text-[#6C4EFF] stroke-[2.2]" />
+            <h1 className="notifications-title">
+              <Bell style={{ width: '20px', height: '20px', color: '#6C4EFF', strokeWidth: 2.2 }} />
               Notifications
             </h1>
           </div>
@@ -123,28 +123,28 @@ export const Notifications = () => {
           {notifications.some(n => !n.isRead) && (
             <button
               onClick={handleMarkAllAsRead}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold text-[#6C4EFF] bg-[#F4F1FF] hover:bg-[#E9E6F8] transition-colors"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.375rem 0.75rem', borderRadius: '9999px', fontSize: '12px', fontWeight: 600, color: '#6C4EFF', backgroundColor: '#F4F1FF', border: 'none', cursor: 'pointer' }}
             >
-              <Check className="w-3.5 h-3.5" />
+              <Check style={{ width: '14px', height: '14px' }} />
               Mark all read
             </button>
           )}
         </div>
 
         {/* List of notifications */}
-        <div className="divide-y divide-[#E9E6F8]/65">
+        <div className="notifications-list">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="w-8 h-8 border-4 border-[#6C4EFF] border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-[#9CA3AF]">Loading notifications...</p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 0', gap: '0.75rem' }}>
+              <div className="auth-btn-spinner animate-spin" style={{ borderColor: '#6C4EFF', borderTopColor: 'transparent' }} />
+              <p style={{ fontSize: '12px', color: '#9CA3AF' }}>Loading notifications...</p>
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-              <div className="w-14 h-14 rounded-full bg-[#FAFAFF] border border-[#E9E6F8] flex items-center justify-center mb-4">
-                <Bell className="w-6 h-6 text-[#9CA3AF] stroke-[1.8]" />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 1.5rem', textAlign: 'center' }}>
+              <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                <Bell style={{ width: '24px', height: '24px', color: '#9CA3AF', strokeWidth: 1.8 }} />
               </div>
-              <h2 className="text-sm font-semibold text-[#374151]">All caught up!</h2>
-              <p className="text-xs text-[#9CA3AF] max-w-[240px] mt-1.5 leading-relaxed">
+              <h2 style={{ fontSize: '14px', fontWeight: 600, color: '#374151', margin: 0 }}>All caught up!</h2>
+              <p style={{ fontSize: '12px', color: '#9CA3AF', maxWidth: '240px', marginTop: '0.375rem', lineHeight: 1.625 }}>
                 You have no new notifications. We'll alert you when listing status updates or verify requests complete.
               </p>
             </div>
@@ -155,30 +155,26 @@ export const Notifications = () => {
                 <div
                   key={notification._id}
                   onClick={() => isUnread && handleMarkAsRead(notification._id)}
-                  className={`p-5 flex gap-4 transition-all duration-200 cursor-pointer ${
-                    isUnread
-                      ? 'bg-[#F9F8FF]/85 hover:bg-[#F4F1FF]/60'
-                      : 'hover:bg-[#FAFAFF]/50 bg-white'
-                  }`}
+                  className={`notification-item ${isUnread ? 'unread' : 'read'}`}
                 >
                   {getNotificationIcon(notification.type)}
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline gap-2">
-                      <h3 className={`text-[13.5px] truncate leading-tight ${isUnread ? 'font-bold text-[#111827]' : 'font-semibold text-[#4B5563]'}`}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justify: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
+                      <h3 style={{ fontSize: '13.5px', fontWeight: isUnread ? 700 : 600, color: isUnread ? '#111827' : '#4B5563', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {notification.title}
                       </h3>
-                      <span className="text-[10px] text-[#9CA3AF] flex-shrink-0">
+                      <span style={{ fontSize: '10px', color: '#9CA3AF', flexShrink: 0 }}>
                         {formatDate(notification.createdAt)}
                       </span>
                     </div>
-                    <p className={`text-[12.5px] mt-1 leading-relaxed ${isUnread ? 'text-[#374151] font-medium' : 'text-[#6B7280]'}`}>
+                    <p style={{ fontSize: '12.5px', marginTop: '0.25rem', lineHeight: 1.625, margin: 0, color: isUnread ? '#374151' : '#6B7280', fontWeight: isUnread ? 500 : 400 }}>
                       {notification.message}
                     </p>
                   </div>
 
                   {isUnread && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#6C4EFF] self-center flex-shrink-0 animate-pulse" />
+                    <div className="animate-pulse" style={{ width: '10px', height: '10px', borderRadius: '9999px', backgroundColor: '#6C4EFF', alignSelf: 'center', flexShrink: 0 }} />
                   )}
                 </div>
               );

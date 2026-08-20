@@ -17,6 +17,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import api from '../api/axios';
+import './Chat.css';
 
 export const Chat = () => {
   const { user, isLoggedIn, showToast } = useAuth();

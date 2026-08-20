@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import './ProductCard.css';
 
 export const ProductCard = ({ product }) => {
   const { isLoggedIn, user, updateProfile, showToast } = useAuth();
@@ -38,48 +39,46 @@ export const ProductCard = ({ product }) => {
   return (
     <Link
       to={`/listing/${product._id}`}
-      className="block bg-white border border-[#E9E6F8]/70 rounded-[20px] overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group"
+      className="product-card"
     >
       {/* Image area */}
-      <div className="relative aspect-square bg-[#FAFAFF] overflow-hidden">
+      <div className="product-card-image-wrapper">
         <img
           src={displayImage}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+          className="product-card-image"
         />
 
         {/* Heart bookmark */}
         <button
           onClick={handleHeartClick}
           disabled={saving}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 transition-all"
+          className="product-card-heart-btn"
         >
           <Heart
-            className={`w-4 h-4 stroke-[2] transition-colors ${
-              isSaved ? 'fill-[#6C4EFF] text-[#6C4EFF]' : 'text-[#9CA3AF]'
-            }`}
+            className={`product-card-heart-icon ${isSaved ? 'saved' : ''}`}
           />
         </button>
 
         {/* Donate badge */}
         {product.listingType === 'donate' && (
-          <span className="absolute bottom-3 left-3 bg-[#6C4EFF] text-white text-[9px] font-bold px-2.5 py-[3px] rounded-full uppercase tracking-wider">
+          <span className="product-card-donate-badge">
             Free
           </span>
         )}
       </div>
 
       {/* Info */}
-      <div className="p-3.5 flex flex-col gap-1">
-        <h3 className="font-semibold text-[#111827] text-[13px] leading-snug truncate group-hover:text-[#6C4EFF] transition-colors">
+      <div className="product-card-info">
+        <h3 className="product-card-title">
           {product.title}
         </h3>
-        <p className="font-bold text-[#111827] text-[14px]">
+        <p className="product-card-price">
           {product.listingType === 'donate' ? 'Free' : `₹${product.price}`}
         </p>
-        <div className="flex items-center gap-1 text-[#9CA3AF] mt-0.5">
-          <MapPin className="w-3 h-3 flex-shrink-0" />
-          <span className="text-[11px] font-medium truncate">
+        <div className="product-card-location">
+          <MapPin className="product-card-pin-icon" />
+          <span className="product-card-college">
             {user && product.sellerCollege === user.college ? 'Your College' : product.sellerCollege}
           </span>
         </div>

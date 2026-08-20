@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, Tag, SlidersHorizontal } from 'lucide-react';
 import api from '../api/axios';
 import ProductCard from '../components/ProductCard';
+import './GeneralMarket.css';
 
 const CATEGORIES = ['All', 'Textbooks', 'Electronics', 'Stationery', 'Clothing', 'Hostel Essentials', 'Lab Equipment', 'Projects', 'Other'];
 
@@ -41,41 +42,37 @@ export const GeneralMarket = () => {
   });
 
   return (
-    <div className="max-w-[1360px] mx-auto px-5 lg:px-8 pt-5 lg:pt-8 pb-28 lg:pb-12">
+    <div className="market-page-container">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight">General Market</h1>
-        <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Discover items from verified students across all colleges.</p>
+      <div className="market-header">
+        <h1 className="market-header-title">General Market</h1>
+        <p className="market-header-subtitle">Discover items from verified students across all colleges.</p>
       </div>
 
       {/* Search + Filter bar */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+      <div className="market-filter-bar">
+        <div className="market-search-wrapper">
+          <Search className="market-search-icon" />
           <input
             type="text"
             placeholder="Search items..."
             value={searchVal}
             onChange={(e) => setSearchVal(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+            className="market-search-input"
           />
         </div>
-        <div className="relative">
+        <div className="market-sort-wrapper">
           <button
             onClick={() => setShowSort(!showSort)}
-            className={`w-11 h-11 rounded-full border flex items-center justify-center transition-all flex-shrink-0 ${
-              showSort || sortBy !== 'newest'
-                ? 'bg-[#F4F1FF] border-[#6C4EFF]/30 text-[#6C4EFF]'
-                : 'bg-[#FAFAFF] border-[#E9E6F8] text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30'
-            }`}
+            className={`market-sort-btn ${(showSort || sortBy !== 'newest') ? 'active' : ''}`}
           >
-            <SlidersHorizontal className="w-[18px] h-[18px]" />
+            <SlidersHorizontal style={{ width: '18px', height: '18px' }} />
           </button>
           {showSort && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E9E6F8] rounded-2xl shadow-lg py-1.5 z-50 animate-scaleIn origin-top-right">
-              <div className="px-3.5 py-2 border-b border-[#E9E6F8] mb-1">
-                <span className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Sort by</span>
+            <div className="market-sort-dropdown animate-scaleIn">
+              <div className="market-sort-header">
+                <span className="market-sort-title">Sort by</span>
               </div>
               {[
                 { value: 'newest', label: 'Newest First' },
@@ -88,11 +85,7 @@ export const GeneralMarket = () => {
                     setSortBy(opt.value);
                     setShowSort(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-[12px] font-medium transition-colors ${
-                    sortBy === opt.value
-                      ? 'text-[#6C4EFF] bg-[#F4F1FF]'
-                      : 'text-[#6B7280] hover:bg-[#FAFAFF] hover:text-[#111827]'
-                  }`}
+                  className={`market-sort-option ${sortBy === opt.value ? 'active' : ''}`}
                 >
                   {opt.label}
                 </button>
@@ -103,16 +96,12 @@ export const GeneralMarket = () => {
       </div>
 
       {/* Category pills */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 -mx-1 px-1 mb-2">
+      <div className="market-category-pills no-scrollbar">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-[7px] rounded-full text-[12px] font-semibold whitespace-nowrap transition-all ${
-              activeCategory === cat
-                ? 'bg-[#6C4EFF] text-white shadow-sm'
-                : 'bg-[#FAFAFF] border border-[#E9E6F8] text-[#6B7280] hover:bg-[#F4F1FF] hover:text-[#6C4EFF]'
-            }`}
+            className={`market-cat-pill ${activeCategory === cat ? 'active' : ''}`}
           >
             {cat}
           </button>
@@ -120,37 +109,36 @@ export const GeneralMarket = () => {
       </div>
 
       {/* Results count */}
-      <p className="text-[12px] text-[#9CA3AF] mb-5">
+      <p className="market-results-count">
         {loading ? 'Loading...' : `${filtered.length} item${filtered.length !== 1 ? 's' : ''} found`}
       </p>
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="market-grid">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-            <div key={n} className="bg-white border border-[#E9E6F8]/70 rounded-[20px] overflow-hidden animate-pulse">
-              <div className="aspect-square bg-[#F4F1FF]" />
-              <div className="p-3.5 flex flex-col gap-2">
-                <div className="h-3.5 bg-[#F4F1FF] rounded-full w-3/4" />
-                <div className="h-3.5 bg-[#F4F1FF] rounded-full w-1/2" />
-                <div className="h-3 bg-[#F4F1FF] rounded-full w-2/3" />
+            <div key={n} className="product-card animate-pulse">
+              <div className="product-card-image-wrapper" style={{ backgroundColor: '#F4F1FF' }} />
+              <div className="product-card-info">
+                <div style={{ height: '14px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '75%' }} />
+                <div style={{ height: '14px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '50%' }} />
               </div>
             </div>
           ))}
         </div>
       ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="market-grid">
           {filtered.map((item) => (
             <ProductCard key={item._id} product={item} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 bg-[#F4F1FF] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Tag className="w-7 h-7 text-[#6C4EFF] stroke-[1.8]" />
+        <div className="market-empty">
+          <div className="market-empty-icon-box">
+            <Tag style={{ width: '28px', height: '28px', color: '#6C4EFF', strokeWidth: 1.8 }} />
           </div>
-          <h3 className="font-bold text-[16px] text-[#111827] mb-1">No items found</h3>
-          <p className="text-[13px] text-[#9CA3AF]">Try adjusting your search or filters.</p>
+          <h3 className="market-empty-title">No items found</h3>
+          <p className="market-empty-desc">Try adjusting your search or filters.</p>
         </div>
       )}
     </div>

@@ -8,12 +8,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import './Orders.css';
 
 const getMediaUrl = (path) => {
   if (!path) return '';
   let url = path;
 
-  // Cloudinary fix: PDFs stored under /image/upload/ return HTTP 401. Replace with /raw/upload/
   if (url.includes('cloudinary.com') && url.includes('/image/upload/') && url.toLowerCase().includes('.pdf')) {
     url = url.replace('/image/upload/', '/raw/upload/');
   }
@@ -26,7 +26,6 @@ const getMediaUrl = (path) => {
   return `${serverBase}${url}`;
 };
 
-
 export const Orders = () => {
   const navigate = useNavigate();
   const { user, showToast } = useAuth();
@@ -37,7 +36,6 @@ export const Orders = () => {
   const [expandedDetails, setExpandedDetails] = useState({});
   const [selectedScreenshot, setSelectedScreenshot] = useState(null);
 
-  // Fetch student print orders
   const fetchOrders = async () => {
     try {
       const { data } = await api.get('/print/my-orders');
@@ -70,17 +68,16 @@ export const Orders = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'pending':
-        return <span className="bg-[#FAF9FF] text-[#6D5DF6] border border-[#6D5DF6]/20 text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">In Progress</span>;
       case 'printing':
-        return <span className="bg-[#FAF9FF] text-[#6D5DF6] border border-[#6D5DF6]/20 text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">In Progress</span>;
+        return <span className="orders-status-chip in-progress">In Progress</span>;
       case 'out-for-delivery':
-        return <span className="bg-[#FFF3EB] text-[#E56A00] border border-[#FFE3CC] text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">Out for Delivery</span>;
+        return <span className="orders-status-chip out-for-delivery">Out for Delivery</span>;
       case 'delivered':
-        return <span className="bg-[#EEF9F2] text-emerald-600 border border-emerald-100 text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">At Your Desk</span>;
+        return <span className="orders-status-chip delivered">At Your Desk</span>;
       case 'cancelled':
-        return <span className="bg-rose-50 text-rose-600 border border-rose-100 text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">Cancelled</span>;
+        return <span className="orders-status-chip cancelled">Cancelled</span>;
       default:
-        return <span className="bg-gray-50 text-gray-600 border border-gray-100 text-[11.5px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">{status}</span>;
+        return <span className="orders-status-chip" style={{ backgroundColor: '#f9fafb', color: '#4b5563', border: '1px solid #e5e7eb' }}>{status}</span>;
     }
   };
 
@@ -100,7 +97,6 @@ export const Orders = () => {
     return lastPart.substring(lastPart.indexOf('-') + 1) || lastPart;
   };
 
-  // Helper to generate dynamic progress timestamps matching screenshot mockup
   const getStepTime = (baseDateStr, stepIndex, currentStatus) => {
     const base = new Date(baseDateStr);
     const format = (d) => {
@@ -136,39 +132,40 @@ export const Orders = () => {
   const currentList = activeTab === 'active' ? activeOrdersList : pastOrdersList;
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] font-sans antialiased text-[#111827] pb-32 overflow-x-hidden w-full">
+    <div className="orders-page-container">
       
-      {/* ── HEADER ── */}
-      <header className="h-[60px] md:h-[72px] border-b border-[#ECECEC] bg-white sticky top-0 z-40 px-4 md:px-6">
-        <div className="max-w-[800px] h-full mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* HEADER */}
+      <header className="orders-header">
+        <div className="orders-header-inner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button 
               onClick={() => navigate('/profile')}
-              className="w-10 h-10 rounded-full border border-[#ECECEC] flex items-center justify-center hover:bg-[#FAFAFA] transition-colors"
+              className="profile-icon-btn"
+              style={{ border: '1px solid #ECECEC' }}
             >
-              <ArrowLeft className="w-5 h-5 text-gray-750 stroke-[2]" />
+              <ArrowLeft style={{ width: '20px', height: '20px', color: '#1f2937', strokeWidth: 2 }} />
             </button>
-            <div className="text-left">
-              <h1 className="text-[15px] md:text-[17.5px] font-bold text-gray-800 tracking-tight">My Orders</h1>
-              <p className="text-[10.5px] md:text-[11.5px] text-gray-500 font-medium mt-0.5 leading-none">Track and manage your print orders</p>
+            <div style={{ textAlign: 'left' }}>
+              <h1 style={{ fontSize: '17.5px', fontWeight: 700, color: '#1f2937', margin: 0, letterSpacing: '-0.025em' }}>My Orders</h1>
+              <p style={{ fontSize: '11.5px', color: '#6B7280', fontWeight: 500, marginTop: '2px', margin: 0, lineHeight: 1 }}>Track and manage your print orders</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <a href="tel:9391461855" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-gray-650 hover:text-[#6D5DF6] transition-all">
-              <HelpCircle className="w-4.5 h-4.5 text-gray-500" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <a href="tel:9391461855" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13.5px', fontWeight: 600, color: '#4b5563', textDecoration: 'none' }}>
+              <HelpCircle style={{ width: '18px', height: '18px', color: '#6b7280' }} />
               <span>Help</span>
             </a>
             
-            {/* WhatsApp Contact circular button */}
             <a 
               href="https://wa.me/9391461855" 
               target="_blank" 
               rel="noreferrer"
-              className="w-10 h-10 rounded-full border border-[#ECECEC] bg-white flex items-center justify-center hover:bg-gray-55 transition-all shadow-sm active:scale-[0.98]"
+              className="profile-icon-btn"
+              style={{ border: '1px solid #ECECEC', backgroundColor: '#ffffff' }}
               title="Contact WhatsApp"
             >
-              <svg className="w-5 h-5 text-emerald-500 fill-current" viewBox="0 0 24 24">
+              <svg style={{ width: '20px', height: '20px', fill: '#10b981' }} viewBox="0 0 24 24">
                 <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.197 1.45 4.817 1.45 5.548 0 10.063-4.515 10.066-10.067.002-2.69-1.04-5.218-2.93-7.108C16.66 1.54 14.135.495 11.454.495c-5.553 0-10.07 4.515-10.074 10.069-.001 1.73.454 3.42 1.316 4.921l-.974 3.56 3.652-.958zm13.11-6.177c-.3-.15-1.782-.88-2.057-.98-.275-.1-.475-.15-.675.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.65.075-.3-.15-1.267-.467-2.414-1.492-.893-.797-1.495-1.78-1.67-2.08-.175-.3-.02-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.675-1.625-.925-2.225-.244-.588-.492-.51-.675-.52-.172-.007-.37-.01-.568-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.782-.728 2.032-1.43.25-.702.25-1.303.175-1.43-.075-.127-.275-.202-.575-.352z"/>
               </svg>
             </a>
@@ -176,98 +173,73 @@ export const Orders = () => {
         </div>
       </header>
 
-      {/* ── SEGMENTED FILTER TABS ── */}
-      <div className="max-w-[800px] mx-auto px-4 md:px-6 mt-4 md:mt-6 text-left">
-        <div className="flex border-b border-[#ECECEC] gap-6 relative">
+      {/* SEGMENTED FILTER TABS */}
+      <div className="orders-main-wrapper" style={{ textStyle: 'left' }}>
+        <div className="orders-tab-bar">
           <button 
             onClick={() => setActiveTab('active')}
-            className={`pb-3.5 text-[13.5px] font-extrabold flex items-center relative transition-all ${
-              activeTab === 'active' 
-                ? 'text-[#6D5DF6]' 
-                : 'text-[#9CA3AF] hover:text-[#6B7280]'
-            }`}
+            className={`orders-tab-btn ${activeTab === 'active' ? 'active' : ''}`}
           >
             Active Prints
-            <span className={`ml-2 w-5.5 h-5.5 rounded-full flex items-center justify-center text-[10px] font-black border ${
-              activeTab === 'active' 
-                ? 'bg-[#FAF9FF] text-[#6D5DF6] border-[#6D5DF6]/15' 
-                : 'bg-[#FAFAFA] text-gray-500 border-[#ECECEC]'
-            }`}>
+            <span style={{ marginLeft: '8px', width: '22px', height: '22px', borderRadius: '9999px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900, backgroundColor: activeTab === 'active' ? '#FAF9FF' : '#FAFAFA', color: activeTab === 'active' ? '#6D5DF6' : '#6b7280', border: '1px solid #ECECEC' }}>
               {activeOrdersList.length}
             </span>
-            {activeTab === 'active' && (
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6D5DF6]" />
-            )}
           </button>
           
           <button 
             onClick={() => setActiveTab('past')}
-            className={`pb-3.5 text-[13.5px] font-extrabold flex items-center relative transition-all ${
-              activeTab === 'past' 
-                ? 'text-[#6D5DF6]' 
-                : 'text-[#9CA3AF] hover:text-[#6B7280]'
-            }`}
+            className={`orders-tab-btn ${activeTab === 'past' ? 'active' : ''}`}
           >
             Past History
-            <span className={`ml-2 w-5.5 h-5.5 rounded-full flex items-center justify-center text-[10px] font-black border ${
-              activeTab === 'past' 
-                ? 'bg-[#FAF9FF] text-[#6D5DF6] border-[#6D5DF6]/15' 
-                : 'bg-[#FAFAFA] text-gray-500 border-[#ECECEC]'
-            }`}>
+            <span style={{ marginLeft: '8px', width: '22px', height: '22px', borderRadius: '9999px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900, backgroundColor: activeTab === 'past' ? '#FAF9FF' : '#FAFAFA', color: activeTab === 'past' ? '#6D5DF6' : '#6b7280', border: '1px solid #ECECEC' }}>
               {pastOrdersList.length}
             </span>
-            {activeTab === 'past' && (
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#6D5DF6]" />
-            )}
           </button>
         </div>
       </div>
 
-      <main className="max-w-[800px] mx-auto px-4 md:px-6 mt-4 md:mt-6 space-y-4 md:space-y-6">
+      <main className="orders-main-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         
-        {/* ── STATUS BANNER ── */}
-        <div className="w-full select-none">
+        {/* STATUS BANNER */}
+        <div style={{ width: '100%' }}>
           <img 
             src="/images/em_print_orders_banner.jpg" 
             alt="Printf Hub Classroom Delivery Banner" 
-            className="w-full h-auto block rounded-[22px] shadow-[0_10px_30px_rgba(0,0,0,0.05)]"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
+            style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '22px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+            onError={(e) => { e.target.style.display = 'none'; }}
           />
         </div>
 
-        {/* ── ORDERS QUEUE ── */}
+        {/* ORDERS QUEUE */}
         {loading ? (
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {[1, 2].map(i => (
-              <div key={i} className="h-44 bg-white rounded-[22px] border border-[#ECECEC] animate-pulse" />
+              <div key={i} className="animate-pulse" style={{ height: '176px', backgroundColor: '#ffffff', borderRadius: '22px', border: '1px solid #ECECEC' }} />
             ))}
           </div>
         ) : currentList.length === 0 ? (
-          <div className="bg-white rounded-[22px] border border-[#ECECEC] p-12 text-center shadow-sm max-w-[460px] mx-auto">
-            <div className="w-14 h-14 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#9CA3AF]">
-              <FileText className="w-7 h-7" />
+          <div className="orders-empty-card">
+            <div style={{ width: '56px', height: '56px', backgroundColor: '#f9fafb', border: '1px solid #f3f4f6', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', color: '#9CA3AF' }}>
+              <FileText style={{ width: '28px', height: '28px' }} />
             </div>
-            <h3 className="text-[15px] font-bold text-[#111827] mb-1">No Orders Found</h3>
-            <p className="text-[12.5px] text-[#6B7280] mb-6 font-semibold">
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '4px' }}>No Orders Found</h3>
+            <p style={{ fontSize: '12.5px', color: '#6B7280', marginBottom: '1.5rem', fontWeight: 600 }}>
               There are no orders listed in this tab segment.
             </p>
             <button
               onClick={() => navigate('/vendors/print-studio')}
-              className="bg-[#6D5DF6] hover:bg-[#5C4EE5] text-white font-bold text-[13px] py-2.5 px-6 rounded-xl transition-all shadow-sm shadow-[#6D5DF6]/15"
+              style={{ backgroundColor: '#6D5DF6', color: '#ffffff', fontWeight: 700, fontSize: '13px', padding: '10px 24px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}
             >
               Order Prints
             </button>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {currentList.map((order) => {
               const isExpanded = !!expandedOrders[order._id];
               const isDetailsExpanded = !!expandedDetails[order._id];
               const isCancelled = order.status === 'cancelled';
               
-              // Map index values for progress bar nodes
               const activeIndex = order.status === 'pending' ? 1 : 
                                   order.status === 'printing' ? 2 :
                                   order.status === 'out-for-delivery' ? 3 :
@@ -294,73 +266,76 @@ export const Orders = () => {
               return (
                 <div 
                   key={order._id}
-                  className="bg-white rounded-[22px] border border-[#ECECEC] shadow-[0_10px_30px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-300 text-left"
+                  className="orders-card"
                 >
                   
                   {/* Order Card Summary header */}
-                  <div className="p-4 md:p-5 flex items-start gap-3 md:gap-4">
-                    <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-[#6D5DF6] flex items-center justify-center text-white shrink-0 shadow-sm shadow-[#6D5DF6]/20">
-                      <FileText className="w-5 h-5 md:w-5.5 md:h-5.5" />
+                  <div className="orders-card-header">
+                    <div style={{ width: '44px', height: '44px', borderRadius: '9999px', backgroundColor: '#6D5DF6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', flexShrink: 0 }}>
+                      <FileText style={{ width: '22px', height: '22px' }} />
                     </div>
 
-                      <div className="flex-1 min-w-0 text-left">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                        <div className="text-left">
-                          <span className="text-[12px] text-[#8C939F] font-semibold block">Order ID</span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <h4 className="text-[15.5px] font-bold text-gray-700 leading-none">
+                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                        <div style={{ textAlign: 'left' }}>
+                          <span style={{ fontSize: '12px', color: '#8C939F', fontWeight: 600, display: 'block' }}>Order ID</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                            <h4 style={{ fontSize: '15.5px', fontWeight: 700, color: '#374151', margin: 0, lineHeight: 1 }}>
                               {order._id.startsWith('mock') ? `EM-2025-05${order._id.substring(order._id.length - 2)}-001` : `EM-${new Date(order.createdAt).getFullYear()}-${order._id.substring(order._id.length - 8).toUpperCase()}`}
                             </h4>
                             <button 
                               onClick={() => copyToClipboard(order._id.startsWith('mock') ? `EM-2025-05${order._id.substring(order._id.length - 2)}-001` : `EM-${new Date(order.createdAt).getFullYear()}-${order._id.substring(order._id.length - 8).toUpperCase()}`, 'Order ID')}
-                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              className="profile-icon-btn"
+                              style={{ width: '24px', height: '24px' }}
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Copy style={{ width: '14px', height: '14px', color: '#9ca3af' }} />
                             </button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           {getStatusBadge(order.status)}
                           <button 
                             onClick={() => toggleOrderExpand(order._id)}
-                            className="w-8 h-8 rounded-lg border border-[#ECECEC] flex items-center justify-center bg-white hover:bg-[#FAFAFA] transition-all"
+                            className="profile-icon-btn"
+                            style={{ width: '32px', height: '32px', border: '1px solid #ECECEC', borderRadius: '8px', backgroundColor: '#ffffff' }}
                           >
-                            {isExpanded ? <ChevronUp className="w-4.5 h-4.5 text-[#6B7280]" /> : <ChevronDown className="w-4.5 h-4.5 text-[#6B7280]" />}
+                            {isExpanded ? <ChevronUp style={{ width: '18px', height: '18px', color: '#6B7280' }} /> : <ChevronDown style={{ width: '18px', height: '18px', color: '#6B7280' }} />}
                           </button>
                         </div>
                       </div>
 
                       {/* Card meta columns details */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5 mt-3 md:mt-4 text-[12.5px] text-[#6B7280]">
-                        <div className="text-left">
-                          <span className="text-[12px] text-[#8C939F] font-semibold block">UPI Reference Note</span>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className="bg-[#FAF9FF] border border-[#6D5DF6]/15 text-[#6D5DF6] font-bold px-2.5 py-0.5 rounded-lg text-[11px] flex items-center gap-1 select-none">
-                              <span className="text-[10px] text-[#6D5DF6]">✪</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginTop: '1rem', fontSize: '12.5px', color: '#6B7280' }}>
+                        <div style={{ textAlign: 'left' }}>
+                          <span style={{ fontSize: '12px', color: '#8C939F', fontWeight: 600, display: 'block' }}>UPI Reference Note</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                            <span style={{ backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.15)', color: '#6D5DF6', fontWeight: 700, padding: '2px 10px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontSize: '10px', color: '#6D5DF6' }}>✪</span>
                               {order.upiReference}
                             </span>
                             <button 
                               onClick={() => copyToClipboard(order.upiReference, 'UPI Reference Code')}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="profile-icon-btn"
+                              style={{ width: '20px', height: '20px' }}
                             >
-                              <Copy className="w-3 h-3" />
+                              <Copy style={{ width: '12px', height: '12px', color: '#9ca3af' }} />
                             </button>
                           </div>
                         </div>
 
-                        <div className="text-left">
-                          <span className="text-[12px] text-[#8C939F] font-semibold block">Placed on</span>
-                          <div className="flex items-center gap-1.5 mt-1.5 text-gray-500 font-medium">
-                            <Calendar className="w-4 h-4 text-[#9CA3AF]" />
+                        <div style={{ textAlign: 'left' }}>
+                          <span style={{ fontSize: '12px', color: '#8C939F', fontWeight: 600, display: 'block' }}>Placed on</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: '#6b7280', fontWeight: 500 }}>
+                            <Calendar style={{ width: '16px', height: '16px', color: '#9CA3AF' }} />
                             {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(order.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
 
-                        <div className="text-left">
-                          <span className="text-[12px] text-[#8C939F] font-semibold block">Delivering to</span>
-                          <div className="flex items-center gap-1.5 mt-1.5 text-gray-500 font-medium">
-                            <MapPin className="w-4 h-4 text-[#9CA3AF]" />
+                        <div style={{ textAlign: 'left' }}>
+                          <span style={{ fontSize: '12px', color: '#8C939F', fontWeight: 600, display: 'block' }}>Delivering to</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: '#6b7280', fontWeight: 500 }}>
+                            <MapPin style={{ width: '16px', height: '16px', color: '#9CA3AF' }} />
                             {order.department} • Room {order.section}
                           </div>
                         </div>
@@ -369,25 +344,20 @@ export const Orders = () => {
                     </div>
                   </div>
 
-                  {/* ── EXPANDED DETAILS PORTAL BLOCK ── */}
+                  {/* EXPANDED DETAILS PORTAL BLOCK */}
                   {isExpanded && (
-                    <div className="border-t border-[#ECECEC] animate-slide-down">
+                    <div className="animate-slideDown" style={{ borderTop: '1px solid #ECECEC' }}>
                       
                       {/* Timeline progress line nodes */}
                       {!isCancelled && (
-                        <div className="px-5 py-7 bg-[#FAF9FF]/40 border-b border-[#ECECEC] overflow-x-auto scrollbar-none">
-                          <div className="relative flex items-center justify-between w-full min-w-[350px]">
+                        <div style={{ padding: '1.75rem 1.25rem', backgroundColor: 'rgba(250,249,255,0.4)', borderBottom: '1px solid #ECECEC', overflowX: 'auto' }}>
+                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', minWidth: '350px' }}>
                             
-                            {/* Visual Timeline connector lines */}
-                            <div className="absolute left-[36px] right-[36px] top-[15px] h-[3px] z-0 flex items-center justify-between pointer-events-none w-[calc(100%-72px)]">
-                              {/* Segment 1: Ordered to Paid */}
-                              <div className={`h-[3px] flex-1 mx-0.5 ${activeIndex >= 1 ? 'bg-emerald-500' : 'bg-[#ECECEC]'}`} />
-                              {/* Segment 2: Paid to Printing */}
-                              <div className={`h-[3px] flex-1 mx-0.5 ${activeIndex >= 2 ? 'bg-[#6D5DF6]' : 'bg-[#ECECEC]'}`} />
-                              {/* Segment 3: Printing to Out for Delivery */}
-                              <div className={`h-[3px] flex-1 mx-0.5 ${activeIndex >= 3 ? 'bg-[#6D5DF6]' : 'border-t-2 border-dashed border-[#E5E7EB]'}`} />
-                              {/* Segment 4: Out for Delivery to At Your Desk */}
-                              <div className={`h-[3px] flex-1 mx-0.5 ${activeIndex >= 4 ? 'bg-emerald-500' : 'border-t-2 border-dashed border-[#E5E7EB]'}`} />
+                            <div style={{ position: 'absolute', left: '36px', right: '36px', top: '15px', height: '3px', zIndex: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', pointerEvents: 'none', width: 'calc(100% - 72px)' }}>
+                              <div style={{ height: '3px', flex: 1, margin: '0 2px', backgroundColor: activeIndex >= 1 ? '#10b981' : '#ECECEC' }} />
+                              <div style={{ height: '3px', flex: 1, margin: '0 2px', backgroundColor: activeIndex >= 2 ? '#6D5DF6' : '#ECECEC' }} />
+                              <div style={{ height: '3px', flex: 1, margin: '0 2px', backgroundColor: activeIndex >= 3 ? '#6D5DF6' : '#ECECEC' }} />
+                              <div style={{ height: '3px', flex: 1, margin: '0 2px', backgroundColor: activeIndex >= 4 ? '#10b981' : '#ECECEC' }} />
                             </div>
 
                             {[
@@ -403,28 +373,20 @@ export const Orders = () => {
                               const StepIcon = step.icon;
 
                               return (
-                                <div key={idx} className="flex flex-col items-center z-10 select-none max-w-[18%]">
-                                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                                    isCurrent 
-                                      ? 'bg-white border-[#6D5DF6] text-[#6D5DF6] ring-4 ring-[#6D5DF6]/10'
-                                      : isDone 
-                                      ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                      : 'bg-white border-[#ECECEC] text-[#9CA3AF]'
-                                  }`}>
+                                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, userSelect: 'none', maxWidth: '18%' }}>
+                                  <div style={{ width: '32px', height: '32px', borderRadius: '9999px', border: '2px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', backgroundColor: isCurrent ? '#ffffff' : (isDone ? '#10b981' : '#ffffff'), borderColor: isCurrent ? '#6D5DF6' : (isDone ? '#10b981' : '#ECECEC'), color: isCurrent ? '#6D5DF6' : (isDone ? '#ffffff' : '#9CA3AF') }}>
                                     {isDone && !isCurrent ? (
-                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                      <Check style={{ width: '14px', height: '14px', strokeWidth: 3 }} />
                                     ) : (
-                                      <StepIcon className={`w-4.5 h-4.5 ${isCurrent ? 'text-[#6D5DF6]' : 'text-[#9CA3AF]'} stroke-[2.2]`} />
+                                      <StepIcon style={{ width: '18px', height: '18px', color: isCurrent ? '#6D5DF6' : '#9CA3AF', strokeWidth: 2.2 }} />
                                     )}
                                   </div>
                                   
-                                  <span className={`text-[10px] mt-2 font-black tracking-tight text-center leading-tight ${
-                                    isCurrent ? 'text-[#6D5DF6]' : isDone ? 'text-[#111827]' : 'text-[#9CA3AF]'
-                                  }`}>
+                                  <span style={{ fontSize: '10px', marginTop: '8px', fontWeight: 900, textAlign: 'center', color: isCurrent ? '#6D5DF6' : (isDone ? '#111827' : '#9CA3AF') }}>
                                     {idx + 1}. {step.label}
                                   </span>
                                   
-                                  <span className="text-[8px] text-[#9CA3AF] font-bold mt-1 tracking-tight text-center">
+                                  <span style={{ fontSize: '8px', color: '#9CA3AF', fontWeight: 700, marginTop: '4px', textAlign: 'center' }}>
                                     {stepTime}
                                   </span>
                                 </div>
@@ -436,72 +398,72 @@ export const Orders = () => {
                       )}
 
                       {/* Accordion Details summary details */}
-                      <div className="p-5">
+                      <div style={{ padding: '1.25rem' }}>
                         
-                        <div className="border border-[#ECECEC] rounded-[18px] bg-white p-4">
+                        <div style={{ border: '1px solid #ECECEC', borderRadius: '18px', backgroundColor: '#ffffff', padding: '1rem' }}>
                           
-                          <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-[#F5F5F5]">
-                            <div className="flex items-center gap-2">
-                              <FileText className="w-4 h-4 text-[#6D5DF6]" />
-                              <span className="text-[13px] font-black text-[#111827]">Order Details</span>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '14px', marginBottom: '14px', borderBottom: '1px solid #F5F5F5' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <FileText style={{ width: '16px', height: '16px', color: '#6D5DF6' }} />
+                              <span style={{ fontSize: '13px', fontWeight: 900, color: '#111827' }}>Order Details</span>
                             </div>
                             <button 
                               type="button"
                               onClick={() => toggleDetailsExpand(order._id)}
-                              className="w-7 h-7 rounded-lg border border-[#ECECEC] flex items-center justify-center hover:bg-[#FAFAFA]"
+                              className="profile-icon-btn"
+                              style={{ width: '28px', height: '28px', border: '1px solid #ECECEC' }}
                             >
-                              {isDetailsExpanded ? <ChevronUp className="w-3.5 h-3.5 text-gray-550" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-550" />}
+                              {isDetailsExpanded ? <ChevronUp style={{ width: '14px', height: '14px', color: '#6b7280' }} /> : <ChevronDown style={{ width: '14px', height: '14px', color: '#6b7280' }} />}
                             </button>
                           </div>
 
                           {/* Quick receipt values preview */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[12.5px] font-semibold text-[#6B7280]">
-                            <div className="text-left">
-                              <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block">Total Files</span>
-                              <span className="text-[#111827] font-bold mt-0.5 block">{totalFilesCount}</span>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', fontSize: '12.5px', fontWeight: 600, color: '#6B7280' }}>
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block' }}>Total Files</span>
+                              <span style={{ color: '#111827', fontWeight: 700, marginTop: '2px', display: 'block' }}>{totalFilesCount}</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block">Total Pages</span>
-                              <span className="text-[#111827] font-bold mt-0.5 block">{totalPagesCount}</span>
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block' }}>Total Pages</span>
+                              <span style={{ color: '#111827', fontWeight: 700, marginTop: '2px', display: 'block' }}>{totalPagesCount}</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block">Total Sets</span>
-                              <span className="text-[#111827] font-bold mt-0.5 block">{totalSetsCount}</span>
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block' }}>Total Sets</span>
+                              <span style={{ color: '#111827', fontWeight: 700, marginTop: '2px', display: 'block' }}>{totalSetsCount}</span>
                             </div>
-                            <div className="text-left">
-                              <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block">Amount Paid</span>
-                              <span className="text-[#6D5DF6] font-black mt-0.5 block">₹{order.totalPrice.toFixed(2)}</span>
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block' }}>Amount Paid</span>
+                              <span style={{ color: '#6D5DF6', fontWeight: 900, marginTop: '2px', display: 'block' }}>₹{order.totalPrice.toFixed(2)}</span>
                             </div>
                           </div>
 
                           {/* Expanded Table & Receipt verification proof */}
                           {isDetailsExpanded && (
-                            <div className="mt-5 border-t border-[#F5F5F5] pt-4.5 space-y-5 animate-fade-in text-left">
+                            <div className="animate-fadeIn" style={{ marginTop: '1.25rem', borderTop: '1px solid #F5F5F5', paddingTop: '1.125rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'left' }}>
                               
-                              {/* Files List Table */}
                               <div>
-                                <span className="text-[10px] text-[#9CA3AF] uppercase font-extrabold block mb-2 tracking-wide">Print Items List</span>
-                                <div className="border border-[#ECECEC] rounded-xl overflow-x-auto text-[12.5px] max-w-full">
-                                  <table className="w-full text-left border-collapse min-w-[580px]">
+                                <span style={{ fontSize: '10px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>Print Items List</span>
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', overflowX: 'auto', fontSize: '12.5px' }}>
+                                  <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '580px' }}>
                                     <thead>
-                                      <tr className="bg-[#FAF9FF] border-b border-[#ECECEC] text-[#9CA3AF] font-bold">
-                                        <th className="p-3">File Name</th>
-                                        <th className="p-3">Pages</th>
-                                        <th className="p-3">Layout</th>
-                                        <th className="p-3">Color</th>
-                                        <th className="p-3">Binding</th>
-                                        <th className="p-3 text-right">Price</th>
+                                      <tr style={{ backgroundColor: '#FAF9FF', borderBottom: '1px solid #ECECEC', color: '#9CA3AF', fontWeight: 700 }}>
+                                        <th style={{ padding: '12px' }}>File Name</th>
+                                        <th style={{ padding: '12px' }}>Pages</th>
+                                        <th style={{ padding: '12px' }}>Layout</th>
+                                        <th style={{ padding: '12px' }}>Color</th>
+                                        <th style={{ padding: '12px' }}>Binding</th>
+                                        <th style={{ padding: '12px', textAlign: 'right' }}>Price</th>
                                       </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#ECECEC] font-semibold">
+                                    <tbody style={{ fontWeight: 600 }}>
                                       {orderFiles.map((file, fIdx) => (
-                                        <tr key={fIdx} className="hover:bg-gray-55">
-                                          <td className="p-3 truncate max-w-[120px] sm:max-w-[240px] text-[#111827] font-bold">{file.fileName}</td>
-                                          <td className="p-3 text-[#111827]">{file.pagesCount} pgs • {file.sets} sets</td>
-                                          <td className="p-3 uppercase text-[#6B7280]">{getLayoutLabel(file.layout)}</td>
-                                          <td className="p-3 uppercase text-[#6B7280]">{file.colorType === 'bw' ? 'B&W' : 'Color'}</td>
-                                          <td className="p-3 text-[#6B7280]">{file.binding === 'spiral' ? 'Spiral' : 'None'}</td>
-                                          <td className="p-3 text-right text-[#6D5DF6] font-bold">
+                                        <tr key={fIdx} style={{ borderBottom: '1px solid #ECECEC' }}>
+                                          <td style={{ padding: '12px', color: '#111827', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '240px' }}>{file.fileName}</td>
+                                          <td style={{ padding: '12px', color: '#111827' }}>{file.pagesCount} pgs • {file.sets} sets</td>
+                                          <td style={{ padding: '12px', textTransform: 'uppercase', color: '#6B7280' }}>{getLayoutLabel(file.layout)}</td>
+                                          <td style={{ padding: '12px', textTransform: 'uppercase', color: '#6B7280' }}>{file.colorType === 'bw' ? 'B&W' : 'Color'}</td>
+                                          <td style={{ padding: '12px', color: '#6B7280' }}>{file.binding === 'spiral' ? 'Spiral' : 'None'}</td>
+                                          <td style={{ padding: '12px', textAlign: 'right', color: '#6D5DF6', fontWeight: 700 }}>
                                             ₹{file.subtotal?.toFixed(2) || (order.totalPrice / totalFilesCount).toFixed(2)}
                                           </td>
                                         </tr>
@@ -511,77 +473,69 @@ export const Orders = () => {
                                 </div>
                               </div>
 
-                              {/* Delivery specifications details card */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="border border-[#ECECEC] rounded-xl p-3 flex flex-col text-left">
-                                  <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block mb-1">Delivering classroom location</span>
-                                  <p className="text-[13px] font-bold text-[#111827]">
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                                  <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Delivering classroom location</span>
+                                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#111827', margin: 0 }}>
                                     Department: {order.department} • Room: {order.section}
                                   </p>
                                 </div>
-                                <div className="border border-[#ECECEC] rounded-xl p-3 flex flex-col text-left">
-                                  <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block mb-1">Delivery Date & Time slot</span>
-                                  <p className="text-[13px] font-bold text-[#111827]">
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                                  <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Delivery Date & Time slot</span>
+                                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#111827', margin: 0 }}>
                                     {new Date(order.deliveryDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                                   </p>
                                 </div>
                               </div>
 
-                              {/* Special Instructions List */}
                               {orderFiles.some(f => f.instructions) && (
-                                <div className="border border-[#ECECEC] rounded-xl p-3 bg-gray-55 text-left">
-                                  <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block mb-1">Printing Instructions</span>
-                                  <ul className="list-disc pl-4 text-[12px] font-semibold text-[#6B7280] space-y-0.5">
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', padding: '12px', backgroundColor: '#FAFAFA', textAlign: 'left' }}>
+                                  <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '4px' }}>Printing Instructions</span>
+                                  <ul style={{ listStyleType: 'disc', paddingLeft: '1rem', fontSize: '12px', fontWeight: 600, color: '#6B7280', margin: 0 }}>
                                     {orderFiles.map((f, fIdx) => f.instructions && (
                                       <li key={fIdx}>
-                                        <span className="font-extrabold text-[#111827]">{f.fileName}:</span> "{f.instructions}"
+                                        <span style={{ fontWeight: 800, color: '#111827' }}>{f.fileName}:</span> "{f.instructions}"
                                       </li>
                                     ))}
                                   </ul>
                                 </div>
                               )}
 
-                              {/* Payment Verification Card */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#F5F5F5] pt-4">
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', borderTop: '1px solid #F5F5F5', paddingTop: '1rem' }}>
                                 
-                                <div className="border border-[#ECECEC] rounded-xl p-3 bg-[#FAF9FF] relative overflow-hidden text-left">
-                                  <span className="text-[9.5px] text-[#9CA3AF] uppercase font-extrabold block">Payment Method</span>
-                                  <span className="text-[13px] font-black text-[#111827] mt-0.5 block">UPI</span>
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[11px] font-bold text-[#6B7280]">Ref Note: {order.upiReference}</span>
-                                    <span className="bg-[#EEF9F2] text-emerald-600 font-extrabold text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-emerald-100 flex items-center gap-0.5">
-                                      <ShieldCheck className="w-2.5 h-2.5 fill-emerald-600 stroke-white" />
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', padding: '12px', backgroundColor: '#FAF9FF', position: 'relative', overflow: 'hidden', textAlign: 'left' }}>
+                                  <span style={{ fontSize: '9.5px', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: 800, display: 'block' }}>Payment Method</span>
+                                  <span style={{ fontSize: '13px', fontWeight: 900, color: '#111827', marginTop: '2px', display: 'block' }}>UPI</span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#6B7280' }}>Ref Note: {order.upiReference}</span>
+                                    <span style={{ backgroundColor: '#EEF9F2', color: '#059669', fontWeight: 800, fontSize: '8px', textTransform: 'uppercase', padding: '2px 8px', borderRadius: '9999px', border: '1px solid #a7f3d0', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                      <ShieldCheck style={{ width: '10px', height: '10px', fill: '#059669', stroke: '#ffffff' }} />
                                       Verified
                                     </span>
                                   </div>
                                 </div>
 
-                                {/* Receipt Proof Card */}
-                                <div className="border border-[#ECECEC] rounded-xl p-3 flex items-center justify-between bg-white text-left">
-                                  <div className="flex items-center gap-2.5">
+                                <div style={{ border: '1px solid #ECECEC', borderRadius: '12px', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', textAlign: 'left' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {order.paymentScreenshotUrl ? (
                                       <div 
                                         onClick={() => setSelectedScreenshot(getMediaUrl(order.paymentScreenshotUrl))}
-                                        className="w-10 h-10 bg-gray-100 border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 shrink-0 flex items-center justify-center"
+                                        style={{ width: '40px', height: '40px', backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                       >
                                         <img 
                                           src={getMediaUrl(order.paymentScreenshotUrl)} 
                                           alt="" 
-                                          className="w-full h-full object-cover" 
-                                          onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%239CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>';
-                                          }}
+                                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                                         />
                                       </div>
                                     ) : (
-                                      <div className="w-10 h-10 bg-gray-100 rounded-lg border border-dashed flex items-center justify-center text-gray-400 shrink-0">
+                                      <div style={{ width: '40px', height: '40px', backgroundColor: '#f3f4f6', borderRadius: '8px', border: '1px dashed #d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', flexShrink: 0, fontSize: '10px' }}>
                                         No Image
                                       </div>
                                     )}
                                     <div>
-                                      <span className="text-[10px] text-[#9CA3AF] font-bold block">Receipt Image</span>
-                                      <span className="text-[11px] font-extrabold text-gray-700">Audit Proof</span>
+                                      <span style={{ fontSize: '10px', color: '#9CA3AF', fontWeight: 700, display: 'block' }}>Receipt Image</span>
+                                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#374151' }}>Audit Proof</span>
                                     </div>
                                   </div>
 
@@ -589,9 +543,9 @@ export const Orders = () => {
                                     <button 
                                       type="button"
                                       onClick={() => setSelectedScreenshot(getMediaUrl(order.paymentScreenshotUrl))}
-                                      className="text-[#6D5DF6] hover:underline text-[12px] font-bold flex items-center gap-0.5 bg-[#FAF9FF] border border-[#6D5DF6]/10 px-3 py-1.5 rounded-lg"
+                                      style={{ color: '#6D5DF6', textDecoration: 'none', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '2px', backgroundColor: '#FAF9FF', border: '1px solid rgba(109,93,246,0.1)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                                     >
-                                      <Eye className="w-3.5 h-3.5" /> View
+                                      <Eye style={{ width: '14px', height: '14px' }} /> View
                                     </button>
                                   )}
                                 </div>
@@ -601,14 +555,13 @@ export const Orders = () => {
                             </div>
                           )}
 
-                          {/* Expansion toggle button */}
-                          <button
+                          <button 
                             type="button"
                             onClick={() => toggleDetailsExpand(order._id)}
-                            className="w-full mt-4 h-11 border border-[#EBEBEB] hover:bg-[#6D5DF6]/5 hover:border-[#6D5DF6]/30 text-[#6D5DF6] font-bold text-[13px] rounded-xl flex items-center justify-center gap-1.5 transition-all bg-white"
+                            style={{ width: '100%', marginTop: '1rem', height: '44px', border: '1px solid #EBEBEB', color: '#6D5DF6', fontWeight: 700, fontSize: '13px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#ffffff', cursor: 'pointer' }}
                           >
                             View Full Details
-                            {isDetailsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            {isDetailsExpanded ? <ChevronUp style={{ width: '16px', height: '16px' }} /> : <ChevronDown style={{ width: '16px', height: '16px' }} />}
                           </button>
 
                         </div>
@@ -623,22 +576,22 @@ export const Orders = () => {
           </div>
         )}
 
-        {/* ── HELP CARD ── */}
-        <div className="bg-white rounded-[18px] md:rounded-[22px] border border-[#ECECEC] p-4 md:p-5.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] text-left">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center text-[#6D5DF6] shrink-0">
-              <Headset className="w-5.5 h-5.5" />
+        {/* HELP CARD */}
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '22px', border: '1px solid #ECECEC', padding: '1.25rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '44px', height: '44px', backgroundColor: '#fff1f2', border: '1px solid #ffe4e6', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6D5DF6', flexShrink: 0 }}>
+              <Headset style={{ width: '22px', height: '22px' }} />
             </div>
             <div>
-              <h4 className="text-[13px] font-extrabold text-[#111827]">Need Help with your order?</h4>
-              <p className="text-[11.5px] text-[#6B7280] mt-0.5 font-semibold">Contact us on WhatsApp: <span className="text-[#6D5DF6] font-black">9391461855</span></p>
+              <h4 style={{ fontSize: '13px', fontWeight: 800, color: '#111827', margin: 0 }}>Need Help with your order?</h4>
+              <p style={{ fontSize: '11.5px', color: '#6B7280', marginTop: '2px', fontWeight: 600, margin: 0 }}>Contact us on WhatsApp: <span style={{ color: '#6D5DF6', fontWeight: 900 }}>9391461855</span></p>
             </div>
           </div>
           <a 
             href="https://wa.me/9391461855"
             target="_blank"
             rel="noreferrer"
-            className="h-10 px-4.5 border border-[#ECECEC] hover:bg-[#FAFAFA] text-[#111827] font-bold text-[12.5px] rounded-xl flex items-center gap-1.5 transition-colors"
+            style={{ height: '40px', paddingLeft: '1.125rem', paddingRight: '1.125rem', border: '1px solid #ECECEC', backgroundColor: '#ffffff', color: '#111827', fontWeight: 700, fontSize: '12.5px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
           >
             Chat with Us
           </a>
@@ -646,50 +599,17 @@ export const Orders = () => {
 
       </main>
 
-      {/* ── STICKY MOBILE BOTTOM NAVIGATION ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#ECECEC] h-[84px] pb-safe flex items-center justify-around px-2 shadow-lg">
-        <button onClick={() => navigate('/')} className="flex flex-col items-center justify-center gap-1 flex-1 text-[#9CA3AF] hover:text-[#111827]">
-          <HomeIcon className="w-5.5 h-5.5" />
-          <span className="text-[9.5px] font-bold">Home</span>
-        </button>
-        
-        <button onClick={() => navigate('/chat')} className="flex flex-col items-center justify-center gap-1 flex-1 text-[#9CA3AF] hover:text-[#111827]">
-          <MessageSquare className="w-5.5 h-5.5" />
-          <span className="text-[9.5px] font-bold">Chat</span>
-        </button>
-
-        {/* Floating FAB */}
-        <div className="flex-1 flex justify-center relative">
-          <button 
-            onClick={() => navigate('/')}
-            className="absolute -top-7 w-14 h-14 bg-gradient-to-tr from-[#6D5DF6] to-[#8A72FF] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6D5DF6]/30 active:scale-95 transition-all"
-          >
-            <Plus className="w-6.5 h-6.5 stroke-[2.5]" />
-          </button>
-        </div>
-
-        <button onClick={() => navigate('/orders')} className="flex flex-col items-center justify-center gap-1 flex-1 text-[#6D5DF6]">
-          <FileText className="w-5.5 h-5.5" />
-          <span className="text-[9.5px] font-black">Orders</span>
-        </button>
-
-        <button onClick={() => navigate('/profile')} className="flex flex-col items-center justify-center gap-1 flex-1 text-[#9CA3AF] hover:text-[#111827]">
-          <UserIcon className="w-5.5 h-5.5" />
-          <span className="text-[9.5px] font-bold">Profile</span>
-        </button>
-      </div>
-
-      {/* ── LIGHTBOX RECEIPT OVERLAY ── */}
+      {/* LIGHTBOX RECEIPT OVERLAY */}
       {selectedScreenshot && (
         <div 
           onClick={() => setSelectedScreenshot(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', cursor: 'pointer' }}
         >
-          <div className="max-w-[500px] w-full bg-white rounded-3xl overflow-hidden p-2 relative shadow-2xl animate-scaleIn">
+          <div style={{ maxWidth: '500px', width: '100%', backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', padding: '8px', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             <img 
               src={selectedScreenshot} 
               alt="Audit Screenshot proof" 
-              className="w-full max-h-[75vh] object-contain rounded-2xl block" 
+              style={{ width: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '16px', display: 'block' }} 
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="%239CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';

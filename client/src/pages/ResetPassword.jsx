@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Lock, ArrowRight, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import api from '../api/axios';
+import './Login.css';
 
 export const ResetPassword = () => {
   const { token } = useParams();
@@ -44,10 +45,10 @@ export const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-5 py-12">
-      <div className="w-full max-w-[400px]">
+    <div className="auth-page-wrapper">
+      <div className="auth-card-container">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
+        <div className="auth-logo-row">
           <Link to="/">
             <Logo size={40} showText={false} />
           </Link>
@@ -56,46 +57,46 @@ export const ResetPassword = () => {
         {!success ? (
           <>
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-[24px] font-bold text-[#111827]">Set New Password</h1>
-              <p className="text-[13px] text-[#9CA3AF] mt-1">Please enter your new password below</p>
+            <div className="auth-header">
+              <h1 className="auth-title" style={{ fontSize: '24px' }}>Set New Password</h1>
+              <p className="auth-subtitle">Please enter your new password below</p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="auth-form">
               {/* New Password */}
-              <div>
-                <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+              <div className="auth-field">
+                <label className="auth-label">New Password</label>
+                <div className="auth-input-wrapper">
+                  <Lock className="auth-input-icon" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 6 characters"
-                    className="w-full h-12 pl-11 pr-12 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+                    className="auth-input has-toggle"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
+                    className="auth-eye-btn"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
                   </button>
                 </div>
               </div>
 
               {/* Confirm Password */}
-              <div>
-                <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Confirm New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+              <div className="auth-field">
+                <label className="auth-label">Confirm New Password</label>
+                <div className="auth-[#6C4EFF]-wrapper" style={{ position: 'relative' }}>
+                  <Lock className="auth-input-icon" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
-                    className="w-full h-12 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-[14px] text-[13px] text-[#111827] placeholder-[#9CA3AF] focus:bg-white focus:border-[#6C4EFF]/30 focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all"
+                    className="auth-input"
                   />
                 </div>
               </div>
@@ -104,30 +105,31 @@ export const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] rounded-full shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                className="auth-submit-btn"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="auth-btn-spinner animate-spin" />
                 ) : (
-                  <>Reset Password <ArrowRight className="w-4 h-4" /></>
+                  <>Reset Password <ArrowRight style={{ width: '16px', height: '16px' }} /></>
                 )}
               </button>
             </form>
           </>
         ) : (
-          <div className="text-center bg-[#FAFAFF] border border-[#E9E6F8] rounded-3xl p-6 shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-              <CheckCircle2 className="w-6 h-6 stroke-[2]" />
+          <div style={{ textAlign: 'center', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div style={{ width: '3rem', height: '3rem', borderRadius: '9999px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyCenter: 'center', margin: '0 auto 1rem auto', border: '1px solid #a7f3d0' }}>
+              <CheckCircle2 style={{ width: '24px', height: '24px', strokeWidth: 2 }} />
             </div>
-            <h3 className="font-bold text-[18px] text-[#111827] mb-2">Password Reset Successful</h3>
-            <p className="text-[13px] text-[#6B7280] leading-relaxed mb-6">
+            <h3 style={{ fontWeight: 700, fontSize: '18px', color: '#111827', margin: '0 0 0.5rem 0' }}>Password Reset Successful</h3>
+            <p style={{ fontSize: '13px', color: '#6B7280', lineHeight: 1.625, margin: '0 0 1.5rem 0' }}>
               Your password has been successfully updated. You can now log in with your new password.
             </p>
             <Link
               to="/login"
-              className="w-full h-12 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] rounded-full shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="auth-submit-btn"
+              style={{ textDecoration: 'none' }}
             >
-              Go to Sign In <ArrowRight className="w-4 h-4" />
+              Go to Sign In <ArrowRight style={{ width: '16px', height: '16px' }} />
             </Link>
           </div>
         )}

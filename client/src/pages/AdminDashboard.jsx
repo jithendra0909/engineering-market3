@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText } from 'lucide-react';
 import api from '../api/axios';
+import './AdminDashboard.css';
 
 export const AdminDashboard = () => {
   const { showToast } = useAuth();

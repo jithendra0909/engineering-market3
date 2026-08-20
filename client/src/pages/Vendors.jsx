@@ -4,6 +4,7 @@ import {
   Printer, LayoutGrid, Star, ChevronRight, 
   ShieldCheck, Lock, Headset, Award, Search, Gift
 } from 'lucide-react';
+import './Vendors.css';
 
 export const Vendors = () => {
   const navigate = useNavigate();
@@ -18,212 +19,188 @@ export const Vendors = () => {
     (!searchVal || 'em gift studio personalized gifts photo frames'.includes(searchVal.toLowerCase()));
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="home-page">
 
-
-
-      {/* Decorative background blobs — matches Home page */}
-      <div className="absolute top-0 left-0 w-full h-[500px] pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-20 -left-20 w-[300px] h-[300px] bg-[#6C4EFF]/[0.06] rounded-full blur-3xl" />
-        <div className="absolute top-10 right-0 w-[250px] h-[250px] bg-[#E14BA1]/[0.04] rounded-full blur-3xl" />
+      {/* Decorative background blobs */}
+      <div className="home-bg-blobs">
+        <div className="home-blob-1" />
+        <div className="home-blob-2" />
       </div>
 
-      <div className="max-w-[1360px] mx-auto px-5 lg:px-8 pt-5 lg:pt-8 pb-28 lg:pb-12 flex flex-col gap-8 lg:gap-10">
+      <div className="vendors-page-container">
 
-        {/* ── HEADER ── */}
-        <div className="text-left">
-          <h1 className="text-[18px] lg:text-[20px] font-bold text-[#111827] tracking-tight">Vendors</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-1 leading-relaxed">Discover verified vendors and services on campus.</p>
+        {/* HEADER */}
+        <div>
+          <h1 className="home-section-title">Vendors</h1>
+          <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '0.25rem', margin: 0, lineHeight: 1.625 }}>Discover verified vendors and services on campus.</p>
         </div>
 
-        {/* ── SEARCH & CHIPS BAR ── */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        {/* SEARCH & CHIPS BAR */}
+        <div className="vendors-search-bar-row">
           
-          {/* Search — Home page style */}
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#9CA3AF]" />
+          {/* Search */}
+          <div className="home-mobile-search-wrapper" style={{ width: '100%', maxWidth: '28rem' }}>
+            <Search className="home-mobile-search-icon" />
             <input 
               type="text" 
               placeholder="Search vendors or services..." 
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
-              className="w-full h-11 pl-11 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] placeholder-[#9CA3AF]"
+              className="home-mobile-search-input"
             />
           </div>
 
-          {/* Category Tabs — matching Home card style */}
-          <div className="flex items-center gap-3 self-start sm:self-auto overflow-x-auto no-scrollbar py-1">
+          {/* Category Tabs */}
+          <div className="vendors-tabs-row no-scrollbar">
             <button 
               onClick={() => setActiveTab('All')}
-              className={`h-10 px-5 rounded-full flex items-center gap-2 font-bold text-[12px] transition-all border shrink-0 ${
-                activeTab === 'All' 
-                  ? 'bg-[#F4F1FF] border-[#6C4EFF]/20 text-[#6C4EFF]' 
-                  : 'bg-white border-[#E9E6F8]/70 text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30'
-              }`}
+              className={`vendors-tab-btn ${activeTab === 'All' ? 'active' : ''}`}
             >
-              <LayoutGrid className="w-3.5 h-3.5 stroke-[2]" />
+              <LayoutGrid style={{ width: '14px', height: '14px', strokeWidth: 2 }} />
               All
             </button>
 
             <button 
               onClick={() => setActiveTab('Printing')}
-              className={`h-10 px-5 rounded-full flex items-center gap-2 font-bold text-[12px] transition-all border shrink-0 ${
-                activeTab === 'Printing' 
-                  ? 'bg-[#F4F1FF] border-[#6C4EFF]/20 text-[#6C4EFF]' 
-                  : 'bg-white border-[#E9E6F8]/70 text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30'
-              }`}
+              className={`vendors-tab-btn ${activeTab === 'Printing' ? 'active' : ''}`}
             >
-              <Printer className="w-3.5 h-3.5 stroke-[2]" />
+              <Printer style={{ width: '14px', height: '14px', strokeWidth: 2 }} />
               Printing
             </button>
 
             <button 
               onClick={() => setActiveTab('Gifts')}
-              className={`h-10 px-5 rounded-full flex items-center gap-2 font-bold text-[12px] transition-all border shrink-0 ${
-                activeTab === 'Gifts' 
-                  ? 'bg-[#F4F1FF] border-[#6C4EFF]/20 text-[#6C4EFF]' 
-                  : 'bg-white border-[#E9E6F8]/70 text-[#9CA3AF] hover:text-[#111827] hover:border-[#6C4EFF]/30'
-              }`}
+              className={`vendors-tab-btn ${activeTab === 'Gifts' ? 'active' : ''}`}
             >
-              <Gift className="w-3.5 h-3.5 stroke-[2]" />
+              <Gift style={{ width: '14px', height: '14px', strokeWidth: 2 }} />
               Gifts
             </button>
           </div>
         </div>
 
-        {/* ── POPULAR VENDORS ── */}
-        <div className="flex flex-col gap-5">
-          <h2 className="text-[18px] lg:text-[20px] font-bold text-[#111827]">Popular Vendors</h2>
+        {/* POPULAR VENDORS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <h2 className="home-section-title">Popular Vendors</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* ── EM Printf Hub (Coming Soon) ── */}
+          <div className="vendors-grid">
+            {/* EM Printf Hub (Coming Soon) */}
             {showPrintHub && (
               <button
                 onClick={() => setShowComingSoon(true)}
-                className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
+                className="vendor-card-btn"
               >
-                {/* Icon badge — Home page style */}
-                <div className="w-16 h-16 bg-[#F4F1FF] rounded-[14px] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Printer className="w-8 h-8 text-[#6C4EFF] stroke-[1.8]" />
+                <div className="vendor-card-icon-box">
+                  <Printer style={{ width: '32px', height: '32px', color: '#6C4EFF', strokeWidth: 1.8 }} />
                 </div>
 
-                {/* Content */}
-                <div className="flex-grow flex flex-col justify-center min-w-0">
-                  <h3 className="font-bold text-[15px] text-[#111827] truncate leading-tight">EM Printf Hub</h3>
-                  <p className="text-[12px] text-[#6C4EFF] font-bold mt-0.5">Printing Services</p>
-                  <p className="text-[11px] text-[#9CA3AF] mt-1 truncate">ID Cards • Photocopies • Spiral Binding</p>
+                <div className="vendor-card-info">
+                  <h3 className="vendor-card-title">EM Printf Hub</h3>
+                  <p className="vendor-card-service">Printing Services</p>
+                  <p className="vendor-card-tags">ID Cards • Photocopies • Spiral Binding</p>
                   
-                  {/* Verified badge */}
-                  <div className="mt-2 flex">
-                    <span className="bg-[#EEF9F2] text-emerald-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" />
+                  <div style={{ marginTop: '0.5rem', display: 'flex' }}>
+                    <span className="vendor-verified-badge">
+                      <ShieldCheck style={{ width: '12px', height: '12px' }} />
                       Verified
                     </span>
                   </div>
                 </div>
 
-                {/* Rating + Arrow */}
-                <div className="flex flex-col items-end justify-between self-stretch py-0.5 shrink-0">
-                  <div className="flex items-center gap-1 text-[13px] font-bold text-[#111827]">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <div className="vendor-card-meta">
+                  <div className="vendor-rating">
+                    <Star style={{ width: '14px', height: '14px', fill: '#fbbf24', color: '#fbbf24' }} />
                     4.8
-                    <span className="text-[#9CA3AF] font-medium text-[11px]">(256)</span>
+                    <span className="vendor-rating-count">(256)</span>
                   </div>
                   
-                  <ChevronRight className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C4EFF] transition-colors" />
+                  <ChevronRight style={{ width: '16px', height: '16px', color: '#9CA3AF' }} />
                 </div>
               </button>
             )}
 
-            {/* ── EM Gift Studio (Active) ── */}
+            {/* EM Gift Studio (Active) */}
             {showGiftStudio && (
               <button
                 onClick={() => navigate('/vendors/gift-studio')}
-                className="bg-white border border-[#E9E6F8]/70 rounded-[20px] p-5 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group"
+                className="vendor-card-btn"
               >
-                {/* Icon badge */}
-                <div className="w-16 h-16 bg-[#F4F1FF] rounded-[14px] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Gift className="w-8 h-8 text-[#6C4EFF] stroke-[1.8]" />
+                <div className="vendor-card-icon-box">
+                  <Gift style={{ width: '32px', height: '32px', color: '#6C4EFF', strokeWidth: 1.8 }} />
                 </div>
 
-                {/* Content */}
-                <div className="flex-grow flex flex-col justify-center min-w-0">
-                  <h3 className="font-bold text-[15px] text-[#111827] truncate leading-tight">EM Gift Studio</h3>
-                  <p className="text-[12px] text-[#6C4EFF] font-bold mt-0.5">Personalized Gifts</p>
-                  <p className="text-[11px] text-[#9CA3AF] mt-1 truncate">Photo Frames • Custom Gifts</p>
+                <div className="vendor-card-info">
+                  <h3 className="vendor-card-title">EM Gift Studio</h3>
+                  <p className="vendor-card-service">Personalized Gifts</p>
+                  <p className="vendor-card-tags">Photo Frames • Custom Gifts</p>
                   
-                  {/* Verified badge */}
-                  <div className="mt-2 flex">
-                    <span className="bg-[#EEF9F2] text-emerald-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" />
+                  <div style={{ marginTop: '0.5rem', display: 'flex' }}>
+                    <span className="vendor-verified-badge">
+                      <ShieldCheck style={{ width: '12px', height: '12px' }} />
                       Verified
                     </span>
                   </div>
                 </div>
 
-                {/* Rating + Arrow */}
-                <div className="flex flex-col items-end justify-between self-stretch py-0.5 shrink-0">
-                  <div className="flex items-center gap-1 text-[13px] font-bold text-[#111827]">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <div className="vendor-card-meta">
+                  <div className="vendor-rating">
+                    <Star style={{ width: '14px', height: '14px', fill: '#fbbf24', color: '#fbbf24' }} />
                     4.9
-                    <span className="text-[#9CA3AF] font-medium text-[11px]">(128)</span>
+                    <span className="vendor-rating-count">(128)</span>
                   </div>
                   
-                  <ChevronRight className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C4EFF] transition-colors" />
+                  <ChevronRight style={{ width: '16px', height: '16px', color: '#9CA3AF' }} />
                 </div>
               </button>
             )}
           </div>
         </div>
 
-        {/* ── TRUST FEATURES — Matches Home page exactly ── */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8 py-4 lg:py-8 border-t border-[#E9E6F8]/60">
+        {/* TRUST FEATURES */}
+        <section className="home-trust-section">
           {[
-            { icon: ShieldCheck, title: 'Verified Vendors', sub: 'Trusted & verified for your safety.', color: 'text-[#6C4EFF]', bg: 'bg-[#F4F1FF]' },
-            { icon: Lock, title: 'Safe & Secure', sub: 'Your transactions are always protected.', color: 'text-emerald-600', bg: 'bg-[#EEF9F2]' },
-            { icon: Headset, title: 'Support', sub: "We're here to help you, always.", color: 'text-blue-600', bg: 'bg-blue-50' },
-            { icon: Award, title: 'Top Rated', sub: 'Quality assured by student reviews.', color: 'text-orange-600', bg: 'bg-orange-50' },
+            { icon: ShieldCheck, title: 'Verified Vendors', sub: 'Trusted & verified for your safety.', iconColor: '#6C4EFF', bg: '#F4F1FF' },
+            { icon: Lock, title: 'Safe & Secure', sub: 'Your transactions are always protected.', iconColor: '#059669', bg: '#EEF9F2' },
+            { icon: Headset, title: 'Support', sub: "We're here to help you, always.", iconColor: '#2563eb', bg: '#eff6ff' },
+            { icon: Award, title: 'Top Rated', sub: 'Quality assured by student reviews.', iconColor: '#ea580c', bg: '#fff7ed' },
           ].map((feat) => (
-            <div key={feat.title} className="flex flex-col items-center text-center p-4 lg:p-6">
-              <div className={`w-12 h-12 ${feat.bg} rounded-full flex items-center justify-center mb-3`}>
-                <feat.icon className={`w-5 h-5 ${feat.color} stroke-[1.8]`} />
+            <div key={feat.title} className="home-trust-item">
+              <div className="home-trust-icon-box" style={{ backgroundColor: feat.bg }}>
+                <feat.icon style={{ width: '20px', height: '20px', color: feat.iconColor, strokeWidth: 1.8 }} />
               </div>
-              <h4 className="font-bold text-[13px] text-[#111827]">{feat.title}</h4>
-              <p className="text-[11px] text-[#9CA3AF] mt-1 leading-relaxed max-w-[200px]">{feat.sub}</p>
+              <h4 className="home-trust-title">{feat.title}</h4>
+              <p className="home-trust-sub">{feat.sub}</p>
             </div>
           ))}
         </section>
 
       </div>
 
-      {/* ── COMING SOON MODAL — Remove this block to launch Print Hub ── */}
+      {/* COMING SOON MODAL */}
       {showComingSoon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-6" onClick={() => setShowComingSoon(false)}>
-          <div className="bg-white rounded-[24px] p-8 max-w-sm w-full text-center shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="w-16 h-16 bg-[#F4F1FF] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Printer className="w-8 h-8 text-[#6C4EFF] stroke-[1.5]" />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', padding: '1.5rem' }} onClick={() => setShowComingSoon(false)}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '24px', padding: '2rem', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ width: '4rem', height: '4rem', backgroundColor: '#F4F1FF', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+              <Printer style={{ width: '32px', height: '32px', color: '#6C4EFF', strokeWidth: 1.5 }} />
             </div>
-            <h2 className="text-[20px] font-extrabold text-[#111827] tracking-tight">EM Printf Hub</h2>
-            <p className="text-[13px] text-[#9CA3AF] mt-2 leading-relaxed">
+            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#111827', margin: 0 }}>EM Printf Hub</h2>
+            <p style={{ fontSize: '13px', color: '#9CA3AF', marginTop: '0.5rem', lineHeight: 1.625 }}>
               We're putting the finishing touches on our printing service. Upload PDFs, get classroom delivery — launching very soon!
             </p>
-            <div className="mt-4 px-6 py-2.5 bg-[#F4F1FF] text-[#6C4EFF] font-bold text-[12px] rounded-full border border-[#6C4EFF]/20 inline-block">
+            <div style={{ marginTop: '1rem', padding: '0.625rem 1.5rem', backgroundColor: '#F4F1FF', color: '#6C4EFF', fontWeight: 700, fontSize: '12px', borderRadius: '9999px', border: '1px solid rgba(108, 78, 255, 0.2)', display: 'inline-block' }}>
               🚀 Coming Soon
             </div>
             <button
               onClick={() => setShowComingSoon(false)}
-              className="mt-4 block w-full text-[13px] font-semibold text-[#9CA3AF] hover:text-[#111827] transition-colors"
+              style={{ marginTop: '1rem', display: 'block', width: '100%', fontSize: '13px', fontWeight: 600, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Close
             </button>
           </div>
         </div>
       )}
-      {/* ── END COMING SOON MODAL ── */}
 
     </div>
   );
 };
 
 export default Vendors;
-

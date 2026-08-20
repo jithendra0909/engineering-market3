@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Phone, Heart, MapPin, Tag, GraduationCap, Clock, ChevronLeft, Share2, MessageCircle, Flag } from 'lucide-react';
+import { Phone, Heart, MapPin, Tag, GraduationCap, Clock, ChevronLeft, MessageCircle, Flag } from 'lucide-react';
 import api from '../api/axios';
 import VerificationRequiredModal from '../components/VerificationRequiredModal';
+import './ProductDetails.css';
 
 export const ProductDetails = () => {
   const { id } = useParams();
@@ -102,15 +103,15 @@ export const ProductDetails = () => {
 
   if (loading) {
     return (
-      <div className="max-w-[1360px] mx-auto px-5 lg:px-8 pt-5 lg:pt-8 pb-28 lg:pb-12 animate-pulse">
-        <div className="h-6 w-24 bg-[#F4F1FF] rounded-full mb-6" />
-        <div className="lg:flex gap-10">
-          <div className="lg:w-1/2 aspect-square bg-[#F4F1FF] rounded-[24px]" />
-          <div className="flex-1 mt-6 lg:mt-0 flex flex-col gap-4">
-            <div className="h-7 bg-[#F4F1FF] rounded-full w-3/4" />
-            <div className="h-8 bg-[#F4F1FF] rounded-full w-1/4" />
-            <div className="h-4 bg-[#F4F1FF] rounded-full w-full" />
-            <div className="h-4 bg-[#F4F1FF] rounded-full w-2/3" />
+      <div className="details-page-container animate-pulse">
+        <div style={{ height: '24px', width: '96px', backgroundColor: '#F4F1FF', borderRadius: '9999px', marginBottom: '1.5rem' }} />
+        <div className="details-layout">
+          <div className="details-gallery-col" style={{ aspectRatio: '1/1', backgroundColor: '#F4F1FF', borderRadius: '24px' }} />
+          <div className="details-info-col" style={{ gap: '1rem' }}>
+            <div style={{ height: '28px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '75%' }} />
+            <div style={{ height: '32px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '25%' }} />
+            <div style={{ height: '16px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '100%' }} />
+            <div style={{ height: '16px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '66%' }} />
           </div>
         </div>
       </div>
@@ -129,100 +130,98 @@ export const ProductDetails = () => {
   };
 
   return (
-    <div className="max-w-[1360px] mx-auto px-5 lg:px-8 pt-5 lg:pt-8 pb-28 lg:pb-12">
+    <div className="details-page-container">
 
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#6B7280] hover:text-[#6C4EFF] transition-colors mb-5"
+        className="details-back-btn"
       >
-        <ChevronLeft className="w-4 h-4" /> Back
+        <ChevronLeft style={{ width: '16px', height: '16px' }} /> Back
       </button>
 
-      {/* Status banners for expired/sold/removed listings */}
+      {/* Status banners */}
       {listing.isSold && (
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
-          <span className="text-base">🏷️</span> This item has been sold and is no longer available.
+        <div className="details-status-banner sold">
+          <span>🏷️</span> This item has been sold and is no longer available.
         </div>
       )}
       {listing.isRemoved && (
-        <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
-          <span className="text-base">🚫</span> This listing has been removed.
+        <div className="details-status-banner removed">
+          <span>🚫</span> This listing has been removed.
         </div>
       )}
       {listing.isExpired && !listing.isSold && !listing.isRemoved && (
-        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-2xl px-4 py-3 mb-5 text-[13px] font-semibold">
-          <span className="text-base">⏰</span> This listing has expired. Contact the seller to check availability.
+        <div className="details-status-banner expired">
+          <span>⏰</span> This listing has expired. Contact the seller to check availability.
         </div>
       )}
 
-      <div className="lg:flex gap-10">
-        {/* ── Left: Image gallery ── */}
-        <div className="lg:w-1/2 lg:flex-shrink-0">
+      <div className="details-layout">
+        {/* Left: Image gallery */}
+        <div className="details-gallery-col">
           {/* Main image */}
-          <div className="aspect-square bg-[#FAFAFF] rounded-[24px] overflow-hidden border border-[#E9E6F8]/70 mb-3">
+          <div className="details-main-img-box">
             <img
               src={listing.images[selectedImg]}
               alt={listing.title}
-              className="w-full h-full object-cover"
+              className="details-main-img"
             />
           </div>
 
           {/* Thumbnails */}
           {listing.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="details-thumbs-list no-scrollbar">
               {listing.images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImg(idx)}
-                  className={`w-16 h-16 rounded-[12px] overflow-hidden border-2 flex-shrink-0 transition-all ${
-                    selectedImg === idx ? 'border-[#6C4EFF]' : 'border-[#E9E6F8]/70 hover:border-[#6C4EFF]/30'
-                  }`}
+                  className={`details-thumb-btn ${selectedImg === idx ? 'active' : ''}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="details-thumb-img" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* ── Right: Details ── */}
-        <div className="flex-1 mt-6 lg:mt-0 flex flex-col">
+        {/* Right: Details */}
+        <div className="details-info-col">
           {/* Category + Time */}
-          <div className="flex items-center gap-3 mb-3">
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#6C4EFF] bg-[#F4F1FF] px-2.5 py-1 rounded-full">
-              <Tag className="w-3 h-3" /> {listing.category}
+          <div className="details-meta-row">
+            <span className="details-cat-pill">
+              <Tag style={{ width: '12px', height: '12px' }} /> {listing.category}
             </span>
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9CA3AF]">
-              <Clock className="w-3 h-3" /> {timeAgo(listing.createdAt)}
+            <span className="details-time-pill">
+              <Clock style={{ width: '12px', height: '12px' }} /> {timeAgo(listing.createdAt)}
             </span>
           </div>
 
           {/* Title */}
-          <h1 className="text-[22px] lg:text-[26px] font-bold text-[#111827] leading-tight mb-2">
+          <h1 className="details-title">
             {listing.title}
           </h1>
 
           {/* Price */}
-          <p className="text-[26px] font-extrabold text-[#111827] mb-4">
+          <p className="details-price">
             {listing.listingType === 'donate' ? (
-              <span className="text-[#6C4EFF]">Free / Donation</span>
+              <span style={{ color: '#6C4EFF' }}>Free / Donation</span>
             ) : (
               `₹${listing.price}`
             )}
           </p>
 
           {/* Meta info */}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] bg-[#FAFAFF] border border-[#E9E6F8]/70 px-3 py-1.5 rounded-full">
-              <MapPin className="w-3.5 h-3.5 text-[#9CA3AF]" /> {listing.sellerCollege}
+          <div className="details-chips-row">
+            <span className="details-chip">
+              <MapPin style={{ width: '14px', height: '14px', color: '#9CA3AF' }} /> {listing.sellerCollege}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] bg-[#FAFAFF] border border-[#E9E6F8]/70 px-3 py-1.5 rounded-full">
+            <span className="details-chip">
               {listing.condition}
             </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#6B7280] bg-[#FAFAFF] border border-[#E9E6F8]/70 px-3 py-1.5 rounded-full">
+            <span className="details-chip">
               {listing.marketType === 'college' ? (
-                <><GraduationCap className="w-3.5 h-3.5 text-[#9CA3AF]" /> College Market</>
+                <><GraduationCap style={{ width: '14px', height: '14px', color: '#9CA3AF' }} /> College Market</>
               ) : (
                 'General Market'
               )}
@@ -230,27 +229,27 @@ export const ProductDetails = () => {
           </div>
 
           {/* Description */}
-          <div className="mb-6">
-            <h3 className="font-bold text-[14px] text-[#111827] mb-2">Description</h3>
-            <p className="text-[13px] text-[#6B7280] leading-relaxed whitespace-pre-line">
+          <div className="details-desc-box">
+            <h3 className="details-desc-title">Description</h3>
+            <p className="details-desc-text">
               {listing.description}
             </p>
           </div>
 
           {/* Seller card */}
-          <div className="bg-[#FAFAFF] border border-[#E9E6F8]/70 rounded-[20px] p-4 mb-6">
-            <h3 className="font-bold text-[13px] text-[#111827] mb-3">Seller</h3>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#F4F1FF] flex items-center justify-center text-[#6C4EFF] font-bold text-[12px] overflow-hidden flex-shrink-0">
+          <div className="details-seller-card">
+            <h3 className="details-seller-title">Seller</h3>
+            <div className="details-seller-info">
+              <div className="details-seller-avatar">
                 {listing.seller?.profileImageUrl ? (
-                  <img src={listing.seller.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={listing.seller.profileImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   listing.seller?.fullName?.charAt(0) || 'S'
                 )}
               </div>
               <div>
-                <p className="font-bold text-[13px] text-[#111827]">{listing.seller?.fullName}</p>
-                <p className="text-[11px] text-[#9CA3AF]">
+                <p className="details-seller-name">{listing.seller?.fullName}</p>
+                <p className="details-seller-sub">
                   {listing.seller?.department} · {listing.seller?.year}
                 </p>
               </div>
@@ -258,53 +257,47 @@ export const ProductDetails = () => {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-3 mt-auto">
+          <div className="details-actions-row">
             {isLoggedIn && user?._id === (listing.seller?._id || listing.seller) ? (
               <button
                 disabled
-                className="flex-1 bg-[#E9E6F8] text-[#9CA3AF] font-semibold text-[14px] py-3.5 rounded-full flex items-center justify-center gap-2 cursor-not-allowed"
+                className="details-chat-btn"
               >
-                <MessageCircle className="w-5 h-5" /> Your Listing
+                <MessageCircle style={{ width: '20px', height: '20px' }} /> Your Listing
               </button>
             ) : (
               <button
                 onClick={handleContact}
-                className="flex-1 bg-[#6C4EFF] hover:bg-[#8A72FF] text-white font-bold text-[14px] py-3.5 rounded-full shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                className="details-chat-btn"
               >
-                <MessageCircle className="w-5 h-5" /> Chat with Seller
+                <MessageCircle style={{ width: '20px', height: '20px' }} /> Chat with Seller
               </button>
             )}
             <button
               onClick={handleSave}
-              className={`w-[52px] h-[52px] rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${
-                isSaved
-                  ? 'bg-[#F4F1FF] border-[#6C4EFF]/30 text-[#6C4EFF]'
-                  : 'bg-white border-[#E9E6F8] text-[#9CA3AF] hover:text-[#6C4EFF] hover:border-[#6C4EFF]/30'
-              }`}
+              className={`details-save-btn ${isSaved ? 'saved' : ''}`}
             >
-              <Heart className={`w-5 h-5 stroke-[2] ${isSaved ? 'fill-[#6C4EFF]' : ''}`} />
+              <Heart style={{ width: '20px', height: '20px', strokeWidth: 2, fill: isSaved ? '#6C4EFF' : 'none' }} />
             </button>
             <button
               onClick={() => setIsShareModalOpen(true)}
-              className="w-[52px] h-[52px] rounded-full border border-emerald-200 bg-[#E8F8F0] text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-all flex-shrink-0 flex items-center justify-center"
+              className="details-wa-share-btn"
               title="Share to WhatsApp Group"
             >
-              <WhatsAppIcon className="w-5 h-5" />
+              <WhatsAppIcon style={{ width: '20px', height: '20px' }} />
             </button>
           </div>
 
           {isLoggedIn && user?._id !== listing.seller?._id && (
-            <div className="flex justify-center mt-5">
+            <div className="details-report-wrapper">
               <button
                 onClick={() => setIsReportModalOpen(true)}
                 disabled={listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)}
-                className={`flex items-center gap-1.5 text-xs font-semibold hover:underline ${
-                  listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
-                    ? 'text-[#9CA3AF] cursor-default hover:no-underline'
-                    : 'text-rose-600 hover:text-rose-700'
+                className={`details-report-btn ${
+                  listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id) ? 'reported' : ''
                 }`}
               >
-                <Flag className="w-3.5 h-3.5" />
+                <Flag style={{ width: '14px', height: '14px' }} />
                 {listing.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
                   ? 'You have reported this item'
                   : 'Report this listing'}
@@ -330,25 +323,25 @@ export const ProductDetails = () => {
 🔗 *View details here:* ${window.location.href}`;
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)} />
-            <div className="relative w-full max-w-[440px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
-              <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
-                <WhatsAppIcon className="w-5 h-5 text-emerald-600" /> WhatsApp Group Quick-Share
+          <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setIsShareModalOpen(false)} />
+            <div style={{ position: 'relative', width: '100%', maxWidth: '440px', backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', padding: '1.5rem', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid #E9E6F8', textAlign: 'left' }}>
+              <h3 style={{ fontWeight: 700, fontSize: '16px', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                <WhatsAppIcon style={{ width: '20px', height: '20px', color: '#059669' }} /> WhatsApp Group Quick-Share
               </h3>
-              <p className="text-xs text-[#6B7280]">
+              <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
                 Here is the clean, formatted message for your college groups. Copy it or share directly to WhatsApp.
               </p>
               
-              <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 font-mono text-[11px] text-[#374151] leading-relaxed whitespace-pre-wrap select-all max-h-[220px] overflow-y-auto">
+              <div style={{ backgroundColor: 'rgba(238,249,242,0.5)', border: '1px solid #d1fae5', borderRadius: '16px', padding: '1rem', fontFamily: 'monospace', fontSize: '11px', color: '#374151', lineHeight: 1.625, whiteSpace: 'pre-wrap', userSelect: 'all', maxHeight: '220px', overflowY: 'auto' }}>
                 {shareText}
               </div>
 
-              <div className="flex gap-3 mt-2">
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button
                   type="button"
                   onClick={() => setIsShareModalOpen(false)}
-                  className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+                  style={{ flex: 1, height: '44px', border: '1px solid #E9E6F8', color: '#6B7280', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', background: 'none', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
@@ -358,7 +351,7 @@ export const ProductDetails = () => {
                     navigator.clipboard?.writeText(shareText);
                     showToast('Message copied to clipboard!', 'success');
                   }}
-                  className="flex-1 h-11 border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-[13px] rounded-full transition-colors flex items-center justify-center gap-1.5"
+                  style={{ flex: 1, height: '44px', border: '1px solid #a7f3d0', backgroundColor: '#ffffff', color: '#047857', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
                 >
                   Copy Message
                 </button>
@@ -366,7 +359,7 @@ export const ProductDetails = () => {
                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center gap-1.5"
+                  style={{ flex: 1, height: '44px', backgroundColor: '#059669', color: '#ffffff', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', textDecoration: 'none' }}
                 >
                   Send
                 </a>
@@ -378,22 +371,22 @@ export const ProductDetails = () => {
 
       {/* Report Listing Modal Overlay */}
       {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReportModalOpen(false)} />
-          <form onSubmit={handleReport} className="relative w-full max-w-[420px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
-            <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
-              <Flag className="w-5 h-5 text-rose-600" /> Report Inappropriate Listing
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setIsReportModalOpen(false)} />
+          <form onSubmit={handleReport} style={{ position: 'relative', width: '100%', maxWidth: '420px', backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', padding: '1.5rem', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid #E9E6F8', textAlign: 'left' }}>
+            <h3 style={{ fontWeight: 700, fontSize: '16px', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+              <Flag style={{ width: '20px', height: '20px', color: '#e11d48' }} /> Report Inappropriate Listing
             </h3>
-            <p className="text-xs text-[#6B7280]">
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
               If this listing contains inappropriate images, offensive language, spam, or scams, please report it.
             </p>
             
             <div>
-              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Reason</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: '0.375rem' }}>Reason</label>
               <select
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all cursor-pointer"
+                style={{ width: '100%', height: '44px', paddingLeft: '0.75rem', paddingRight: '0.75rem', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', borderRadius: '12px', fontSize: '13px', color: '#111827', cursor: 'pointer' }}
               >
                 <option value="Inappropriate Image">Inappropriate Image</option>
                 <option value="Scam or Fraud">Scam or Fraud</option>
@@ -403,28 +396,28 @@ export const ProductDetails = () => {
             </div>
 
             <div>
-              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Additional Details (Optional)</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: '0.375rem' }}>Additional Details (Optional)</label>
               <textarea
                 value={reportNotes}
                 onChange={(e) => setReportNotes(e.target.value)}
                 placeholder="Provide details about why you are reporting this listing..."
                 rows={3}
-                className="w-full p-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all resize-none"
+                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#FAFAFF', border: '1px solid #E9E6F8', borderRadius: '12px', fontSize: '13px', color: '#111827', resize: 'none' }}
               />
             </div>
 
-            <div className="flex gap-3 mt-2">
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
               <button
                 type="button"
                 onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+                style={{ flex: 1, height: '44px', border: '1px solid #E9E6F8', color: '#6B7280', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', background: 'none', cursor: 'pointer' }}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={reporting}
-                className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center disabled:opacity-60"
+                style={{ flex: 1, height: '44px', backgroundColor: '#e11d48', color: '#ffffff', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', border: 'none', cursor: 'pointer' }}
               >
                 {reporting ? 'Submitting...' : 'Submit Report'}
               </button>
