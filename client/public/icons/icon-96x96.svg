@@ -1,0 +1,22 @@
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <rect width="96" height="96" fill="#6C4EFF" rx="17" ry="17" />
+  <svg x="19" y="19" width="58" height="58" viewBox="0 0 100 100">
+    <polygon
+      points="50,6 88,28 88,72 50,94 12,72 12,28"
+      stroke="white"
+      stroke-width="7"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <text
+      x="50"
+      y="55"
+      text-anchor="middle"
+      dominant-baseline="central"
+      fill="white"
+      font-size="34"
+      font-weight="bold"
+      font-family="Arial, Helvetica, sans-serif"
+    >EM</text>
+  </svg>
+</svg>
