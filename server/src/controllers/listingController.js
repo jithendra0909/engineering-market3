@@ -6,31 +6,19 @@ import User from '../models/User.js';
 // @access  Private
 const getListings = async (req, res) => {
   try {
-    const now = new Date();
     let query = { status: 'available' };
     
-    // If authenticated admin, show everything; if student, show general + own college (filtered by expiration or owner); if unauthenticated, show general + college (strictly unexpired)
+    // If authenticated admin, show everything; if student, show general + own college; if unauthenticated, show general
     if (req.user && req.user.role === 'admin') {
-      // Admin sees all available listings (including expired)
+      // Admin sees all available listings
     } else if (req.user) {
-      query.$and = [
-        {
-          $or: [
-            { marketType: 'general' },
-            { marketType: 'college', sellerCollege: req.user.college }
-          ]
-        },
-        {
-          $or: [
-            { expiresAt: { $gt: now } },
-            { seller: req.user._id }
-          ]
-        }
+      query.$or = [
+        { marketType: 'general' },
+        { marketType: 'college', sellerCollege: req.user.college }
       ];
     } else {
-      // Unauthenticated: show only general listings that are not expired
+      // Unauthenticated: show general listings
       query.marketType = 'general';
-      query.expiresAt = { $gt: now };
     }
     
     const listings = await Listing.find(query)
@@ -48,19 +36,7 @@ const getListings = async (req, res) => {
 // @access  Private
 const getGeneralListings = async (req, res) => {
   try {
-    const now = new Date();
     let query = { marketType: 'general', status: 'available' };
-    
-    if (req.user && req.user.role === 'admin') {
-      // Admin sees everything
-    } else if (req.user) {
-      query.$or = [
-        { expiresAt: { $gt: now } },
-        { seller: req.user._id }
-      ];
-    } else {
-      query.expiresAt = { $gt: now };
-    }
 
     const listings = await Listing.find(query)
       .populate('seller', 'fullName email profileImageUrl')
@@ -76,21 +52,16 @@ const getGeneralListings = async (req, res) => {
 // @access  Private
 const getCollegeListings = async (req, res) => {
   try {
-    const now = new Date();
     let query = { 
       marketType: 'college', 
       status: 'available' 
     };
     
-    if (req.user.role === 'admin') {
+    if (req.user && req.user.role === 'admin') {
       // Admin sees all college listings across all colleges
-    } else {
+    } else if (req.user) {
       // Students only see their own college's listings
       query.sellerCollege = req.user.college;
-      query.$or = [
-        { expiresAt: { $gt: now } },
-        { seller: req.user._id }
-      ];
     }
 
     const listings = await Listing.find(query)

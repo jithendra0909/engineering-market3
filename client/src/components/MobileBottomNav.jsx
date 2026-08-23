@@ -1,35 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, MessageSquare, Plus, X, Store, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
 import './MobileBottomNav.css';
 
 export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setUnreadCount(0);
-      return;
-    }
-
-    const fetchUnreadCount = async () => {
-      try {
-        const { data } = await api.get('/chats/unread/count');
-        setUnreadCount(data.count);
-      } catch (err) {
-        console.error('Error fetching unread count:', err);
-      }
-    };
-
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 12000);
-    return () => clearInterval(interval);
-  }, [isLoggedIn, location.pathname]);
+  const { isLoggedIn, unreadChatCount } = useAuth();
 
   const handleTabClick = (path) => {
     setIsCreateOpen(false);
@@ -59,7 +37,7 @@ export const MobileBottomNav = ({ isCreateOpen, setIsCreateOpen }) => {
         <button onClick={() => handleTabClick('/chat')} className={tabClass('/chat')}>
           <MessageSquare className="mobile-nav-icon" />
           <span className="mobile-nav-label">Chat</span>
-          {unreadCount > 0 && (
+          {unreadChatCount > 0 && (
             <span className="mobile-nav-badge" />
           )}
         </button>

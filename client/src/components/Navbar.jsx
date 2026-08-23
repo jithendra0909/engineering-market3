@@ -7,7 +7,7 @@ import api from '../api/axios';
 import './Navbar.css';
 
 export const Navbar = () => {
-  const { user, isLoggedIn, logout, isAdmin, showToast, unreadNotificationsCount } = useAuth();
+  const { user, isLoggedIn, logout, isAdmin, showToast, unreadNotificationsCount, unreadChatCount } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -16,27 +16,6 @@ export const Navbar = () => {
   const searchInputRef = useRef(null);
   const dropdownRef = useRef(null);
   const catDropdownRef = useRef(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setUnreadCount(0);
-      return;
-    }
-
-    const fetchUnreadCount = async () => {
-      try {
-        const { data } = await api.get('/chats/unread/count');
-        setUnreadCount(data.count);
-      } catch (err) {
-        console.error('Error fetching unread count:', err);
-      }
-    };
-
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 12000);
-    return () => clearInterval(interval);
-  }, [isLoggedIn, location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -136,7 +115,7 @@ export const Navbar = () => {
                 className={`navbar-nav-item ${isActive('/chat') ? 'active' : ''}`}
               >
                 Messages
-                {unreadCount > 0 && (
+                {unreadChatCount > 0 && (
                   <span className="navbar-unread-dot" />
                 )}
               </Link>

@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [colleges, setColleges] = useState([]);
   const [toast, setToast] = useState(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -50,6 +51,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchUnreadChatCount = async () => {
+    if (!token) return;
+    try {
+      const { data } = await api.get('/chats/unread/count');
+      setUnreadChatCount(data.count);
+    } catch (err) {
+      console.error('Error fetching unread chat count:', err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       localStorage.setItem('em_token', token);
@@ -65,17 +76,25 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!token) {
       setUnreadNotificationsCount(0);
+      setUnreadChatCount(0);
       return;
     }
 
     fetchUnreadNotificationsCount();
+    fetchUnreadChatCount();
     
-    // Listen for custom trigger to update immediately
+    // Listen for custom triggers to update immediately
     window.addEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+    window.addEventListener('chatsUpdated', fetchUnreadChatCount);
     
-    const interval = setInterval(fetchUnreadNotificationsCount, 15000);
+    const interval = setInterval(() => {
+      fetchUnreadNotificationsCount();
+      fetchUnreadChatCount();
+    }, 15000);
+
     return () => {
       window.removeEventListener('notificationsUpdated', fetchUnreadNotificationsCount);
+      window.removeEventListener('chatsUpdated', fetchUnreadChatCount);
       clearInterval(interval);
     };
   }, [token]);
@@ -145,13 +164,15 @@ export const AuthProvider = ({ children }) => {
         isAdmin,
         isVerified,
         unreadNotificationsCount,
+        unreadChatCount,
         login,
         signup,
         logout,
         showToast,
         updateProfile,
         loadUser,
-        fetchUnreadNotificationsCount
+        fetchUnreadNotificationsCount,
+        fetchUnreadChatCount
       }}
     >
       {children}
