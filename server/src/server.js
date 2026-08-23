@@ -67,8 +67,9 @@ app.use('/api', async (req, res, next) => {
   } catch (error) {
     console.error('Database connection error:', error.message);
     res.status(503).json({
-      message: 'Database connection failed. Please check MONGO_URI environment variable.',
-      error: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      message: 'Database connection failed. Please check MONGO_URI environment variable in Vercel.',
+      error: error.message,
+      mongoUriConfigured: !!process.env.MONGO_URI,
     });
   }
 });
