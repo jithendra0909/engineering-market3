@@ -22,7 +22,9 @@ const getMediaUrl = (path) => {
     return url;
   }
   const isDev = !import.meta.env.PROD;
-  const serverBase = isDev ? 'http://localhost:5000' : '';
+  const serverBase = isDev
+    ? 'http://localhost:5000'
+    : (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : '');
   return `${serverBase}${url}`;
 };
 
