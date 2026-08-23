@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/axios';
+import { subscribeToPush, unsubscribeFromPush } from '../utils/pushSubscription';
 
 const AuthContext = createContext(null);
 
@@ -31,6 +32,17 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  // Auto-subscribe to push notifications when user is loaded
+  useEffect(() => {
+    if (user && token) {
+      // Delay slightly so the app is fully rendered before prompting
+      const timer = setTimeout(() => {
+        subscribeToPush().catch(() => {});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const fetchColleges = async () => {
     try {
@@ -138,6 +150,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Unsubscribe from push notifications
+    unsubscribeFromPush().catch(() => {});
     setToken(null);
     setUser(null);
     localStorage.removeItem('em_token');

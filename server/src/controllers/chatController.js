@@ -3,6 +3,8 @@ import Message from '../models/Message.js';
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
 import { sendWhatsAppNotification } from '../utils/whatsappNotification.js';
+import { sendChatEmailNotification } from '../utils/emailNotification.js';
+import { sendPushNotification } from '../utils/pushNotification.js';
 
 // @desc    Get all conversations for logged-in user
 // @route   GET /api/chats
@@ -191,8 +193,45 @@ export const sendMessage = async (req, res) => {
 
     await conversation.save();
 
-    // WhatsApp notification is sent on conversation creation (first contact).
-    // We intentionally do NOT send a WhatsApp template for every message to avoid spamming the seller.
+    // ─── Send Email + Push Notifications (non-blocking) ───
+    // Fire-and-forget: don't delay the API response
+    (async () => {
+      try {
+        // Fetch recipient and sender details
+        const [recipient, sender, listing] = await Promise.all([
+          User.findById(recipientId).select('email fullName'),
+          User.findById(senderId).select('fullName'),
+          Listing.findById(conversation.listing).select('title'),
+        ]);
+
+        if (!recipient || !sender) return;
+
+        const itemTitle = listing?.title || 'a listing';
+        const senderName = sender.fullName || 'Someone';
+
+        // 1. Email Notification (rate-limited: 1 per conversation per 5 min)
+        sendChatEmailNotification({
+          recipientEmail: recipient.email,
+          recipientName: recipient.fullName,
+          senderName,
+          messagePreview: text.trim(),
+          itemTitle,
+          conversationId: conversationId,
+        }).catch((err) => console.error('[Chat] Email notification error:', err.message));
+
+        // 2. Web Push Notification (instant)
+        sendPushNotification({
+          userId: recipientId.toString(),
+          title: `${senderName}`,
+          body: text.trim().length > 80 ? text.trim().substring(0, 80) + '...' : text.trim(),
+          url: `/chat?conversationId=${conversationId}`,
+          tag: `chat-${conversationId}`,
+        }).catch((err) => console.error('[Chat] Push notification error:', err.message));
+
+      } catch (err) {
+        console.error('[Chat] Notification dispatch error:', err.message);
+      }
+    })();
 
     res.status(201).json(message);
   } catch (error) {

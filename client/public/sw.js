@@ -127,3 +127,67 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// ─── Push Notification Handler ───
+// Triggered when the server sends a push notification via web-push
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+
+    const options = {
+      body: data.body || 'You have a new message',
+      icon: data.icon || '/icons/icon-192x192.svg',
+      badge: '/icons/icon-96x96.svg',
+      tag: data.tag || 'em-notification',
+      renotify: true,
+      vibrate: [200, 100, 200],
+      data: {
+        url: data.url || '/chat',
+        timestamp: data.timestamp || Date.now(),
+      },
+      actions: [
+        {
+          action: 'open',
+          title: 'Reply',
+        },
+        {
+          action: 'dismiss',
+          title: 'Dismiss',
+        },
+      ],
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Engineering Market', options)
+    );
+  } catch (error) {
+    console.error('[SW] Error handling push event:', error);
+  }
+});
+
+// ─── Notification Click Handler ───
+// Opens the relevant page when the user clicks a notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const urlToOpen = event.notification.data?.url || '/chat';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If the app is already open, focus it and navigate
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin)) {
+          client.focus();
+          client.navigate(urlToOpen);
+          return;
+        }
+      }
+      // Otherwise open a new window
+      return clients.openWindow(urlToOpen);
+    })
+  );
+});
