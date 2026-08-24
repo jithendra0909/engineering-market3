@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
   },
   idCardImageUrl: {
     type: String,
-    required: true
+    default: ''
   },
   profileImageUrl: {
     type: String,

@@ -166,54 +166,6 @@
   gap: 0.75rem;
 }
 
-.signup-upload-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #E9E6F8;
-  border-radius: 16px;
-  padding: 1.25rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.signup-upload-box:hover {
-  border-color: rgba(108, 78, 255, 0.3);
-  background-color: #FAFAFF;
-}
-
-.signup-upload-icon-box {
-  width: 3rem;
-  height: 3rem;
-  background-color: #F4F1FF;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.5rem;
-}
-
-.signup-upload-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6B7280;
-  text-align: center;
-  padding: 0 1rem;
-}
-
-.signup-upload-subtext {
-  font-size: 10px;
-  color: #9CA3AF;
-  margin-top: 0.125rem;
-}
-
-.signup-preview-img {
-  width: 100%;
-  max-height: 150px;
-  object-fit: contain;
-  border-radius: 10px;
-}
 
 .signup-submit-btn {
   width: 100%;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
-import { User, Mail, Lock, Hash, BookOpen, Calendar, Camera, ArrowRight, Eye, EyeOff, GraduationCap } from 'lucide-react';
+import { User, Mail, Lock, Hash, BookOpen, Calendar, ArrowRight, Eye, EyeOff, GraduationCap } from 'lucide-react';
 import './Signup.css';
 
 const DEPARTMENTS = [
@@ -31,20 +31,8 @@ export const Signup = () => {
   const [department, setDepartment] = useState('');
   const [year, setYear] = useState('1st Year');
   const [college, setCollege] = useState('');
-  const [idCardFile, setIdCardFile] = useState(null);
-  const [idCardPreview, setIdCardPreview] = useState('');
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setIdCardFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setIdCardPreview(reader.result);
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,67 +56,19 @@ export const Signup = () => {
       setError('Password must be at least 8 characters long and include:\n✓ At least 1 uppercase letter (A-Z)\n✓ At least 1 lowercase letter (a-z)\n✓ At least 1 numeric digit (0-9)');
       return;
     }
-    if (!idCardFile) {
-      setError('Please upload your college ID card.');
-      return;
-    }
 
-    const formData = new FormData();
-    formData.append('fullName', fullName);
-    formData.append('email', email);
-    formData.append('whatsappNumber', '+91' + whatsappNumber);
-    formData.append('password', password);
-    formData.append('registrationNumber', registrationNumber);
-    formData.append('department', department);
-    formData.append('year', year);
-    formData.append('college', college);
-
-    const compressImage = (file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1200;
-            const MAX_HEIGHT = 1200;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            canvas.toBlob((blob) => {
-              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
-                type: 'image/jpeg',
-                lastModified: Date.now()
-              });
-              resolve(compressedFile);
-            }, 'image/jpeg', 0.7);
-          };
-        };
-      });
+    const signupData = {
+      fullName,
+      email,
+      whatsappNumber: '+91' + whatsappNumber,
+      password,
+      registrationNumber,
+      department,
+      year,
+      college
     };
 
-    const compressedIdCard = await compressImage(idCardFile);
-    formData.append('idCardImage', compressedIdCard);
-
-    const result = await signup(formData);
+    const result = await signup(signupData);
     if (result.success) {
       setIsSuccess(true);
       showToast('Account created! Pending admin verification.', 'success');
@@ -147,7 +87,7 @@ export const Signup = () => {
           </div>
           <h2 className="signup-success-title">Registration Submitted!</h2>
           <p className="signup-success-desc">
-            Your student account has been created and is pending verification. An admin will review your ID card shortly.
+            Your student account has been created and is pending verification. An admin will review your account shortly.
           </p>
           <Link
             to="/login"
@@ -291,30 +231,6 @@ export const Signup = () => {
             </div>
           </div>
 
-          {/* ID Card Upload */}
-          <div className="signup-field">
-            <label className="signup-label">
-              {year === '1st Year' ? 'College ID Card or Admission Fee Receipt / Allotment Order' : 'College ID Card'}
-            </label>
-            <label className="signup-upload-box">
-              {idCardPreview ? (
-                <img src={idCardPreview} alt="ID Preview" className="signup-preview-img" />
-              ) : (
-                <>
-                  <div className="signup-upload-icon-box">
-                    <Camera style={{ width: '20px', height: '20px', color: '#6C4EFF' }} />
-                  </div>
-                  <p className="signup-upload-text">
-                    {year === '1st Year' 
-                      ? 'Upload college ID, admission fee receipt, or allotment order' 
-                      : 'Upload your college ID card'}
-                  </p>
-                  <p className="signup-upload-subtext">JPG, PNG up to 5MB</p>
-                </>
-              )}
-              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-            </label>
-          </div>
 
           {/* Submit */}
           <button

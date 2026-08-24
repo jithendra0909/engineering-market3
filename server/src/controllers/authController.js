@@ -52,11 +52,6 @@ const registerStudent = async (req, res) => {
       });
     }
 
-    // Verify file upload for ID card image
-    if (!req.file) {
-      return res.status(400).json({ message: 'Student ID card image is required for registration' });
-    }
-
     // Create user
     const user = await User.create({
       fullName,
@@ -67,7 +62,7 @@ const registerStudent = async (req, res) => {
       department,
       year,
       college,
-      idCardImageUrl: req.file.path, // Configured by uploadMiddleware (Cloudinary or local static URL)
+      idCardImageUrl: req.file ? req.file.path : '',
       verificationStatus: 'pending', // Default is pending approval
       role: 'student'
     });

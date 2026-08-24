@@ -128,14 +128,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (formData) => {
+  const signup = async (signupData) => {
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/signup', formData, {
-        headers: {
-          'Content-Type': undefined
-        }
-      });
+      const { data } = await api.post('/auth/signup', signupData);
       setToken(data.token);
       setUser(data);
       showToast('Registration successful! Account pending verification.', 'success');

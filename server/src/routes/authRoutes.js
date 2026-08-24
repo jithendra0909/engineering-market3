@@ -5,7 +5,7 @@ import { handleSingleUpload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-router.post('/signup', handleSingleUpload('idCardImage'), registerStudent);
+router.post('/signup', registerStudent);
 router.post('/login', loginUser);
 router.get('/me', protect, getUserProfile);
 router.put('/profile', protect, handleSingleUpload('idCardImage'), updateUserProfile);
