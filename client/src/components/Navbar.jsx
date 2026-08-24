@@ -81,7 +81,7 @@ export const Navbar = () => {
             </Link>
 
             {/* Categories Dropdown */}
-            <div className="relative" ref={catDropdownRef}>
+            <div className="navbar-dropdown-wrapper" ref={catDropdownRef}>
               <button
                 onClick={() => setIsCatOpen(!isCatOpen)}
                 className={`navbar-nav-item ${(isActive('/general-market') || isActive('/college-market')) ? 'active' : ''}`}
@@ -144,7 +144,7 @@ export const Navbar = () => {
                 </button>
 
                 {/* Profile dropdown */}
-                <div className="relative" ref={dropdownRef}>
+                <div className="navbar-dropdown-wrapper" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="navbar-profile-avatar-btn"

@@ -31,12 +31,12 @@ export const AdminLogin = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
+    <div className="auth-page-wrapper">
+      <div className="auth-card-container">
 
         {/* Icon */}
-        <div className="auth-header-icon-box" style={{ backgroundColor: '#fff1f2' }}>
-          <ShieldAlert className="auth-header-icon" style={{ color: '#e11d48' }} />
+        <div style={{ width: '4rem', height: '4rem', backgroundColor: '#fff1f2', borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+          <ShieldAlert style={{ width: '28px', height: '28px', color: '#e11d48' }} />
         </div>
 
         <div className="auth-header">
@@ -74,7 +74,7 @@ export const AdminLogin = () => {
                 onClick={() => setShowPassword(!showPassword)} 
                 className="auth-eye-btn"
               >
-                {showPassword ? <EyeOff className="auth-eye-icon" /> : <Eye className="auth-eye-icon" />}
+                {showPassword ? <EyeOff style={{ width: '16px', height: '16px' }} /> : <Eye style={{ width: '16px', height: '16px' }} />}
               </button>
             </div>
           </div>
@@ -88,7 +88,7 @@ export const AdminLogin = () => {
               <div className="auth-btn-spinner" />
             ) : (
               <>
-                Enter Admin Dashboard <ArrowRight className="auth-btn-arrow" />
+                Enter Admin Dashboard <ArrowRight style={{ width: '16px', height: '16px' }} />
               </>
             )}
           </button>

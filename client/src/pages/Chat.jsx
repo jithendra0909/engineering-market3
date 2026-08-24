@@ -218,42 +218,42 @@ export const Chat = () => {
   });
 
   return (
-    <div className="flex bg-[#EEEAF8] overflow-hidden w-full h-[calc(100vh-56px)] h-[calc(100dvh-56px)] lg:h-[calc(100vh-64px)]">
+    <div className="chat-container">
       {/* ─── LEFT SIDEBAR (CONVERSATIONS LIST) ─── */}
-      <div className={`w-full lg:w-[380px] bg-white border-r border-[#E9E6F8] flex flex-col flex-shrink-0 ${activeChat && conversationIdParam ? 'hidden lg:flex' : 'flex'}`}>
+      <div className={`chat-sidebar ${activeChat && conversationIdParam ? 'hidden-mobile' : ''}`}>
         
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-[#E9E6F8]">
-          <h1 className="text-xl font-bold text-[#111827] flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-[#6C4EFF]" />
+        <div className="chat-sidebar-header">
+          <h1 className="chat-sidebar-title">
+            <MessageSquare style={{ width: '20px', height: '20px', color: '#6C4EFF' }} />
             Messages
           </h1>
           
           {/* Search bar */}
-          <div className="relative mt-3">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+          <div className="chat-search-wrapper">
+            <Search className="chat-search-icon" />
             <input
               type="text"
               placeholder="Search chat or listing..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-[38px] pl-10 pr-4 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 transition-colors"
+              className="chat-search-input"
             />
           </div>
         </div>
 
         {/* Chats list */}
-        <div className="flex-1 overflow-y-auto divide-y divide-[#E9E6F8]/50">
+        <div className="chat-list">
           {loadingConversations && conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-3">
-              <div className="w-8 h-8 border-4 border-[#6C4EFF] border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-[#9CA3AF]">Loading conversations...</p>
+            <div className="chat-loading-state">
+              <div className="chat-spinner animate-spin" />
+              <p className="chat-loading-text">Loading conversations...</p>
             </div>
           ) : filteredConversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-48">
-              <Inbox className="w-8 h-8 text-[#B5AEDC] mb-2" />
-              <p className="text-sm font-semibold text-[#6B7280]">No chats found</p>
-              <p className="text-xs text-[#9CA3AF] mt-1">Start a conversation from any product details page.</p>
+            <div className="chat-empty-state">
+              <Inbox style={{ width: '32px', height: '32px', color: '#B5AEDC', marginBottom: '0.5rem' }} />
+              <p className="chat-empty-title">No chats found</p>
+              <p className="chat-empty-sub">Start a conversation from any product details page.</p>
             </div>
           ) : (
             filteredConversations.map((chat) => {
@@ -266,50 +266,50 @@ export const Chat = () => {
                 <button
                   key={chat._id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`w-full p-4 flex gap-3 text-left transition-colors duration-150 hover:bg-[#FAFAFF] ${isSelected ? 'bg-[#F4F1FF]/60 hover:bg-[#F4F1FF]/60 border-l-4 border-[#6C4EFF]' : ''}`}
+                  className={`chat-item-btn ${isSelected ? 'selected' : ''}`}
                 >
                   {/* Recipient Avatar */}
-                  <div className="relative flex-shrink-0">
+                  <div className="chat-avatar-wrapper">
                     {recipient.profileImageUrl ? (
                       <img
                         src={recipient.profileImageUrl}
                         alt={recipient.fullName}
-                        className="w-12 h-12 rounded-full object-cover border border-[#E9E6F8]"
+                        className="chat-avatar-img"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#F4F1FF] flex items-center justify-center text-[#6C4EFF] font-bold text-base border border-[#E9E6F8]">
+                      <div className="chat-avatar-placeholder">
                         {recipient.fullName?.charAt(0)}
                       </div>
                     )}
                     {/* Unread badge */}
                     {hasUnread && (
-                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full border-2 border-white" />
+                      <span className="chat-unread-badge" />
                     )}
                   </div>
 
                   {/* Chat Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h2 className={`text-[13px] truncate ${hasUnread ? 'font-bold text-[#111827]' : 'font-semibold text-[#374151]'}`}>
+                  <div className="chat-item-info">
+                    <div className="chat-item-top-row">
+                      <h2 className={`chat-item-name ${hasUnread ? 'unread' : ''}`}>
                         {recipient.fullName}
                       </h2>
-                      <span className="text-[10px] text-[#9CA3AF] flex-shrink-0">
+                      <span className="chat-item-date">
                         {formatDate(chat.updatedAt)}
                       </span>
                     </div>
 
                     {/* Listing Title Preview */}
-                    <div className="flex items-center gap-1.5 mb-1 text-[11px] font-medium text-[#6C4EFF]">
-                      <span className="truncate max-w-[150px]">
+                    <div className="chat-item-listing-row">
+                      <span className="chat-item-listing-title">
                         {isListingRemoved ? '[Deleted Listing]' : chat.listing.title}
                       </span>
                       {chat.listing?.price !== undefined && !isListingRemoved && (
-                        <span className="text-[#10B981] font-semibold">₹{chat.listing.price}</span>
+                        <span className="chat-item-listing-price">₹{chat.listing.price}</span>
                       )}
                     </div>
 
                     {/* Message Preview */}
-                    <p className={`text-[12px] truncate ${hasUnread ? 'font-medium text-[#111827]' : 'text-[#6B7280]'}`}>
+                    <p className={`chat-item-preview ${hasUnread ? 'unread' : ''}`}>
                       {chat.lastMessage?.sender === user._id ? 'You: ' : ''}
                       {chat.lastMessage?.text}
                     </p>
@@ -320,7 +320,7 @@ export const Chat = () => {
                     <img
                       src={chat.listing.images[0]}
                       alt=""
-                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-[#E9E6F8]"
+                      className="chat-item-thumb"
                     />
                   )}
                 </button>
@@ -331,90 +331,90 @@ export const Chat = () => {
       </div>
 
       {/* ─── RIGHT MAIN CHAT AREA ─── */}
-      <div className={`flex-1 min-w-0 flex flex-col bg-[#F6F5FB] ${!activeChat || !conversationIdParam ? 'hidden lg:flex' : 'flex'}`}>
+      <div className={`chat-main ${!activeChat || !conversationIdParam ? 'hidden-mobile' : ''}`}>
         {activeChat ? (
           <>
             {/* Header info bar */}
-            <div className="bg-white border-b border-[#E9E6F8] px-4 lg:px-6 py-3.5 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="chat-main-header">
+              <div className="chat-header-left">
                 {/* Back button for mobile */}
                 <button
                   onClick={() => {
                     setActiveChat(null);
                     setSearchParams({});
                   }}
-                  className="lg:hidden p-1.5 hover:bg-[#FAFAFF] rounded-lg text-[#374151]"
+                  className="chat-back-btn"
                 >
-                  <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+                  <ChevronLeft style={{ width: '20px', height: '20px', strokeWidth: 2.5 }} />
                 </button>
 
                 {/* Recipient info */}
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-[#F4F1FF] flex items-center justify-center text-[#6C4EFF] font-bold text-sm border border-[#E9E6F8] flex-shrink-0">
+                <div className="chat-header-recipient">
+                  <div className="chat-header-avatar">
                     {getRecipient(activeChat).profileImageUrl ? (
                       <img
                         src={getRecipient(activeChat).profileImageUrl}
                         alt=""
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="chat-header-avatar-img"
                       />
                     ) : (
                       getRecipient(activeChat).fullName?.charAt(0)
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <h2 className="text-[14px] font-bold text-[#111827] truncate leading-tight">
+                  <div className="chat-header-recipient-info">
+                    <h2 className="chat-header-name">
                       {getRecipient(activeChat).fullName}
                     </h2>
-                    <p className="text-[10px] text-[#6B7280] flex items-center gap-1.5 truncate mt-0.5">
-                      <GraduationCap className="w-3 h-3 text-[#6C4EFF] flex-shrink-0" />
+                    <p className="chat-header-dept">
+                      <GraduationCap style={{ width: '12px', height: '12px', color: '#6C4EFF', flexShrink: 0 }} />
                       <span>{getRecipient(activeChat).department} • {getRecipient(activeChat).year}</span>
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="chat-header-right">
                 {/* Listing Card Header */}
                 {activeChat.listing && activeChat.listing.status !== 'removed' && (
                   <Link
                     to={`/listing/${activeChat.listing._id}`}
-                    className="flex items-center gap-2.5 p-1.5 px-3 bg-[#F4F1FF]/60 hover:bg-[#F4F1FF] rounded-xl border border-[#E9E6F8]/60 transition-colors max-w-[160px] lg:max-w-[280px] text-left"
+                    className="chat-header-listing-link"
                   >
                     {activeChat.listing.images?.[0] && (
                       <img
                         src={activeChat.listing.images[0]}
                         alt=""
-                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                        className="chat-header-listing-img"
                       />
                     )}
-                    <div className="min-w-0 leading-tight">
-                      <p className="text-[11px] font-bold text-[#111827] truncate">{activeChat.listing.title}</p>
-                      <p className="text-[11px] font-extrabold text-[#10B981] mt-0.5">₹{activeChat.listing.price}</p>
+                    <div className="chat-header-listing-info">
+                      <p className="chat-header-listing-title">{activeChat.listing.title}</p>
+                      <p className="chat-header-listing-price">₹{activeChat.listing.price}</p>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#6C4EFF] flex-shrink-0 ml-1" />
+                    <ExternalLink style={{ width: '14px', height: '14px', color: '#6C4EFF', flexShrink: 0, marginLeft: '4px' }} />
                   </Link>
                 )}
 
                 <button
                   onClick={() => setIsReportModalOpen(true)}
                   disabled={activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)}
-                  className={`p-2 rounded-full border transition-all ${
+                  className={`chat-report-btn ${
                     activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id)
-                      ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-default'
-                      : 'bg-rose-50 border-rose-100/50 text-rose-600 hover:bg-rose-100/70 hover:border-rose-200'
+                      ? 'reported'
+                      : ''
                   }`}
                   title={activeChat.reports?.some(r => r.reporter === user?._id || r.reporter?._id === user?._id) ? "You reported this chat" : "Report conversation"}
                 >
-                  <Flag className="w-4 h-4" />
+                  <Flag style={{ width: '16px', height: '16px' }} />
                 </button>
               </div>
             </div>
 
             {/* Messages box */}
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4">
+            <div className="chat-messages-container">
               {loadingMessages && messages.length === 0 ? (
-                <div className="flex justify-center py-10">
-                  <div className="w-8 h-8 border-4 border-[#6C4EFF] border-t-transparent rounded-full animate-spin" />
+                <div className="chat-messages-loading">
+                  <div className="chat-spinner animate-spin" />
                 </div>
               ) : (
                 messages.map((message) => {
@@ -423,20 +423,16 @@ export const Chat = () => {
                   return (
                     <div
                       key={message._id}
-                      className={`flex ${isSelf ? 'justify-end' : 'justify-start'}`}
+                      className={`chat-message-row ${isSelf ? 'self' : 'other'}`}
                     >
-                      <div className="max-w-[70%]">
+                      <div className="chat-message-content">
                         <div
-                          className={`p-3.5 rounded-[20px] text-[13px] leading-relaxed shadow-sm ${
-                            isSelf
-                              ? 'bg-[#6C4EFF] text-white rounded-tr-none'
-                              : 'bg-white text-[#374151] border border-[#E9E6F8] rounded-tl-none'
-                          }`}
+                          className={`chat-bubble ${isSelf ? 'self' : 'other'}`}
                         >
                           {message.text}
                         </div>
-                        <p className={`text-[10px] text-[#9CA3AF] mt-1 flex items-center gap-1 ${isSelf ? 'justify-end' : 'justify-start'}`}>
-                          <Clock className="w-2.5 h-2.5" />
+                        <p className={`chat-message-time ${isSelf ? 'self' : 'other'}`}>
+                          <Clock style={{ width: '10px', height: '10px' }} />
                           {formatTime(message.createdAt)}
                         </p>
                       </div>
@@ -449,16 +445,16 @@ export const Chat = () => {
 
             {/* Quick replies suggestion chips */}
             {messages.length <= 1 && (
-              <div className="px-4 lg:px-6 py-2 flex flex-wrap gap-2 bg-[#F6F5FB] flex-shrink-0">
-                <span className="text-[11px] font-bold text-[#6B7280] w-full flex items-center gap-1.5 mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#6C4EFF]" /> Suggested Replies:
+              <div className="chat-quick-replies">
+                <span className="chat-quick-replies-label">
+                  <Sparkles style={{ width: '14px', height: '14px', color: '#6C4EFF' }} /> Suggested Replies:
                 </span>
                 {quickReplies.map((reply, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(reply)}
                     disabled={sending}
-                    className="text-[12px] bg-white hover:bg-[#F4F1FF] hover:text-[#6C4EFF] border border-[#E9E6F8] px-3 py-1.5 rounded-full transition-colors font-medium text-[#4B5563] shadow-sm disabled:opacity-50"
+                    className="chat-quick-reply-btn"
                   >
                     {reply}
                   </button>
@@ -467,13 +463,13 @@ export const Chat = () => {
             )}
 
             {/* Input message form */}
-            <div className="p-4 bg-white border-t border-[#E9E6F8] flex-shrink-0">
+            <div className="chat-input-bar">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="flex items-center gap-3"
+                className="chat-input-form"
               >
                 <input
                   type="text"
@@ -481,25 +477,25 @@ export const Chat = () => {
                   value={newMessageText}
                   onChange={(e) => setNewMessageText(e.target.value)}
                   disabled={sending}
-                  className="flex-1 min-w-0 h-[46px] px-5 bg-[#FAFAFF] border border-[#E9E6F8] rounded-full text-[13px] text-[#111827] focus:outline-none focus:border-[#6C4EFF]/40 transition-colors placeholder-[#9CA3AF]"
+                  className="chat-message-input"
                 />
                 <button
                   type="submit"
                   disabled={!newMessageText.trim() || sending}
-                  className="w-[46px] h-[46px] flex-shrink-0 bg-[#6C4EFF] hover:bg-[#5739E6] text-white rounded-full flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
+                  className="chat-send-btn"
                 >
-                  <Send className="w-4.5 h-4.5 stroke-[2.2] transform rotate-0" />
+                  <Send style={{ width: '18px', height: '18px', strokeWidth: 2.2 }} />
                 </button>
               </form>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-16 h-16 bg-white rounded-3xl shadow-sm border border-[#E9E6F8] flex items-center justify-center mb-4">
-              <MessageSquare className="w-8 h-8 text-[#6C4EFF]" />
+          <div className="chat-welcome">
+            <div className="chat-welcome-icon-box">
+              <MessageSquare style={{ width: '32px', height: '32px', color: '#6C4EFF' }} />
             </div>
-            <h2 className="text-lg font-bold text-[#111827]">Welcome to Chat Support</h2>
-            <p className="text-sm text-[#6B7280] max-w-[320px] mt-1.5">
+            <h2 className="chat-welcome-title">Welcome to Chat Support</h2>
+            <p className="chat-welcome-desc">
               Select a conversation from the sidebar or start a new one to communicate securely with sellers.
             </p>
           </div>
@@ -508,22 +504,22 @@ export const Chat = () => {
 
       {/* Report Chat Modal Overlay */}
       {isReportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReportModalOpen(false)} />
-          <form onSubmit={handleReportConversation} className="relative w-full max-w-[420px] bg-white rounded-3xl overflow-hidden p-6 z-10 flex flex-col gap-4 border border-[#E9E6F8] text-left">
-            <h3 className="font-bold text-base text-[#111827] flex items-center gap-2">
-              <Flag className="w-5 h-5 text-rose-600" /> Report Abusive Chat
+        <div className="chat-modal-overlay">
+          <div className="chat-modal-backdrop" onClick={() => setIsReportModalOpen(false)} />
+          <form onSubmit={handleReportConversation} className="chat-report-modal">
+            <h3 className="chat-report-modal-title">
+              <Flag style={{ width: '20px', height: '20px', color: '#e11d48' }} /> Report Abusive Chat
             </h3>
-            <p className="text-xs text-[#6B7280]">
+            <p className="chat-report-modal-desc">
               If this conversation contains harassment, abusive language, scams, or spam, please report it to our administration.
             </p>
             
             <div>
-              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Reason</label>
+              <label className="chat-report-label">Reason</label>
               <select
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                className="w-full h-11 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all cursor-pointer"
+                className="chat-report-select"
               >
                 <option value="Abusive Language">Abusive Language</option>
                 <option value="Scam or Fraud">Scam or Fraud</option>
@@ -534,28 +530,28 @@ export const Chat = () => {
             </div>
 
             <div>
-              <label className="text-[12px] font-semibold text-[#6B7280] block mb-1.5">Additional Details (Optional)</label>
+              <label className="chat-report-label">Additional Details (Optional)</label>
               <textarea
                 value={reportNotes}
                 onChange={(e) => setReportNotes(e.target.value)}
                 placeholder="Provide details about why you are reporting this conversation..."
                 rows={3}
-                className="w-full p-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-[13px] text-[#111827] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C4EFF]/10 transition-all resize-none"
+                className="chat-report-textarea"
               />
             </div>
 
-            <div className="flex gap-3 mt-2">
+            <div className="chat-report-actions">
               <button
                 type="button"
                 onClick={() => setIsReportModalOpen(false)}
-                className="flex-1 h-11 border border-[#E9E6F8] text-[#6B7280] font-bold text-[13px] rounded-full hover:bg-slate-50 transition-colors"
+                className="chat-report-cancel-btn"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={reporting}
-                className="flex-1 h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[13px] rounded-full transition-colors flex items-center justify-center disabled:opacity-60"
+                className="chat-report-submit-btn"
               >
                 {reporting ? 'Submitting...' : 'Submit Report'}
               </button>

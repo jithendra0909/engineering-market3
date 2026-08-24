@@ -123,6 +123,11 @@
   transform: rotate(180deg);
 }
 
+/* Dropdown wrapper */
+.navbar-dropdown-wrapper {
+  position: relative;
+}
+
 /* Dropdowns */
 .navbar-dropdown-menu {
   position: absolute;
