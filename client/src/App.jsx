@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import VerifiedOnly from './components/VerifiedOnly';
 import IntroSplash from './components/IntroSplash';
 import FeedbackWidget from './components/FeedbackWidget';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 // Pages
 import Home from './pages/Home';
@@ -69,6 +70,9 @@ const AppLayout = ({ children }) => {
 
       {/* Floating feedback button & drawer widget */}
       <FeedbackWidget />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 };

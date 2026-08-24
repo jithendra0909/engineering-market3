@@ -16,6 +16,7 @@ import chatRoutes from './routes/chatRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import printRoutes from './routes/printRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
 
 // Load .env file (no-op on Vercel where env vars are injected)
 dotenv.config();
@@ -83,6 +84,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/print', printRoutes);
+app.use('/api/push', pushRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

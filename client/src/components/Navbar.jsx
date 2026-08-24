@@ -202,7 +202,7 @@ export const Navbar = () => {
       {!['/vendors', '/orders', '/profile'].includes(location.pathname) && (
       <header className="navbar-mobile">
         <div className="navbar-mobile-container">
-          <Link to="/">
+          <Link to="/" className="navbar-logo-link">
             <Logo size={30} showText={true} textClass="logo-text" />
           </Link>
 
