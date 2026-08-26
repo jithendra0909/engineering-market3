@@ -1789,33 +1789,110 @@ export const AdminDashboard = () => {
                       return;
                     }
 
-                    const formData = new FormData();
-                    formData.append('title', giftProductForm.title.trim());
-                    formData.append('description', giftProductForm.description.trim());
-                    formData.append('category', giftProductForm.category.trim());
-                    formData.append('basePrice', giftProductForm.basePrice);
-                    formData.append('mrpPrice', giftProductForm.mrpPrice || '');
-                    formData.append('badge', giftProductForm.badge || '');
-                    formData.append('isFeatured', giftProductForm.isFeatured);
-                    formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));
-                    formData.append('sizeOptions', JSON.stringify(giftProductForm.sizeOptions.filter(s => s.label.trim())));
-
                     const existingUrls = giftProductPhotoItems
                       .filter(item => item.type === 'existing')
                       .map(item => item.url);
-                    formData.append('existingImages', JSON.stringify(existingUrls));
 
-                    giftProductPhotoItems
-                      .filter(item => item.type === 'new' && item.file)
-                      .forEach(item => formData.append('images', item.file));
+                    const newFileItems = giftProductPhotoItems
+                      .filter(item => item.type === 'new' && item.file);
 
-                    if (editingGiftProduct) {
-                      await api.put(`/gift/products/${editingGiftProduct._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                      showToast('Product updated successfully!', 'success');
-                    } else {
-                      await api.post('/gift/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                      showToast('Product created successfully!', 'success');
+                    // --- Direct-to-Cloudinary upload flow (bypasses Vercel 4.5MB limit) ---
+                    let useDirectUpload = false;
+                    let signData = null;
+
+                    if (newFileItems.length > 0) {
+                      try {
+                        const signRes = await api.get('/gift/cloudinary-sign');
+                        signData = signRes.data;
+                        if (!signData.useFallback) {
+                          useDirectUpload = true;
+                        }
+                      } catch (signErr) {
+                        console.warn('Cloudinary sign request failed, falling back to server upload:', signErr);
+                        // Fall through to multer fallback
+                      }
                     }
+
+                    if (useDirectUpload && newFileItems.length > 0) {
+                      // Production path: upload each image directly to Cloudinary from the browser
+                      const newImageUrls = [];
+                      for (let i = 0; i < newFileItems.length; i++) {
+                        const item = newFileItems[i];
+                        showToast(`Uploading image ${i + 1} of ${newFileItems.length}...`, 'info');
+
+                        const cloudFormData = new FormData();
+                        cloudFormData.append('file', item.file);
+                        cloudFormData.append('api_key', signData.apiKey);
+                        cloudFormData.append('timestamp', signData.timestamp);
+                        cloudFormData.append('signature', signData.signature);
+                        cloudFormData.append('folder', signData.folder);
+
+                        try {
+                          const cloudRes = await fetch(signData.uploadUrl, {
+                            method: 'POST',
+                            body: cloudFormData
+                          });
+
+                          if (!cloudRes.ok) {
+                            const errBody = await cloudRes.json().catch(() => ({}));
+                            throw new Error(errBody.error?.message || `HTTP ${cloudRes.status}`);
+                          }
+
+                          const cloudResult = await cloudRes.json();
+                          newImageUrls.push(cloudResult.secure_url);
+                        } catch (uploadErr) {
+                          showToast(`Failed to upload "${item.file.name}": ${uploadErr.message}`, 'error');
+                          return; // Abort — don't save a product with missing images
+                        }
+                      }
+
+                      // Send JSON-only payload (no raw image bytes reach Vercel)
+                      const payload = {
+                        title: giftProductForm.title.trim(),
+                        description: giftProductForm.description.trim(),
+                        category: giftProductForm.category.trim(),
+                        basePrice: giftProductForm.basePrice,
+                        mrpPrice: giftProductForm.mrpPrice || '',
+                        badge: giftProductForm.badge || '',
+                        isFeatured: giftProductForm.isFeatured,
+                        features: giftProductForm.features.filter(f => f.trim()),
+                        sizeOptions: giftProductForm.sizeOptions.filter(s => s.label.trim()),
+                        existingImages: existingUrls,
+                        newImages: newImageUrls
+                      };
+
+                      if (editingGiftProduct) {
+                        await api.put(`/gift/products/${editingGiftProduct._id}`, payload);
+                        showToast('Product updated successfully!', 'success');
+                      } else {
+                        await api.post('/gift/products', payload);
+                        showToast('Product created successfully!', 'success');
+                      }
+                    } else {
+                      // Fallback path: local dev without Cloudinary — use FormData + multer
+                      const formData = new FormData();
+                      formData.append('title', giftProductForm.title.trim());
+                      formData.append('description', giftProductForm.description.trim());
+                      formData.append('category', giftProductForm.category.trim());
+                      formData.append('basePrice', giftProductForm.basePrice);
+                      formData.append('mrpPrice', giftProductForm.mrpPrice || '');
+                      formData.append('badge', giftProductForm.badge || '');
+                      formData.append('isFeatured', giftProductForm.isFeatured);
+                      formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));
+                      formData.append('sizeOptions', JSON.stringify(giftProductForm.sizeOptions.filter(s => s.label.trim())));
+                      formData.append('existingImages', JSON.stringify(existingUrls));
+
+                      newFileItems.forEach(item => formData.append('images', item.file));
+
+                      if (editingGiftProduct) {
+                        await api.put(`/gift/products/${editingGiftProduct._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                        showToast('Product updated successfully!', 'success');
+                      } else {
+                        await api.post('/gift/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                        showToast('Product created successfully!', 'success');
+                      }
+                    }
+
                     setShowGiftProductModal(false);
                     fetchGiftData();
                   } catch (err) {

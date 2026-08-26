@@ -1,4 +1,5 @@
 import GiftProduct from '../models/GiftProduct.js';
+import cloudinary from '../config/cloudinary.js';
 
 // @desc    Get all gift products (public: active only, admin: all)
 // @route   GET /api/gift/products
@@ -72,6 +73,43 @@ const getGiftProductById = async (req, res) => {
   }
 };
 
+// @desc    Generate a signed Cloudinary upload signature for direct browser upload of gift images
+// @route   GET /api/gift/cloudinary-sign
+// @access  Private/Admin
+// This allows the browser to upload images directly to Cloudinary, bypassing Vercel's 4.5MB body limit
+const getGiftImageCloudinarySignature = async (req, res) => {
+  try {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      // In dev: tell client to use server-side upload (multer) instead
+      return res.json({ useFallback: true });
+    }
+
+    const timestamp = Math.round(Date.now() / 1000);
+    const folder = 'engineering-market/gift-products';
+
+    const signature = cloudinary.utils.api_sign_request(
+      { folder, timestamp },
+      apiSecret
+    );
+
+    res.json({
+      cloudName,
+      apiKey,
+      timestamp,
+      signature,
+      folder,
+      uploadUrl: `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`
+    });
+  } catch (error) {
+    console.error('Gift Cloudinary sign error:', error);
+    res.status(500).json({ message: 'Failed to generate upload signature', error: error.message });
+  }
+};
+
 // @desc    Create a new gift product
 // @route   POST /api/gift/products
 // @access  Admin
@@ -98,7 +136,7 @@ const createGiftProduct = async (req, res) => {
       }
     }
 
-    // Image handling: combine existingImages (if any) and uploadedPaths
+    // Image handling: combine existingImages, newImages (direct Cloudinary URLs), and uploadedPaths (multer fallback)
     let existingImagesList = [];
     if (req.body.existingImages !== undefined) {
       if (typeof req.body.existingImages === 'string') {
@@ -112,8 +150,19 @@ const createGiftProduct = async (req, res) => {
       }
     }
 
+    // newImages: Cloudinary URLs uploaded directly by the browser (production path)
+    let newImagesList = [];
+    if (req.body.newImages !== undefined) {
+      if (typeof req.body.newImages === 'string') {
+        try { newImagesList = JSON.parse(req.body.newImages); } catch { newImagesList = []; }
+      } else if (Array.isArray(req.body.newImages)) {
+        newImagesList = req.body.newImages;
+      }
+    }
+
+    // uploadedPaths: multer server-side upload fallback (local dev without Cloudinary)
     const newUploadedPaths = req.uploadedPaths || [];
-    const imageUrls = [...existingImagesList, ...newUploadedPaths];
+    const imageUrls = [...existingImagesList, ...newImagesList, ...newUploadedPaths];
 
     if (imageUrls.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
@@ -199,7 +248,7 @@ const updateGiftProduct = async (req, res) => {
       }
     }
 
-    // Image handling: combine retained existing images and newly uploaded paths
+    // Image handling: combine retained existing images, new Cloudinary URLs, and multer fallback paths
     let existingImagesList = [];
     if (req.body.existingImages !== undefined) {
       if (typeof req.body.existingImages === 'string') {
@@ -211,13 +260,27 @@ const updateGiftProduct = async (req, res) => {
       } else if (Array.isArray(req.body.existingImages)) {
         existingImagesList = req.body.existingImages;
       }
-    } else if (!req.uploadedPaths || req.uploadedPaths.length === 0) {
-      // If existingImages not specified and no uploaded files, retain current images
+    }
+
+    // newImages: Cloudinary URLs uploaded directly by the browser (production path)
+    let newImagesList = [];
+    if (req.body.newImages !== undefined) {
+      if (typeof req.body.newImages === 'string') {
+        try { newImagesList = JSON.parse(req.body.newImages); } catch { newImagesList = []; }
+      } else if (Array.isArray(req.body.newImages)) {
+        newImagesList = req.body.newImages;
+      }
+    }
+
+    // uploadedPaths: multer server-side upload fallback (local dev without Cloudinary)
+    const newUploadedPaths = req.uploadedPaths || [];
+
+    // If no image sources were explicitly provided, retain current images
+    if (req.body.existingImages === undefined && newImagesList.length === 0 && newUploadedPaths.length === 0) {
       existingImagesList = product.images || [];
     }
 
-    const newUploadedPaths = req.uploadedPaths || [];
-    const finalImages = [...existingImagesList, ...newUploadedPaths];
+    const finalImages = [...existingImagesList, ...newImagesList, ...newUploadedPaths];
 
     if (finalImages.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
@@ -283,5 +346,6 @@ export {
   createGiftProduct,
   updateGiftProduct,
   deleteGiftProduct,
-  toggleFeatured
+  toggleFeatured,
+  getGiftImageCloudinarySignature
 };
