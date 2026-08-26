@@ -87,7 +87,12 @@ const GiftCart = ({ isOpen, onClose, onBrowse }) => {
                 >
                   {/* Product image */}
                   <div className="gift-cart-item-img-box">
-                    <img src={item.image} alt={item.productName} className="gift-cart-item-img" />
+                    <img
+                      src={item.image || '/images/placeholder.jpg'}
+                      alt={item.productName}
+                      className="gift-cart-item-img"
+                      onError={(e) => { e.currentTarget.src = '/images/placeholder.jpg'; }}
+                    />
                   </div>
 
                   {/* Item details */}

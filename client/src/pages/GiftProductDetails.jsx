@@ -62,6 +62,7 @@ export const GiftProductDetails = () => {
       frameSize: selectedSize ? selectedSize.label : 'Default',
       quantity: 1,
       unitPrice: finalPrice,
+      image: product.images?.[0] || '',
     });
     showToast('Added to cart!', 'success');
   };
@@ -69,6 +70,16 @@ export const GiftProductDetails = () => {
   const finalPrice = selectedSize
     ? product?.basePrice + (selectedSize?.priceModifier || 0)
     : product?.basePrice;
+
+  const finalMrp = selectedSize
+    ? (product?.mrpPrice ?? null) !== null
+      ? product.mrpPrice + (selectedSize?.mrpModifier || 0)
+      : null
+    : product?.mrpPrice ?? null;
+
+  const discountPct = finalMrp && finalMrp > finalPrice
+    ? Math.round(((finalMrp - finalPrice) / finalMrp) * 100)
+    : null;
 
   if (loading) {
     return (
@@ -160,9 +171,15 @@ export const GiftProductDetails = () => {
           </h1>
 
           {/* Price */}
-          <p className="details-price">
-            ₹{finalPrice}
-          </p>
+          <div className="details-price-row">
+            <span className="details-price">₹{finalPrice}</span>
+            {discountPct !== null && (
+              <>
+                <span className="details-price-mrp">₹{finalMrp}</span>
+                <span className="details-discount-badge">{discountPct}% OFF</span>
+              </>
+            )}
+          </div>
 
           {/* Size Options */}
           {product.sizeOptions && product.sizeOptions.length > 0 && (

@@ -22,6 +22,17 @@ const giftProductSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  mrpPrice: {
+    type: Number,
+    default: null,
+    validate: {
+      validator: function (v) {
+        // Only enforce when mrpPrice is actually set
+        return v === null || v === undefined || v >= this.basePrice;
+      },
+      message: 'MRP must be greater than or equal to the selling price'
+    }
+  },
   features: [{
     type: String
   }],
@@ -46,6 +57,10 @@ const giftProductSchema = new mongoose.Schema({
     priceModifier: {
       type: Number,
       required: true
+    },
+    mrpModifier: {
+      type: Number,
+      default: 0
     }
   }]
 }, {

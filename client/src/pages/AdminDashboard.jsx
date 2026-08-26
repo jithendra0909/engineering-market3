@@ -34,7 +34,7 @@ export const AdminDashboard = () => {
   const [showGiftProductModal, setShowGiftProductModal] = useState(false);
   const [editingGiftProduct, setEditingGiftProduct] = useState(null);
   const [giftProductForm, setGiftProductForm] = useState({
-    title: '', description: '', category: '', basePrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: []
+    title: '', description: '', category: '', basePrice: '', mrpPrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: []
   });
   const [giftProductImages, setGiftProductImages] = useState([]);
   const [giftProductImagePreviews, setGiftProductImagePreviews] = useState([]);
@@ -872,7 +872,7 @@ export const AdminDashboard = () => {
                       <button
                         onClick={() => {
                           setEditingGiftProduct(null);
-                          setGiftProductForm({ title: '', description: '', category: '', basePrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: [] });
+                          setGiftProductForm({ title: '', description: '', category: '', basePrice: '', mrpPrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: [] });
                           setGiftProductImages([]);
                           setGiftProductImagePreviews([]);
                           setShowGiftProductModal(true);
@@ -922,7 +922,12 @@ export const AdminDashboard = () => {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-xs font-medium">{gp.category}</td>
-                                <td className="px-6 py-4 font-black">₹{gp.basePrice}</td>
+                                <td className="px-6 py-4">
+                                  <span className="font-black">₹{gp.basePrice}</span>
+                                  {gp.mrpPrice > gp.basePrice && (
+                                    <span className="ml-1.5 text-xs text-[#9CA3AF] line-through">₹{gp.mrpPrice}</span>
+                                  )}
+                                </td>
                                 <td className="px-6 py-4 text-center">
                                   <button
                                     onClick={async () => {
@@ -970,6 +975,7 @@ export const AdminDashboard = () => {
                                           description: gp.description,
                                           category: gp.category,
                                           basePrice: gp.basePrice,
+                                          mrpPrice: gp.mrpPrice ?? '',
                                           features: gp.features?.length ? gp.features : [''],
                                           badge: gp.badge || '',
                                           isFeatured: gp.isFeatured,
@@ -986,12 +992,18 @@ export const AdminDashboard = () => {
                                     </button>
                                     <button
                                       onClick={async () => {
-                                        if (!window.confirm('Deactivate this product?')) return;
+                                        const confirmed = window.confirm(
+                                          `Permanently delete "${gp.title}"? This cannot be undone. ` +
+                                          `If you just want to hide it from customers, use the Active toggle instead.`
+                                        );
+                                        if (!confirmed) return;
                                         try {
-                                          await api.delete(`/gift/products/${gp._id}`);
-                                          showToast('Product deactivated', 'success');
+                                          await api.delete(`/gift/products/${gp._id}?hard=true`);
+                                          showToast('Product permanently deleted', 'success');
                                           fetchGiftData();
-                                        } catch { showToast('Failed to delete product', 'error'); }
+                                        } catch (err) {
+                                          showToast(err.response?.data?.message || 'Failed to delete product', 'error');
+                                        }
                                       }}
                                       className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
                                       title="Delete Product"
@@ -1216,7 +1228,7 @@ export const AdminDashboard = () => {
               </div>
 
               {/* Category + Price row */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Category *</label>
                   <select value={giftProductForm.category} onChange={(e) => setGiftProductForm({...giftProductForm, category: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40 cursor-pointer">
@@ -1227,10 +1239,24 @@ export const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Base Price (₹) *</label>
-                  <input type="number" value={giftProductForm.basePrice} onChange={(e) => setGiftProductForm({...giftProductForm, basePrice: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40" placeholder="180" />
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Selling Price (₹) *</label>
+                  <input type="number" min="0" value={giftProductForm.basePrice} onChange={(e) => setGiftProductForm({...giftProductForm, basePrice: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40" placeholder="180" />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">MRP / Cross Price (₹)</label>
+                  <input type="number" min="0" value={giftProductForm.mrpPrice} onChange={(e) => setGiftProductForm({...giftProductForm, mrpPrice: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40" placeholder="Optional, e.g. 250" />
                 </div>
               </div>
+
+              {/* Live discount preview */}
+              {giftProductForm.mrpPrice && Number(giftProductForm.mrpPrice) > Number(giftProductForm.basePrice || 0) && (
+                <p className="text-xs font-bold text-emerald-600">
+                  {Math.round(((Number(giftProductForm.mrpPrice) - Number(giftProductForm.basePrice)) / Number(giftProductForm.mrpPrice)) * 100)}% OFF will be shown to customers
+                </p>
+              )}
+              {giftProductForm.mrpPrice && Number(giftProductForm.mrpPrice) < Number(giftProductForm.basePrice || 0) && (
+                <p className="text-xs font-bold text-rose-600">MRP cannot be lower than the selling price.</p>
+              )}
 
               {/* Badge + Featured row */}
               <div className="grid grid-cols-2 gap-3">
@@ -1329,11 +1355,17 @@ export const AdminDashboard = () => {
               <button
                 onClick={async () => {
                   try {
+                    if (giftProductForm.mrpPrice && Number(giftProductForm.mrpPrice) < Number(giftProductForm.basePrice)) {
+                      showToast('MRP cannot be lower than the selling price', 'error');
+                      return;
+                    }
+
                     const formData = new FormData();
                     formData.append('title', giftProductForm.title);
                     formData.append('description', giftProductForm.description);
                     formData.append('category', giftProductForm.category);
                     formData.append('basePrice', giftProductForm.basePrice);
+                    formData.append('mrpPrice', giftProductForm.mrpPrice || '');
                     formData.append('badge', giftProductForm.badge);
                     formData.append('isFeatured', giftProductForm.isFeatured);
                     formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));

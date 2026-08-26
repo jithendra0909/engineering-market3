@@ -59,10 +59,17 @@ const GiftProductCard = ({ product }) => {
         )}
 
         {/* Price */}
-        <p className="gift-card-price">
-          <span className="gift-card-price-label">From </span>
+        <div className="gift-card-price-row">
           <span className="gift-card-price-val">₹{product.basePrice}</span>
-        </p>
+          {product.mrpPrice > product.basePrice && (
+            <>
+              <span className="gift-card-price-mrp">₹{product.mrpPrice}</span>
+              <span className="gift-card-discount-badge">
+                {Math.round(((product.mrpPrice - product.basePrice) / product.mrpPrice) * 100)}% OFF
+              </span>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

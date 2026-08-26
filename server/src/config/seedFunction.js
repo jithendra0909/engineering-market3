@@ -507,16 +507,17 @@ export const seedData = async () => {
         category: 'Photo Frames',
         features: ['HD Print Quality', 'Matte Finish', 'Premium Wood'],
         basePrice: 180,
+        mrpPrice: 250,
         badge: 'BEST SELLER',
         images: ['/images/frame_wooden.jpg'],
         isFeatured: true,
         isActive: true,
         sizeOptions: [
-          { label: '8×12', priceModifier: 0 },
-          { label: '10×12', priceModifier: 30 },
-          { label: '10×15', priceModifier: 55 },
-          { label: '12×15', priceModifier: 80 },
-          { label: '12×18', priceModifier: 80 }
+          { label: '8×12', priceModifier: 0, mrpModifier: 0 },
+          { label: '10×12', priceModifier: 30, mrpModifier: 40 },
+          { label: '10×15', priceModifier: 55, mrpModifier: 70 },
+          { label: '12×15', priceModifier: 80, mrpModifier: 100 },
+          { label: '12×18', priceModifier: 80, mrpModifier: 100 }
         ]
       },
       {
@@ -525,16 +526,17 @@ export const seedData = async () => {
         category: 'Photo Frames',
         features: ['Multiple Photos', 'Premium Finish', 'HD Print Quality'],
         basePrice: 180,
+        mrpPrice: 240,
         badge: null,
         images: ['/images/frame_collage.jpg'],
         isFeatured: true,
         isActive: true,
         sizeOptions: [
-          { label: '8×12', priceModifier: 0 },
-          { label: '10×12', priceModifier: 30 },
-          { label: '10×15', priceModifier: 55 },
-          { label: '12×15', priceModifier: 80 },
-          { label: '12×18', priceModifier: 80 }
+          { label: '8×12', priceModifier: 0, mrpModifier: 0 },
+          { label: '10×12', priceModifier: 30, mrpModifier: 40 },
+          { label: '10×15', priceModifier: 55, mrpModifier: 70 },
+          { label: '12×15', priceModifier: 80, mrpModifier: 100 },
+          { label: '12×18', priceModifier: 80, mrpModifier: 100 }
         ]
       },
       {
@@ -543,6 +545,7 @@ export const seedData = async () => {
         category: 'Photo Frames',
         features: ['HD Print Quality', 'Elegant Design', 'Premium Frame'],
         basePrice: 180,
+        mrpPrice: null,
         badge: null,
         images: ['/images/frame_motivational.jpg'],
         isFeatured: true,
@@ -561,6 +564,7 @@ export const seedData = async () => {
         category: 'Photo Frames',
         features: ['HD Print Quality', 'Matte Finish', 'Durable Frame'],
         basePrice: 180,
+        mrpPrice: null,
         badge: null,
         images: ['/images/frame_classic.jpg'],
         isFeatured: true,

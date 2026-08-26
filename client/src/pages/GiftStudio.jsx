@@ -11,7 +11,6 @@ import { useGiftCartStore } from '../stores/giftCartStore';
 import GiftProductCard from '../components/GiftProductCard';
 import FrameCustomizationModal from '../components/FrameCustomizationModal';
 import GiftCart from '../components/GiftCart';
-import GiftPriceGuideModal from '../components/GiftPriceGuideModal';
 import api from '../api/axios';
 import './GiftStudio.css';
 
@@ -22,7 +21,6 @@ const GiftStudio = () => {
   const cartItemCount = useGiftCartStore((s) => s.getItemCount());
 
   // UI state
-  const [isPriceGuideOpen, setIsPriceGuideOpen] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
   const [customizeProduct, setCustomizeProduct] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -129,15 +127,8 @@ const GiftStudio = () => {
             </div>
           </div>
 
-          {/* Right: Price Guide + Share + Heart + Cart */}
+          {/* Right: Share + Heart + Cart */}
           <div className="gift-studio-header-right">
-            <button
-              onClick={() => setIsPriceGuideOpen(true)}
-              className="gift-studio-price-guide-btn"
-              title="View Price Guide"
-            >
-              Price Guide
-            </button>
             <button
               onClick={handleShare}
               className="gift-studio-icon-btn"
@@ -335,12 +326,6 @@ const GiftStudio = () => {
           </span>
         </button>
       )}
-
-      {/* Price Guide Modal Popup */}
-      <GiftPriceGuideModal
-        isOpen={isPriceGuideOpen}
-        onClose={() => setIsPriceGuideOpen(false)}
-      />
 
       {/* Customization Modal */}
       <FrameCustomizationModal

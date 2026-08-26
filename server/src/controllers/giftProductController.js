@@ -77,7 +77,13 @@ const getGiftProductById = async (req, res) => {
 // @access  Admin
 const createGiftProduct = async (req, res) => {
   try {
-    const { title, description, category, basePrice, features, badge, isFeatured, sizeOptions } = req.body;
+    const { title, description, category, basePrice, mrpPrice, features, badge, isFeatured, sizeOptions } = req.body;
+
+    if (mrpPrice !== undefined && mrpPrice !== '' && mrpPrice !== null) {
+      if (Number(mrpPrice) < Number(basePrice)) {
+        return res.status(400).json({ message: 'MRP cannot be lower than the selling price' });
+      }
+    }
 
     // Image handling from Multer multiple uploads
     let imageUrls = [];
@@ -104,6 +110,7 @@ const createGiftProduct = async (req, res) => {
       category,
       images: imageUrls,
       basePrice: Number(basePrice),
+      mrpPrice: mrpPrice !== undefined && mrpPrice !== '' && mrpPrice !== null ? Number(mrpPrice) : null,
       features: parsedFeatures || [],
       badge: badge || null,
       isFeatured: isFeatured === 'true' || isFeatured === true,
@@ -128,12 +135,22 @@ const updateGiftProduct = async (req, res) => {
       return res.status(404).json({ message: 'Gift product not found' });
     }
 
-    const { title, description, category, basePrice, features, badge, isFeatured, isActive, sizeOptions } = req.body;
+    const { title, description, category, basePrice, mrpPrice, features, badge, isFeatured, isActive, sizeOptions } = req.body;
+
+    if (mrpPrice !== undefined && mrpPrice !== '' && mrpPrice !== null) {
+      const effectiveBasePrice = basePrice !== undefined ? Number(basePrice) : product.basePrice;
+      if (Number(mrpPrice) < effectiveBasePrice) {
+        return res.status(400).json({ message: 'MRP cannot be lower than the selling price' });
+      }
+    }
 
     if (title !== undefined) product.title = title;
     if (description !== undefined) product.description = description;
     if (category !== undefined) product.category = category;
     if (basePrice !== undefined) product.basePrice = Number(basePrice);
+    if (mrpPrice !== undefined) {
+      product.mrpPrice = (mrpPrice === '' || mrpPrice === null) ? null : Number(mrpPrice);
+    }
     if (badge !== undefined) product.badge = badge || null;
     if (isFeatured !== undefined) product.isFeatured = isFeatured === 'true' || isFeatured === true;
     if (isActive !== undefined) product.isActive = isActive === 'true' || isActive === true;
