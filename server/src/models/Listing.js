@@ -74,7 +74,12 @@ const listingSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  slug: {
+    type: String,
+    trim: true,
+    default: ''
+  }
 }, {
   timestamps: true
 });
@@ -82,6 +87,22 @@ const listingSchema = new mongoose.Schema({
 listingSchema.index({ sellerCollege: 1, status: 1 });
 listingSchema.index({ marketType: 1, expiresAt: 1 });
 listingSchema.index({ createdAt: -1 });
+
+// Pre-save hook to auto-populate slug from title
+listingSchema.pre('save', function (next) {
+  if (this.isModified('title') || !this.slug) {
+    this.slug = this.title
+      ? this.title
+          .toString()
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+      : '';
+  }
+  next();
+});
 
 const Listing = mongoose.model('Listing', listingSchema);
 export default Listing;

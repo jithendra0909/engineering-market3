@@ -150,7 +150,7 @@ export const Navbar = () => {
                     className="navbar-profile-avatar-btn"
                   >
                     {user.profileImageUrl ? (
-                      <img src={user.profileImageUrl} alt="" className="navbar-avatar-img" />
+                      <img src={user.profileImageUrl} alt={user?.fullName || 'User profile'} className="navbar-avatar-img" />
                     ) : (
                       <UserIcon style={{ width: '16px', height: '16px', color: '#6B7280' }} />
                     )}
@@ -221,7 +221,7 @@ export const Navbar = () => {
             </button>
             <Link to={isLoggedIn ? '/profile' : '/login'} className="navbar-mobile-avatar-link">
               {user?.profileImageUrl ? (
-                <img src={user.profileImageUrl} alt="" className="navbar-avatar-img" />
+                <img src={user.profileImageUrl} alt={user?.fullName || 'User profile'} className="navbar-avatar-img" />
               ) : (
                 <UserIcon style={{ width: '18px', height: '18px' }} />
               )}

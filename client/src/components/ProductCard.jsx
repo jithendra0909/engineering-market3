@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MapPin } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
+import { getListingUrl } from '../utils/slugUtils';
 import './ProductCard.css';
 
 export const ProductCard = ({ product }) => {
@@ -32,27 +34,31 @@ export const ProductCard = ({ product }) => {
     } finally { setSaving(false); }
   };
 
-  const displayImage = product.images && product.images.length > 0
+  const rawImage = product.images && product.images.length > 0
     ? product.images[0]
     : '/images/file_00000000968c71f8895e41375cd51838.png';
 
+  const displayImage = getOptimizedImageUrl(rawImage, { width: 400 });
+
   return (
     <Link
-      to={`/listing/${product._id}`}
+      to={getListingUrl(product)}
       className="product-card"
     >
       {/* Image area */}
       <div className="product-card-image-wrapper">
         <img
           src={displayImage}
-          alt={product.title}
+          alt={product.title ? `${product.title} - Engineering Market listing` : 'Product photo'}
           className="product-card-image"
+          loading="lazy"
         />
 
         {/* Heart bookmark */}
         <button
           onClick={handleHeartClick}
           disabled={saving}
+          aria-label={isSaved ? "Remove from saved" : "Save this listing"}
           className="product-card-heart-btn"
         >
           <Heart

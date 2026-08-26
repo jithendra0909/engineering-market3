@@ -1,27 +1,31 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
+import { getGiftProductUrl } from '../utils/slugUtils';
 import './GiftProductCard.css';
 
 /**
  * GiftProductCard — Product card for EM Gift Studio products.
- * Adapted from FrameProductCard for the real GiftProduct API schema shape.
- * Uses product.images[0] instead of product.image, product.title instead of product.name.
+ * Includes SEO slug routing, Cloudinary auto-optimization, and lazy loading.
  */
 const GiftProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/gift-studio/product/${product._id}`);
+    navigate(getGiftProductUrl(product));
   };
+
+  const rawImage = product.images?.[0] || '/images/placeholder.jpg';
+  const displayImage = getOptimizedImageUrl(rawImage, { width: 400 });
 
   return (
     <div className="gift-card" onClick={handleClick}>
       {/* Image area */}
       <div className="gift-card-img-wrapper">
         <img
-          src={product.images?.[0] || '/images/placeholder.jpg'}
-          alt={product.title}
+          src={displayImage}
+          alt={product.title ? `${product.title} - Personalized gift` : 'Gift item photo'}
           className="gift-card-img"
           loading="lazy"
         />

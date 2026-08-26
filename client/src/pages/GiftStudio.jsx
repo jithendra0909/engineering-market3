@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft, Share2, Heart, ArrowRight, ChevronRight,
   Award, Palette, Truck, ShieldCheck, Wand2, Eye, Lock, Clock,
@@ -93,8 +94,28 @@ const GiftStudio = () => {
     </div>
   );
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+
   return (
     <div className="gift-studio-page">
+      <Helmet>
+        <title>EM Gift Studio — Custom Photo Frames & Gifts | Engineering Market</title>
+        <meta name="title" content="EM Gift Studio — Custom Photo Frames & Gifts | Engineering Market" />
+        <meta name="description" content="Custom photo frames, collage frames, motivational wall art, and personalized gifts for students and campus memories." />
+        <link rel="canonical" href={`${origin}/vendors/gift-studio`} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${origin}/vendors/gift-studio`} />
+        <meta property="og:title" content="EM Gift Studio — Custom Photo Frames & Gifts" />
+        <meta property="og:description" content="Custom photo frames, collage frames, and personalized gifts on Engineering Market." />
+        <meta property="og:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`${origin}/vendors/gift-studio`} />
+        <meta name="twitter:title" content="EM Gift Studio — Custom Photo Frames & Gifts" />
+        <meta name="twitter:description" content="Custom photo frames, collage frames, and personalized gifts on Engineering Market." />
+        <meta name="twitter:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+      </Helmet>
 
       {/* 1. VENDOR HEADER */}
       <header className="gift-studio-header">

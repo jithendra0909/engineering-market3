@@ -9,7 +9,30 @@
     }
   },
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/index.js" },
     { "source": "/api/(.*)", "destination": "/api/index.js" },
+    {
+      "source": "/listing/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Googlebot|bingbot|Applebot|Discordbot|SkypeUriPreview|YandexBot|DuckDuckBot).*"
+        }
+      ],
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/gift-studio/product/(.*)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Googlebot|bingbot|Applebot|Discordbot|SkypeUriPreview|YandexBot|DuckDuckBot).*"
+        }
+      ],
+      "destination": "/api/index.js"
+    },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

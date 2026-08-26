@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Search, Gift, SlidersHorizontal } from 'lucide-react';
 import api from '../api/axios';
 import GiftProductCard from '../components/GiftProductCard';
@@ -12,6 +13,8 @@ export const GiftStudioProducts = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [showSort, setShowSort] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,8 +45,55 @@ export const GiftStudioProducts = () => {
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
+  const breadcrumbsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": `${origin}/`
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Gift Studio",
+        "item": `${origin}/vendors/gift-studio`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "All Products",
+        "item": `${origin}/gift-studio/products`
+      }
+    ]
+  };
+
   return (
     <div className="market-page-container">
+      <Helmet>
+        <title>EM Gift Studio — Custom Photo Frames & Gifts | Engineering Market</title>
+        <meta name="title" content="EM Gift Studio — Custom Photo Frames & Gifts | Engineering Market" />
+        <meta name="description" content="Browse all personalized gifts — custom college photo frames, birthday frames, motivational art, and personalized keepsakes." />
+        <link rel="canonical" href={`${origin}/gift-studio/products`} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${origin}/gift-studio/products`} />
+        <meta property="og:title" content="EM Gift Studio — Custom Photo Frames & Gifts" />
+        <meta property="og:description" content="Browse custom college photo frames, art, and personalized gifts on Engineering Market." />
+        <meta property="og:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`${origin}/gift-studio/products`} />
+        <meta name="twitter:title" content="EM Gift Studio — Custom Photo Frames & Gifts" />
+        <meta name="twitter:description" content="Browse custom college photo frames, art, and personalized gifts on Engineering Market." />
+        <meta name="twitter:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbsJsonLd)}
+        </script>
+      </Helmet>
 
       {/* Header */}
       <div className="market-header">

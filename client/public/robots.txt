@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /college-market
+Disallow: /profile
+Disallow: /chat
+Disallow: /notifications
+Disallow: /dev/
+
+Sitemap: https://[FINAL_DOMAIN]/sitemap.xml

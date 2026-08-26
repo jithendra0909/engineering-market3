@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 import { Phone, Heart, MapPin, Tag, GraduationCap, Clock, ChevronLeft, MessageCircle, Flag } from 'lucide-react';
 import api from '../api/axios';
 import VerificationRequiredModal from '../components/VerificationRequiredModal';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
+import { slugify } from '../utils/slugUtils';
 import './ProductDetails.css';
 
 export const ProductDetails = () => {
@@ -129,8 +132,89 @@ export const ProductDetails = () => {
     return `${days}d ago`;
   };
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const itemSlug = listing.slug || slugify(listing.title);
+  const canonicalUrl = `${origin}/listing/${listing._id}${itemSlug ? '/' + itemSlug : ''}`;
+  const priceDisplay = listing.listingType === 'donate' ? 'Free / Donation' : `₹${listing.price}`;
+  const pageTitle = `${listing.title} — ${priceDisplay} | Engineering Market`;
+  const metaDesc = listing.description
+    ? listing.description.slice(0, 150) + (listing.description.length > 150 ? '...' : '')
+    : `Buy ${listing.title} on Engineering Market.`;
+  const primaryImage = (listing.images && listing.images.length > 0)
+    ? getOptimizedImageUrl(listing.images[0], { width: 1200 })
+    : `${origin}/images/em_gift_studio_hero_banner.png`;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "name": listing.title,
+        "description": listing.description,
+        "image": listing.images || [],
+        "category": listing.category,
+        "offers": {
+          "@type": "Offer",
+          "price": listing.listingType === 'donate' ? '0' : String(listing.price || 0),
+          "priceCurrency": "INR",
+          "itemCondition": listing.condition === 'Brand New' ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
+          "availability": listing.status === 'available' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          "url": canonicalUrl
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": `${origin}/`
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "General Market",
+            "item": `${origin}/general-market`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": listing.title,
+            "item": canonicalUrl
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="details-page-container">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="title" content={pageTitle} />
+        <meta name="description" content={`${metaDesc} — Condition: ${listing.condition} · Campus Marketplace.`} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:image" content={primaryImage} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDesc} />
+        <meta name="twitter:image" content={primaryImage} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(productJsonLd)}
+        </script>
+      </Helmet>
 
       {/* Back button */}
       <button
@@ -163,8 +247,8 @@ export const ProductDetails = () => {
           {/* Main image */}
           <div className="details-main-img-box">
             <img
-              src={listing.images[selectedImg]}
-              alt={listing.title}
+              src={getOptimizedImageUrl(listing.images[selectedImg], { width: 900 })}
+              alt={`${listing.title} - Main photo`}
               className="details-main-img"
             />
           </div>
@@ -178,7 +262,12 @@ export const ProductDetails = () => {
                   onClick={() => setSelectedImg(idx)}
                   className={`details-thumb-btn ${selectedImg === idx ? 'active' : ''}`}
                 >
-                  <img src={img} alt="" className="details-thumb-img" />
+                  <img
+                    src={getOptimizedImageUrl(img, { width: 140 })}
+                    alt={`${listing.title} thumbnail ${idx + 1}`}
+                    className="details-thumb-img"
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
@@ -230,7 +319,7 @@ export const ProductDetails = () => {
 
           {/* Description */}
           <div className="details-desc-box">
-            <h3 className="details-desc-title">Description</h3>
+            <h2 className="details-desc-title">Description</h2>
             <p className="details-desc-text">
               {listing.description}
             </p>
@@ -238,11 +327,11 @@ export const ProductDetails = () => {
 
           {/* Seller card */}
           <div className="details-seller-card">
-            <h3 className="details-seller-title">Seller</h3>
+            <h2 className="details-seller-title">Seller</h2>
             <div className="details-seller-info">
               <div className="details-seller-avatar">
                 {listing.seller?.profileImageUrl ? (
-                  <img src={listing.seller.profileImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={getOptimizedImageUrl(listing.seller.profileImageUrl, { width: 80 })} alt={listing.seller?.fullName || 'Seller'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   listing.seller?.fullName?.charAt(0) || 'S'
                 )}

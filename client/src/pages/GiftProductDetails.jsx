@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { ChevronLeft, Tag, Check, ShoppingBag } from 'lucide-react';
 import api from '../api/axios';
 import { generateCustomizeMessage, openWhatsApp } from '../utils/whatsappUtils';
 import { useGiftCartStore } from '../stores/giftCartStore';
 import { useAuth } from '../context/AuthContext';
+import { getOptimizedImageUrl } from '../utils/imageUtils';
+import { slugify } from '../utils/slugUtils';
 import './GiftProductDetails.css';
 
 const WhatsAppIcon = (props) => (
@@ -112,8 +115,109 @@ export const GiftProductDetails = () => {
     );
   }
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const itemSlug = product.slug || slugify(product.title);
+  const canonicalUrl = `${origin}/gift-studio/product/${product._id}${itemSlug ? '/' + itemSlug : ''}`;
+  const pageTitle = `${product.title} — ₹${finalPrice} | EM Gift Studio`;
+  
+  const discountSnippet = discountPct !== null
+    ? `${discountPct}% OFF (was ₹${finalMrp}, now ₹${finalPrice}) — `
+    : '';
+  const descSnippet = product.description
+    ? product.description.slice(0, 140) + (product.description.length > 140 ? '...' : '')
+    : 'Personalized gift crafted for students.';
+  const metaDesc = `${discountSnippet}${descSnippet}`;
+
+  const primaryImage = (product.images && product.images.length > 0)
+    ? getOptimizedImageUrl(product.images[0], { width: 1200 })
+    : `${origin}/images/em_gift_studio_hero_banner.png`;
+
+  const giftProductJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        "name": product.title,
+        "description": product.description,
+        "image": product.images || [],
+        "category": product.category,
+        "offers": {
+          "@type": "Offer",
+          "price": String(finalPrice),
+          "priceCurrency": "INR",
+          "availability": product.isActive ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          "url": canonicalUrl,
+          ...(finalMrp && finalMrp > finalPrice ? {
+            "priceSpecification": {
+              "@type": "PriceSpecification",
+              "price": String(finalMrp),
+              "priceCurrency": "INR",
+              "valueAddedTaxIncluded": true
+            }
+          } : {})
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": `${origin}/`
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Gift Studio",
+            "item": `${origin}/vendors/gift-studio`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": product.category || "Products",
+            "item": `${origin}/gift-studio/products`
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": product.title,
+            "item": canonicalUrl
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <div className="details-page-container">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="title" content={pageTitle} />
+        <meta name="description" content={metaDesc} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:image" content={primaryImage} />
+        <meta property="og:price:amount" content={String(finalPrice)} />
+        <meta property="og:price:currency" content="INR" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={metaDesc} />
+        <meta name="twitter:image" content={primaryImage} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(giftProductJsonLd)}
+        </script>
+      </Helmet>
 
       {/* Back button */}
       <button
@@ -129,8 +233,8 @@ export const GiftProductDetails = () => {
           {/* Main image */}
           <div className="details-main-img-box">
             <img
-              src={product.images[selectedImg]}
-              alt={product.title}
+              src={getOptimizedImageUrl(product.images[selectedImg], { width: 900 })}
+              alt={`${product.title} - Main photo`}
               className="details-main-img"
             />
           </div>
@@ -144,7 +248,12 @@ export const GiftProductDetails = () => {
                   onClick={() => setSelectedImg(idx)}
                   className={`details-thumb-btn ${selectedImg === idx ? 'active' : ''}`}
                 >
-                  <img src={img} alt="" className="details-thumb-img" />
+                  <img
+                    src={getOptimizedImageUrl(img, { width: 140 })}
+                    alt={`${product.title} thumbnail ${idx + 1}`}
+                    className="details-thumb-img"
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
@@ -184,7 +293,7 @@ export const GiftProductDetails = () => {
           {/* Size Options */}
           {product.sizeOptions && product.sizeOptions.length > 0 && (
             <div className="gift-details-sizes">
-              <h3 className="gift-details-section-title">Select Size</h3>
+              <h2 className="gift-details-section-title">Select Size</h2>
               <div className="gift-details-size-pills">
                 {product.sizeOptions.map((size, idx) => (
                   <button

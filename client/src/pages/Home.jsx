@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../context/AuthContext';
 import {
   GraduationCap, Store, Tag, Heart, Search, ChevronRight,
@@ -87,8 +88,67 @@ export const Home = () => {
     </div>
   );
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+
+  const homeJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${origin}/#organization`,
+        "name": "Engineering Market",
+        "url": `${origin}/`,
+        "logo": `${origin}/icons/icon-512x512.svg`,
+        "description": "Student-to-student marketplace for engineering college tools, books, and equipment."
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${origin}/#website`,
+        "url": `${origin}/`,
+        "name": "Engineering Market",
+        "description": "Buy, sell, and donate engineering college essentials on campus.",
+        "publisher": {
+          "@id": `${origin}/#organization`
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": `${origin}/general-market?search={search_term_string}`,
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  };
+
   return (
     <div className="home-page">
+      <Helmet>
+        <title>Engineering Market — Buy, Sell & Donate on Campus | Student Marketplace</title>
+        <meta name="title" content="Engineering Market — Buy, Sell & Donate on Campus | Student Marketplace" />
+        <meta name="description" content="The dedicated campus marketplace for engineering students. Buy & sell drafters, scientific calculators, lab aprons, textbooks, and electronics within your college." />
+        <link rel="canonical" href={`${origin}/`} />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${origin}/`} />
+        <meta property="og:title" content="Engineering Market — Student Campus Marketplace" />
+        <meta property="og:description" content="Buy, sell, and donate engineering college essentials within your campus community." />
+        <meta property="og:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`${origin}/`} />
+        <meta name="twitter:title" content="Engineering Market — Student Campus Marketplace" />
+        <meta name="twitter:description" content="Buy, sell, and donate engineering college essentials within your campus community." />
+        <meta name="twitter:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(homeJsonLd)}
+        </script>
+      </Helmet>
+
+      {/* Semantic Top Heading for Search Engines */}
+      <h1 className="sr-only">Engineering Market — Buy, Sell & Donate Engineering College Essentials on Campus</h1>
 
       {/* DECORATIVE BACKGROUND BLOBS */}
       <div className="home-bg-blobs">

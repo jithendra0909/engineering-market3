@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { 
   Printer, LayoutGrid, Star, ChevronRight, 
   ShieldCheck, Lock, Headset, Award, Search, Gift
@@ -12,6 +13,8 @@ export const Vendors = () => {
   const [searchVal, setSearchVal] = useState('');
   const [showComingSoon, setShowComingSoon] = useState(false);
 
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+
   // Filter vendors based on active tab and search
   const showPrintHub = (activeTab === 'All' || activeTab === 'Printing') && 
     (!searchVal || 'em printf hub printing'.includes(searchVal.toLowerCase()));
@@ -20,6 +23,24 @@ export const Vendors = () => {
 
   return (
     <div className="home-page">
+      <Helmet>
+        <title>Campus Vendors — Gifts, Prints & More | Engineering Market</title>
+        <meta name="title" content="Campus Vendors — Gifts, Prints & More | Engineering Market" />
+        <meta name="description" content="Connect with verified campus vendors for personalized photo frames, printing services, and engineering student essentials." />
+        <link rel="canonical" href={`${origin}/vendors`} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${origin}/vendors`} />
+        <meta property="og:title" content="Campus Vendors — Gifts, Prints & More" />
+        <meta property="og:description" content="Connect with verified campus vendors on Engineering Market." />
+        <meta property="og:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`${origin}/vendors`} />
+        <meta name="twitter:title" content="Campus Vendors — Gifts, Prints & More" />
+        <meta name="twitter:description" content="Connect with verified campus vendors on Engineering Market." />
+        <meta name="twitter:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+      </Helmet>
 
       {/* Decorative background blobs */}
       <div className="home-bg-blobs">

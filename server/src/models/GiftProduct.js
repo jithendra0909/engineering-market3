@@ -62,13 +62,34 @@ const giftProductSchema = new mongoose.Schema({
       type: Number,
       default: 0
     }
-  }]
+  }],
+  slug: {
+    type: String,
+    trim: true,
+    default: ''
+  }
 }, {
   timestamps: true
 });
 
 giftProductSchema.index({ category: 1, isActive: 1 });
 giftProductSchema.index({ isFeatured: 1, isActive: 1 });
+
+// Pre-save hook to auto-populate slug from title
+giftProductSchema.pre('save', function (next) {
+  if (this.isModified('title') || !this.slug) {
+    this.slug = this.title
+      ? this.title
+          .toString()
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+      : '';
+  }
+  next();
+});
 
 const GiftProduct = mongoose.model('GiftProduct', giftProductSchema);
 export default GiftProduct;

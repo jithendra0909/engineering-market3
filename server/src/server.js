@@ -19,6 +19,8 @@ import printRoutes from './routes/printRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import giftRoutes from './routes/giftRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
+import { getSitemapXml } from './controllers/sitemapController.js';
+import { botPrerenderMiddleware } from './middleware/botPrerenderMiddleware.js';
 
 // Load .env file (no-op on Vercel where env vars are injected)
 dotenv.config();
@@ -74,6 +76,19 @@ app.use('/api', async (req, res, next) => {
       error: error.message,
       mongoUriConfigured: !!process.env.MONGO_URI,
     });
+  }
+});
+
+// Social / Search Crawler Open Graph dynamic pre-rendering
+app.use(botPrerenderMiddleware);
+
+// Dynamic XML Sitemap (accessible at /sitemap.xml and /api/sitemap.xml)
+app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res, next) => {
+  try {
+    await connectDB();
+    return getSitemapXml(req, res);
+  } catch (err) {
+    next(err);
   }
 });
 

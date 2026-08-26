@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Search, Tag, SlidersHorizontal } from 'lucide-react';
 import api from '../api/axios';
 import ProductCard from '../components/ProductCard';
@@ -15,6 +16,8 @@ export const GeneralMarket = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [showSort, setShowSort] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -43,6 +46,24 @@ export const GeneralMarket = () => {
 
   return (
     <div className="market-page-container">
+      <Helmet>
+        <title>General Market — Buy & Sell Across All Colleges | Engineering Market</title>
+        <meta name="title" content="General Market — Buy & Sell Across All Colleges | Engineering Market" />
+        <meta name="description" content="Discover textbooks, calculators, electronics, lab tools, and hostel gear from verified engineering students across all college campuses." />
+        <link rel="canonical" href={`${origin}/general-market`} />
+        
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${origin}/general-market`} />
+        <meta property="og:title" content="General Market — Buy & Sell Across All Colleges" />
+        <meta property="og:description" content="Discover items listed by verified students across all engineering campuses." />
+        <meta property="og:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`${origin}/general-market`} />
+        <meta name="twitter:title" content="General Market — Buy & Sell Across All Colleges" />
+        <meta name="twitter:description" content="Discover items listed by verified students across all engineering campuses." />
+        <meta name="twitter:image" content={`${origin}/images/em_gift_studio_hero_banner.png`} />
+      </Helmet>
 
       {/* Header */}
       <div className="market-header">
