@@ -18,6 +18,7 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 import printRoutes from './routes/printRoutes.js';
 import pushRoutes from './routes/pushRoutes.js';
 import giftRoutes from './routes/giftRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
 
 // Load .env file (no-op on Vercel where env vars are injected)
 dotenv.config();
@@ -87,6 +88,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/print', printRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/gift', giftRoutes);
+app.use('/api/departments', departmentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

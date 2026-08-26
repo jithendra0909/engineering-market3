@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import College from '../models/College.js';
 import Listing from '../models/Listing.js';
 import Notification from '../models/Notification.js';
+import Department from '../models/Department.js';
 
 let mongoServer;
 let isConnected = false;
@@ -138,7 +139,7 @@ const seedIfEmpty = async () => {
         password: 'password123',
         whatsappNumber: '919876543210',
         registrationNumber: '21F31A0512',
-        department: 'Computer Science Engineering',
+        department: 'Computer Science and Engineering',
         year: '3rd Year',
         college: view.name,
         idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
@@ -190,6 +191,22 @@ const seedIfEmpty = async () => {
           isRead: false
         }
       ]);
+
+      // 6. Seed Departments
+      const deptCount = await Department.countDocuments();
+      if (deptCount === 0) {
+        const defaultDepartments = [
+          'Computer Science and Engineering',
+          'Electronics and Communication Engineering',
+          'Electrical Engineering',
+          'Mechanical Engineering',
+          'Civil Engineering',
+          'Information Technology',
+          'Chemical Engineering',
+          'Other'
+        ];
+        await Department.insertMany(defaultDepartments.map(name => ({ name, isActive: true })));
+      }
 
       console.log('Seeding completed successfully.');
     }

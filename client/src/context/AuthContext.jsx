@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('em_token'));
   const [loading, setLoading] = useState(true);
   const [colleges, setColleges] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [toast, setToast] = useState(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -53,6 +54,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const { data } = await api.get('/departments');
+      setDepartments(data);
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+    }
+  };
+
   const fetchUnreadNotificationsCount = async () => {
     if (!token) return;
     try {
@@ -83,6 +93,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
     fetchColleges();
+    fetchDepartments();
   }, [token]);
 
   useEffect(() => {
@@ -169,6 +180,7 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         colleges,
+        departments,
         toast,
         isLoggedIn,
         isAdmin,
@@ -181,6 +193,8 @@ export const AuthProvider = ({ children }) => {
         showToast,
         updateProfile,
         loadUser,
+        fetchColleges,
+        fetchDepartments,
         fetchUnreadNotificationsCount,
         fetchUnreadChatCount
       }}

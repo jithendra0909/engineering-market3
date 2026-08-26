@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText, Gift, Star, Edit, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText, Gift, Star, Edit, ToggleLeft, ToggleRight, Plus, GraduationCap } from 'lucide-react';
 import api from '../api/axios';
 import './AdminDashboard.css';
 
@@ -10,7 +10,7 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   
   // Tab states
-  const [activeTab, setActiveTab] = useState('pending'); // pending, listings, students, reported, feedback, gift-studio
+  const [activeTab, setActiveTab] = useState('pending'); // pending, listings, students, reported, feedback, gift-studio, college-dept
   const [subStatus, setSubStatus] = useState('approved'); // approved, rejected (for students tab)
   const [modSubTab, setModSubTab] = useState('listings'); // listings, chats (for moderation log)
   const [giftSubTab, setGiftSubTab] = useState('products'); // products, categories (for gift studio tab)
@@ -41,6 +41,17 @@ export const AdminDashboard = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
   const [editCategoryName, setEditCategoryName] = useState('');
+
+  // Colleges & Departments states
+  const [colleges, setColleges] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [collegeDeptSubTab, setCollegeDeptSubTab] = useState('colleges'); // colleges, departments
+  const [newCollegeName, setNewCollegeName] = useState('');
+  const [editingCollege, setEditingCollege] = useState(null);
+  const [editCollegeName, setEditCollegeName] = useState('');
+  const [newDeptName, setNewDeptName] = useState('');
+  const [editingDept, setEditingDept] = useState(null);
+  const [editDeptName, setEditDeptName] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -77,9 +88,23 @@ export const AdminDashboard = () => {
     }
   };
 
+  const fetchCollegesAndDepartments = async () => {
+    try {
+      const [collegesRes, deptsRes] = await Promise.all([
+        api.get('/colleges?showAll=true'),
+        api.get('/departments?showAll=true'),
+      ]);
+      setColleges(collegesRes.data);
+      setDepartments(deptsRes.data);
+    } catch (err) {
+      console.error('Error fetching colleges/departments:', err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
     fetchGiftData();
+    fetchCollegesAndDepartments();
   }, []);
 
   const handleApprove = async (id) => {
@@ -293,6 +318,17 @@ export const AdminDashboard = () => {
             }`}
           >
             <Gift className="w-4 h-4" /> Gift Studio ({giftProducts.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('college-dept')}
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'college-dept'
+                ? 'bg-white text-[#6C4EFF] shadow-sm border border-[#E9E6F8]'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4" /> Colleges & Departments ({colleges.length + departments.length})
           </button>
         </div>
 
@@ -1157,6 +1193,302 @@ export const AdminDashboard = () => {
                             <tr>
                               <td colSpan="3" className="px-6 py-12 text-center text-[#6B7280]">
                                 No categories yet. Add one above.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'college-dept' && (
+              <div>
+                {/* Sub-tab switcher */}
+                <div className="flex gap-2 px-6 py-3 border-b border-[#E9E6F8] text-xs font-bold">
+                  <button
+                    onClick={() => setCollegeDeptSubTab('colleges')}
+                    className={`px-3 py-1.5 rounded-full transition-all ${
+                      collegeDeptSubTab === 'colleges' ? 'bg-[#111827] text-white' : 'text-[#6B7280] hover:bg-slate-200/50'
+                    }`}
+                  >
+                    Colleges ({colleges.length})
+                  </button>
+                  <button
+                    onClick={() => setCollegeDeptSubTab('departments')}
+                    className={`px-3 py-1.5 rounded-full transition-all ${
+                      collegeDeptSubTab === 'departments' ? 'bg-[#111827] text-white' : 'text-[#6B7280] hover:bg-slate-200/50'
+                    }`}
+                  >
+                    Departments ({departments.length})
+                  </button>
+                </div>
+
+                {collegeDeptSubTab === 'colleges' ? (
+                  <div>
+                    {/* Add College row */}
+                    <div className="px-6 py-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={newCollegeName}
+                        onChange={(e) => setNewCollegeName(e.target.value)}
+                        placeholder="New college name..."
+                        className="flex-1 h-9 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!newCollegeName.trim()) return;
+                          try {
+                            await api.post('/colleges', { name: newCollegeName.trim() });
+                            setNewCollegeName('');
+                            showToast('College added!', 'success');
+                            fetchCollegesAndDepartments();
+                          } catch (err) {
+                            showToast(err.response?.data?.message || 'Failed to add college', 'error');
+                          }
+                        }}
+                        className="h-9 px-4 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
+                      >
+                        <Plus className="w-4 h-4" /> Add
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                            <th className="px-6 py-4">College Name</th>
+                            <th className="px-6 py-4 text-center">Active</th>
+                            <th className="px-6 py-4 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                          {colleges.length > 0 ? (
+                            colleges.map((col) => (
+                              <tr key={col._id} className={`transition-colors ${!col.isActive ? 'opacity-50' : ''} hover:bg-[#FAFAFF]/50`}>
+                                <td className="px-6 py-4">
+                                  {editingCollege === col._id ? (
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editCollegeName}
+                                        onChange={(e) => setEditCollegeName(e.target.value)}
+                                        className="flex-1 h-8 px-2 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                                      />
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            await api.put(`/colleges/${col._id}`, { name: editCollegeName.trim() });
+                                            setEditingCollege(null);
+                                            showToast('College renamed!', 'success');
+                                            fetchCollegesAndDepartments();
+                                          } catch (err) {
+                                            showToast(err.response?.data?.message || 'Failed to rename', 'error');
+                                          }
+                                        }}
+                                        className="h-8 px-3 bg-[#6C4EFF] text-white text-xs font-bold rounded-lg"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingCollege(null)}
+                                        className="h-8 px-3 bg-slate-100 text-[#6B7280] text-xs font-bold rounded-lg"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p className="font-bold">{col.name}</p>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await api.put(`/colleges/${col._id}`, { isActive: !col.isActive });
+                                        fetchCollegesAndDepartments();
+                                        showToast(`College ${col.isActive ? 'deactivated' : 'activated'}`, 'success');
+                                      } catch { showToast('Failed to toggle college', 'error'); }
+                                    }}
+                                    className="mx-auto"
+                                  >
+                                    {col.isActive ? (
+                                      <ToggleRight className="w-6 h-6 text-emerald-500" />
+                                    ) : (
+                                      <ToggleLeft className="w-6 h-6 text-[#9CA3AF]" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() => { setEditingCollege(col._id); setEditCollegeName(col.name); }}
+                                      className="w-8 h-8 rounded-full bg-[#F4F1FF] text-[#6C4EFF] hover:bg-[#E9E6F8] flex items-center justify-center transition-colors"
+                                      title="Rename"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (!window.confirm(`Delete college "${col.name}"?`)) return;
+                                        try {
+                                          await api.delete(`/colleges/${col._id}`);
+                                          showToast('College deleted!', 'success');
+                                          fetchCollegesAndDepartments();
+                                        } catch (err) {
+                                          showToast(err.response?.data?.message || 'Failed to delete college', 'error');
+                                        }
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
+                                      title="Delete College"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="3" className="px-6 py-12 text-center text-[#6B7280]">
+                                No colleges yet. Add one above.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Add Department row */}
+                    <div className="px-6 py-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={newDeptName}
+                        onChange={(e) => setNewDeptName(e.target.value)}
+                        placeholder="New department name..."
+                        className="flex-1 h-9 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!newDeptName.trim()) return;
+                          try {
+                            await api.post('/departments', { name: newDeptName.trim() });
+                            setNewDeptName('');
+                            showToast('Department added!', 'success');
+                            fetchCollegesAndDepartments();
+                          } catch (err) {
+                            showToast(err.response?.data?.message || 'Failed to add department', 'error');
+                          }
+                        }}
+                        className="h-9 px-4 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
+                      >
+                        <Plus className="w-4 h-4" /> Add
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                            <th className="px-6 py-4">Department Name</th>
+                            <th className="px-6 py-4 text-center">Active</th>
+                            <th className="px-6 py-4 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                          {departments.length > 0 ? (
+                            departments.map((dep) => (
+                              <tr key={dep._id} className={`transition-colors ${!dep.isActive ? 'opacity-50' : ''} hover:bg-[#FAFAFF]/50`}>
+                                <td className="px-6 py-4">
+                                  {editingDept === dep._id ? (
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editDeptName}
+                                        onChange={(e) => setEditDeptName(e.target.value)}
+                                        className="flex-1 h-8 px-2 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                                      />
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            await api.put(`/departments/${dep._id}`, { name: editDeptName.trim() });
+                                            setEditingDept(null);
+                                            showToast('Department renamed!', 'success');
+                                            fetchCollegesAndDepartments();
+                                          } catch (err) {
+                                            showToast(err.response?.data?.message || 'Failed to rename', 'error');
+                                          }
+                                        }}
+                                        className="h-8 px-3 bg-[#6C4EFF] text-white text-xs font-bold rounded-lg"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingDept(null)}
+                                        className="h-8 px-3 bg-slate-100 text-[#6B7280] text-xs font-bold rounded-lg"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p className="font-bold">{dep.name}</p>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await api.put(`/departments/${dep._id}`, { isActive: !dep.isActive });
+                                        fetchCollegesAndDepartments();
+                                        showToast(`Department ${dep.isActive ? 'deactivated' : 'activated'}`, 'success');
+                                      } catch { showToast('Failed to toggle department', 'error'); }
+                                    }}
+                                    className="mx-auto"
+                                  >
+                                    {dep.isActive ? (
+                                      <ToggleRight className="w-6 h-6 text-emerald-500" />
+                                    ) : (
+                                      <ToggleLeft className="w-6 h-6 text-[#9CA3AF]" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() => { setEditingDept(dep._id); setEditDeptName(dep.name); }}
+                                      className="w-8 h-8 rounded-full bg-[#F4F1FF] text-[#6C4EFF] hover:bg-[#E9E6F8] flex items-center justify-center transition-colors"
+                                      title="Rename"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (!window.confirm(`Delete department "${dep.name}"?`)) return;
+                                        try {
+                                          await api.delete(`/departments/${dep._id}`);
+                                          showToast('Department deleted!', 'success');
+                                          fetchCollegesAndDepartments();
+                                        } catch (err) {
+                                          showToast(err.response?.data?.message || 'Failed to delete department', 'error');
+                                        }
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
+                                      title="Delete Department"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="3" className="px-6 py-12 text-center text-[#6B7280]">
+                                No departments yet. Add one above.
                               </td>
                             </tr>
                           )}

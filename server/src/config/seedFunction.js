@@ -5,6 +5,7 @@ import Notification from '../models/Notification.js';
 import PrintOrder from '../models/PrintOrder.js';
 import GiftProduct from '../models/GiftProduct.js';
 import GiftCategory from '../models/GiftCategory.js';
+import Department from '../models/Department.js';
 
 export const seedData = async () => {
   try {
@@ -50,7 +51,7 @@ export const seedData = async () => {
       password: 'password123',
       whatsappNumber: '919876543210',
       registrationNumber: '21F31A0512',
-      department: 'Computer Science Engineering',
+      department: 'Computer Science and Engineering',
       year: '3rd Year',
       college: view.name,
       idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
@@ -65,7 +66,7 @@ export const seedData = async () => {
       password: 'password123',
       whatsappNumber: '918765432109',
       registrationNumber: '21F31A0545',
-      department: 'Computer Science Engineering',
+      department: 'Computer Science and Engineering',
       year: '3rd Year',
       college: view.name,
       idCardImageUrl: '/images/file_0000000024747207aa9ab38052a0cc35.png',
@@ -579,6 +580,21 @@ export const seedData = async () => {
       }
     ]);
     console.log('Gift Studio data seeded successfully.');
+
+    // 7. Seed Departments
+    await Department.deleteMany({});
+    const departments = [
+      'Computer Science and Engineering',
+      'Electronics and Communication Engineering',
+      'Electrical Engineering',
+      'Mechanical Engineering',
+      'Civil Engineering',
+      'Information Technology',
+      'Chemical Engineering',
+      'Other'
+    ];
+    await Department.insertMany(departments.map(name => ({ name, isActive: true })));
+    console.log('Departments seeded successfully.');
   } catch (error) {
     console.error('Error during seeding data:', error);
     throw error;

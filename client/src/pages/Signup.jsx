@@ -5,21 +5,10 @@ import { Logo } from '../components/Logo';
 import { User, Mail, Lock, Hash, BookOpen, Calendar, ArrowRight, Eye, EyeOff, GraduationCap } from 'lucide-react';
 import './Signup.css';
 
-const DEPARTMENTS = [
-  'Computer Science and Engineering',
-  'Electronics and Communication Engineering',
-  'Electrical Engineering',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Information Technology',
-  'Chemical Engineering',
-  'Other'
-];
-
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 export const Signup = () => {
-  const { signup, loading, showToast, colleges } = useAuth();
+  const { signup, loading, showToast, colleges, departments } = useAuth();
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState('');
@@ -130,7 +119,7 @@ export const Signup = () => {
             <label className="signup-label">Full Name</label>
             <div className="signup-input-wrapper">
               <User className="signup-input-icon" />
-              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" className="signup-input" />
+              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Bokkam Charan Praneeth" className="signup-input" />
             </div>
           </div>
 
@@ -139,7 +128,7 @@ export const Signup = () => {
             <label className="signup-label">Email</label>
             <div className="signup-input-wrapper">
               <Mail className="signup-input-icon" />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your.email@gmail.com" className="signup-input" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="charanpraneeth@gmail.com" className="signup-input" />
             </div>
           </div>
 
@@ -181,7 +170,7 @@ export const Signup = () => {
             <label className="signup-label">Registration Number</label>
             <div className="signup-input-wrapper">
               <Hash className="signup-input-icon" />
-              <input type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="e.g. 21BCE7001" className="signup-input" />
+              <input type="text" value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} placeholder="e.g. 25L31A4329" className="signup-input" />
             </div>
           </div>
 
@@ -193,7 +182,18 @@ export const Signup = () => {
                 <BookOpen className="signup-input-icon-select" />
                 <select value={department} onChange={(e) => setDepartment(e.target.value)} className="signup-select">
                   <option value="">Select</option>
-                  {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                  {departments && departments.length > 0 ? (
+                    departments.map((d) => (
+                      <option key={d._id || d.name} value={d.name}>{d.name}</option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Computer Science and Engineering">Computer Science and Engineering</option>
+                      <option value="Electronics and Communication Engineering">Electronics and Communication Engineering</option>
+                      <option value="Mechanical Engineering">Mechanical Engineering</option>
+                      <option value="Civil Engineering">Civil Engineering</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
