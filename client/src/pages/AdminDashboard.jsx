@@ -1763,6 +1763,22 @@ export const AdminDashboard = () => {
               <button
                 onClick={async () => {
                   try {
+                    if (!giftProductForm.title.trim()) {
+                      showToast('Please enter a product title', 'error');
+                      return;
+                    }
+                    if (!giftProductForm.description.trim()) {
+                      showToast('Please enter a product description', 'error');
+                      return;
+                    }
+                    if (!giftProductForm.category.trim()) {
+                      showToast('Please select a product category', 'error');
+                      return;
+                    }
+                    if (!giftProductForm.basePrice || isNaN(Number(giftProductForm.basePrice)) || Number(giftProductForm.basePrice) <= 0) {
+                      showToast('Please enter a valid selling price', 'error');
+                      return;
+                    }
                     if (giftProductForm.mrpPrice && Number(giftProductForm.mrpPrice) < Number(giftProductForm.basePrice)) {
                       showToast('MRP cannot be lower than the selling price', 'error');
                       return;
@@ -1774,12 +1790,12 @@ export const AdminDashboard = () => {
                     }
 
                     const formData = new FormData();
-                    formData.append('title', giftProductForm.title);
-                    formData.append('description', giftProductForm.description);
-                    formData.append('category', giftProductForm.category);
+                    formData.append('title', giftProductForm.title.trim());
+                    formData.append('description', giftProductForm.description.trim());
+                    formData.append('category', giftProductForm.category.trim());
                     formData.append('basePrice', giftProductForm.basePrice);
                     formData.append('mrpPrice', giftProductForm.mrpPrice || '');
-                    formData.append('badge', giftProductForm.badge);
+                    formData.append('badge', giftProductForm.badge || '');
                     formData.append('isFeatured', giftProductForm.isFeatured);
                     formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));
                     formData.append('sizeOptions', JSON.stringify(giftProductForm.sizeOptions.filter(s => s.label.trim())));
@@ -1795,15 +1811,17 @@ export const AdminDashboard = () => {
 
                     if (editingGiftProduct) {
                       await api.put(`/gift/products/${editingGiftProduct._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                      showToast('Product updated!', 'success');
+                      showToast('Product updated successfully!', 'success');
                     } else {
                       await api.post('/gift/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                      showToast('Product created!', 'success');
+                      showToast('Product created successfully!', 'success');
                     }
                     setShowGiftProductModal(false);
                     fetchGiftData();
                   } catch (err) {
-                    showToast(err.response?.data?.message || 'Failed to save product', 'error');
+                    console.error('Save gift product error:', err);
+                    const errMsg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to save product';
+                    showToast(errMsg, 'error');
                   }
                 }}
                 className="flex-1 h-10 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl transition-all"

@@ -79,24 +79,50 @@ const createGiftProduct = async (req, res) => {
   try {
     const { title, description, category, basePrice, mrpPrice, features, badge, isFeatured, sizeOptions } = req.body;
 
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Product title is required' });
+    }
+    if (!description || !description.trim()) {
+      return res.status(400).json({ message: 'Product description is required' });
+    }
+    if (!category || !category.trim()) {
+      return res.status(400).json({ message: 'Product category is required' });
+    }
+    if (!basePrice || isNaN(Number(basePrice))) {
+      return res.status(400).json({ message: 'Valid selling price is required' });
+    }
+
     if (mrpPrice !== undefined && mrpPrice !== '' && mrpPrice !== null) {
       if (Number(mrpPrice) < Number(basePrice)) {
         return res.status(400).json({ message: 'MRP cannot be lower than the selling price' });
       }
     }
 
-    // Image handling from Multer multiple uploads
-    let imageUrls = [];
-    if (req.uploadedPaths && req.uploadedPaths.length > 0) {
-      imageUrls = req.uploadedPaths;
-    } else {
+    // Image handling: combine existingImages (if any) and uploadedPaths
+    let existingImagesList = [];
+    if (req.body.existingImages !== undefined) {
+      if (typeof req.body.existingImages === 'string') {
+        try {
+          existingImagesList = JSON.parse(req.body.existingImages);
+        } catch {
+          existingImagesList = req.body.existingImages ? [req.body.existingImages] : [];
+        }
+      } else if (Array.isArray(req.body.existingImages)) {
+        existingImagesList = req.body.existingImages;
+      }
+    }
+
+    const newUploadedPaths = req.uploadedPaths || [];
+    const imageUrls = [...existingImagesList, ...newUploadedPaths];
+
+    if (imageUrls.length === 0) {
       return res.status(400).json({ message: 'At least one product image is required.' });
     }
 
     // Parse features and sizeOptions if they come as JSON strings
     let parsedFeatures = features;
     if (typeof features === 'string') {
-      try { parsedFeatures = JSON.parse(features); } catch { parsedFeatures = [features]; }
+      try { parsedFeatures = JSON.parse(features); } catch { parsedFeatures = features ? [features] : []; }
     }
 
     let parsedSizeOptions = sizeOptions;
@@ -105,9 +131,9 @@ const createGiftProduct = async (req, res) => {
     }
 
     const product = await GiftProduct.create({
-      title,
-      description,
-      category,
+      title: title.trim(),
+      description: description.trim(),
+      category: category.trim(),
       images: imageUrls,
       basePrice: Number(basePrice),
       mrpPrice: mrpPrice !== undefined && mrpPrice !== '' && mrpPrice !== null ? Number(mrpPrice) : null,
@@ -120,7 +146,7 @@ const createGiftProduct = async (req, res) => {
     res.status(201).json(product);
   } catch (error) {
     console.error('Error creating gift product:', error);
-    res.status(500).json({ message: 'Server error creating gift product', error: error.message });
+    res.status(400).json({ message: error.message || 'Server error creating gift product', error: error.message });
   }
 };
 
@@ -202,7 +228,8 @@ const updateGiftProduct = async (req, res) => {
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (error) {
-    res.status(500).json({ message: 'Server error updating gift product', error: error.message });
+    console.error('Error updating gift product:', error);
+    res.status(400).json({ message: error.message || 'Server error updating gift product', error: error.message });
   }
 };
 
