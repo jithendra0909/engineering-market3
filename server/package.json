@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/config/seed.js"
+    "seed": "node src/config/seed.js",
+    "seed-gifts": "node src/config/migrateGiftProducts.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

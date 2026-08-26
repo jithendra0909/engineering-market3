@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Share2, Heart, ArrowRight, ChevronRight,
@@ -6,12 +6,13 @@ import {
   Store, Image, ShoppingBag, BadgeCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { VENDOR_INFO, FRAME_PRODUCTS, CATEGORIES } from '../config/giftStudioData';
+import { VENDOR_INFO, CATEGORIES } from '../config/giftStudioData';
 import { useGiftCartStore } from '../stores/giftCartStore';
-import FrameProductCard from '../components/FrameProductCard';
+import GiftProductCard from '../components/GiftProductCard';
 import FrameCustomizationModal from '../components/FrameCustomizationModal';
 import GiftCart from '../components/GiftCart';
 import GiftPriceGuideModal from '../components/GiftPriceGuideModal';
+import api from '../api/axios';
 import './GiftStudio.css';
 
 const GiftStudio = () => {
@@ -23,12 +24,32 @@ const GiftStudio = () => {
   // UI state
   const [isPriceGuideOpen, setIsPriceGuideOpen] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
-  const [showAllFrames, setShowAllFrames] = useState(false);
   const [customizeProduct, setCustomizeProduct] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Products to display
-  const displayedProducts = showAllFrames ? FRAME_PRODUCTS : FRAME_PRODUCTS.slice(0, 4);
+  // API state
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [productsRes, categoriesRes] = await Promise.all([
+          api.get('/gift/products?featured=true'),
+          api.get('/gift/categories')
+        ]);
+        setFeaturedProducts(productsRes.data);
+        setCategories(categoriesRes.data);
+      } catch (err) {
+        console.error('Error fetching gift studio data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Scroll to Popular Frames
   const scrollToFrames = () => {
@@ -61,6 +82,18 @@ const GiftStudio = () => {
       }
     }
   };
+
+  /* Skeleton loader for product cards */
+  const Skeleton = () => (
+    <div className="gift-card animate-pulse">
+      <div className="gift-card-img-wrapper" style={{ backgroundColor: '#F4F1FF' }} />
+      <div className="gift-card-content">
+        <div style={{ height: '14px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '75%' }} />
+        <div style={{ height: '14px', backgroundColor: '#F4F4FF', borderRadius: '9999px', width: '50%' }} />
+        <div style={{ height: '12px', backgroundColor: '#F4F1FF', borderRadius: '9999px', width: '66%' }} />
+      </div>
+    </div>
+  );
 
   return (
     <div className="gift-studio-page">
@@ -187,10 +220,10 @@ const GiftStudio = () => {
         <section className="gift-studio-categories-section">
           <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '1rem' }}>Shop by Category</h2>
           <div className="gift-studio-categories-grid">
-            {CATEGORIES.map((cat) => (
+            {(categories.length > 0 ? categories : CATEGORIES).map((cat) => (
               <button
-                key={cat.id}
-                onClick={scrollToFrames}
+                key={cat._id || cat.id}
+                onClick={() => navigate(`/gift-studio/products`)}
                 className="gift-studio-cat-btn"
               >
                 <div className="gift-studio-cat-icon-box">
@@ -202,42 +235,47 @@ const GiftStudio = () => {
           </div>
         </section>
 
-        {/* 5. POPULAR FRAMES */}
+        {/* 5. TRENDING IN GIFT STUDIO */}
         <section style={{ marginTop: '1.75rem' }} ref={popularFramesRef} id="popular-frames">
           {/* Section header */}
           <div className="home-section-header" style={{ paddingLeft: '1rem', paddingRight: '1rem', marginBottom: '1rem' }}>
-            <h2 className="home-section-title">Popular Frames</h2>
+            <h2 className="home-section-title">Trending in Gift Studio</h2>
             <button
-              onClick={() => setShowAllFrames(!showAllFrames)}
+              onClick={() => navigate('/gift-studio/products')}
               className="home-view-all-btn"
             >
-              {showAllFrames ? 'Show Less' : 'View All'}
+              View All
               <ArrowRight style={{ width: '14px', height: '14px' }} />
             </button>
           </div>
 
-          {/* Mobile horizontal scroll */}
-          <div className="home-trending-mobile-scroll no-scrollbar" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
-            {displayedProducts.map((product) => (
-              <div key={product.id} className="home-trending-mobile-item">
-                <FrameProductCard
-                  product={product}
-                  onCustomize={(p) => setCustomizeProduct(p)}
-                />
+          {loading ? (
+            <div className="home-skeleton-grid" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+              {[1, 2, 3, 4].map(n => <Skeleton key={n} />)}
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <>
+              {/* Mobile horizontal scroll */}
+              <div className="home-trending-mobile-scroll no-scrollbar" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                {featuredProducts.map((product) => (
+                  <div key={product._id} className="home-trending-mobile-item">
+                    <GiftProductCard product={product} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Desktop grid */}
-          <div className="home-trending-desktop-grid" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
-            {displayedProducts.map((product) => (
-              <FrameProductCard
-                key={product.id}
-                product={product}
-                onCustomize={(p) => setCustomizeProduct(p)}
-              />
-            ))}
-          </div>
+              {/* Desktop grid */}
+              <div className="home-trending-desktop-grid" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+                {featuredProducts.map((product) => (
+                  <GiftProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="home-empty-listings" style={{ paddingLeft: '1rem', paddingRight: '1rem' }}>
+              <p style={{ fontSize: '14px', fontWeight: 500 }}>No featured products yet</p>
+            </div>
+          )}
         </section>
 
         {/* 6. FEATURES STRIP */}

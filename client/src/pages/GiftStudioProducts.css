@@ -1,0 +1,5 @@
+/* GiftStudioProducts page — reuses GeneralMarket.css class patterns.
+   Only Gift Studio-specific overrides go here. */
+
+/* No additional styles needed — all layout/search/sort/pills/grid/empty state
+   classes are reused from GeneralMarket.css and GiftProductCard.css */

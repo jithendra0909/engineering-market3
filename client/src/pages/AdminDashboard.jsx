@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText, Gift, Star, Edit, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
 import api from '../api/axios';
 import './AdminDashboard.css';
 
@@ -10,9 +10,10 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   
   // Tab states
-  const [activeTab, setActiveTab] = useState('pending'); // pending, listings, students, reported
+  const [activeTab, setActiveTab] = useState('pending'); // pending, listings, students, reported, feedback, gift-studio
   const [subStatus, setSubStatus] = useState('approved'); // approved, rejected (for students tab)
   const [modSubTab, setModSubTab] = useState('listings'); // listings, chats (for moderation log)
+  const [giftSubTab, setGiftSubTab] = useState('products'); // products, categories (for gift studio tab)
   
   // Data states
   const [users, setUsers] = useState([]);
@@ -25,6 +26,21 @@ export const AdminDashboard = () => {
   // ID Preview Overlay
   const [previewIdUrl, setPreviewIdUrl] = useState(null);
   const [previewTitle, setPreviewTitle] = useState('Image Preview');
+
+  // Gift Studio states
+  const [giftProducts, setGiftProducts] = useState([]);
+  const [giftCategories, setGiftCategories] = useState([]);
+  const [giftLoading, setGiftLoading] = useState(false);
+  const [showGiftProductModal, setShowGiftProductModal] = useState(false);
+  const [editingGiftProduct, setEditingGiftProduct] = useState(null);
+  const [giftProductForm, setGiftProductForm] = useState({
+    title: '', description: '', category: '', basePrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: []
+  });
+  const [giftProductImages, setGiftProductImages] = useState([]);
+  const [giftProductImagePreviews, setGiftProductImagePreviews] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCategoryName, setEditCategoryName] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -45,8 +61,25 @@ export const AdminDashboard = () => {
     }
   };
 
+  const fetchGiftData = async () => {
+    setGiftLoading(true);
+    try {
+      const [productsRes, categoriesRes] = await Promise.all([
+        api.get('/gift/products?showAll=true'),
+        api.get('/gift/categories')
+      ]);
+      setGiftProducts(productsRes.data);
+      setGiftCategories(categoriesRes.data);
+    } catch (err) {
+      console.error('Error fetching gift data:', err);
+    } finally {
+      setGiftLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchGiftData();
   }, []);
 
   const handleApprove = async (id) => {
@@ -249,6 +282,17 @@ export const AdminDashboard = () => {
             className={`admin-tab-btn ${activeTab === 'feedback' ? 'active-indigo' : ''}`}
           >
             <MessageSquare style={{ width: '16px', height: '16px' }} /> Feedback Logs ({feedbackList.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('gift-studio')}
+            className={`px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 ${
+              activeTab === 'gift-studio'
+                ? 'bg-white text-[#6C4EFF] shadow-sm border border-[#E9E6F8]'
+                : 'text-[#6B7280] hover:text-[#111827] border border-transparent'
+            }`}
+          >
+            <Gift className="w-4 h-4" /> Gift Studio ({giftProducts.length})
           </button>
         </div>
 
@@ -798,11 +842,324 @@ export const AdminDashboard = () => {
                 </table>
               </div>
             )}
+
+            {activeTab === 'gift-studio' && (
+              <div>
+                {/* Sub tabs: Products | Categories */}
+                <div className="flex border-b border-[#E9E6F8] bg-[#FAFAFF] px-6 py-3 gap-4 text-xs font-bold">
+                  <button
+                    onClick={() => setGiftSubTab('products')}
+                    className={`px-3 py-1.5 rounded-full transition-all ${
+                      giftSubTab === 'products' ? 'bg-[#111827] text-white' : 'text-[#6B7280] hover:bg-slate-200/50'
+                    }`}
+                  >
+                    Products ({giftProducts.length})
+                  </button>
+                  <button
+                    onClick={() => setGiftSubTab('categories')}
+                    className={`px-3 py-1.5 rounded-full transition-all ${
+                      giftSubTab === 'categories' ? 'bg-[#111827] text-white' : 'text-[#6B7280] hover:bg-slate-200/50'
+                    }`}
+                  >
+                    Categories ({giftCategories.length})
+                  </button>
+                </div>
+
+                {giftSubTab === 'products' ? (
+                  <div>
+                    {/* Add Product button */}
+                    <div className="px-6 py-4 flex justify-end">
+                      <button
+                        onClick={() => {
+                          setEditingGiftProduct(null);
+                          setGiftProductForm({ title: '', description: '', category: '', basePrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: [] });
+                          setGiftProductImages([]);
+                          setGiftProductImagePreviews([]);
+                          setShowGiftProductModal(true);
+                        }}
+                        className="h-9 px-4 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
+                      >
+                        <Plus className="w-4 h-4" /> Add Product
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                            <th className="px-6 py-4">Product</th>
+                            <th className="px-6 py-4">Category</th>
+                            <th className="px-6 py-4">Price</th>
+                            <th className="px-6 py-4 text-center">Featured</th>
+                            <th className="px-6 py-4 text-center">Active</th>
+                            <th className="px-6 py-4 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                          {giftProducts.length > 0 ? (
+                            giftProducts.map((gp) => (
+                              <tr key={gp._id} className={`transition-colors ${!gp.isActive ? 'opacity-50' : ''} hover:bg-[#FAFAFF]/50`}>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      onClick={() => { setPreviewIdUrl(gp.images?.[0]); setPreviewTitle('Product Image Preview'); }}
+                                      className="w-12 h-12 rounded-lg bg-slate-100 border border-[#E9E6F8] overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-85 transition-opacity"
+                                    >
+                                      {gp.images?.[0] ? (
+                                        <img src={gp.images[0]} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No Img</div>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-bold text-[#111827]">{gp.title}</p>
+                                      {gp.badge && (
+                                        <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider mt-0.5">
+                                          <Star className="w-2.5 h-2.5" /> {gp.badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-xs font-medium">{gp.category}</td>
+                                <td className="px-6 py-4 font-black">₹{gp.basePrice}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await api.post(`/gift/products/${gp._id}/toggle-featured`);
+                                        fetchGiftData();
+                                      } catch { showToast('Failed to toggle featured', 'error'); }
+                                    }}
+                                    className="mx-auto"
+                                    title={gp.isFeatured ? 'Unfeature' : 'Feature'}
+                                  >
+                                    {gp.isFeatured ? (
+                                      <ToggleRight className="w-6 h-6 text-[#6C4EFF]" />
+                                    ) : (
+                                      <ToggleLeft className="w-6 h-6 text-[#9CA3AF]" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await api.put(`/gift/products/${gp._id}`, { isActive: !gp.isActive });
+                                        fetchGiftData();
+                                        showToast(`Product ${gp.isActive ? 'deactivated' : 'activated'}`, 'success');
+                                      } catch { showToast('Failed to toggle active', 'error'); }
+                                    }}
+                                    className="mx-auto"
+                                    title={gp.isActive ? 'Deactivate' : 'Activate'}
+                                  >
+                                    {gp.isActive ? (
+                                      <ToggleRight className="w-6 h-6 text-emerald-500" />
+                                    ) : (
+                                      <ToggleLeft className="w-6 h-6 text-[#9CA3AF]" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() => {
+                                        setEditingGiftProduct(gp);
+                                        setGiftProductForm({
+                                          title: gp.title,
+                                          description: gp.description,
+                                          category: gp.category,
+                                          basePrice: gp.basePrice,
+                                          features: gp.features?.length ? gp.features : [''],
+                                          badge: gp.badge || '',
+                                          isFeatured: gp.isFeatured,
+                                          sizeOptions: gp.sizeOptions || []
+                                        });
+                                        setGiftProductImages([]);
+                                        setGiftProductImagePreviews(gp.images || []);
+                                        setShowGiftProductModal(true);
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-[#F4F1FF] text-[#6C4EFF] hover:bg-[#E9E6F8] flex items-center justify-center transition-colors"
+                                      title="Edit Product"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (!window.confirm('Deactivate this product?')) return;
+                                        try {
+                                          await api.delete(`/gift/products/${gp._id}`);
+                                          showToast('Product deactivated', 'success');
+                                          fetchGiftData();
+                                        } catch { showToast('Failed to delete product', 'error'); }
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
+                                      title="Delete Product"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="px-6 py-12 text-center text-[#6B7280]">
+                                No gift products yet. Click "Add Product" to create one.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  /* Categories sub-tab */
+                  <div>
+                    {/* Add Category row */}
+                    <div className="px-6 py-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="New category name..."
+                        className="flex-1 h-9 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!newCategoryName.trim()) return;
+                          try {
+                            await api.post('/gift/categories', { name: newCategoryName.trim() });
+                            setNewCategoryName('');
+                            showToast('Category created!', 'success');
+                            fetchGiftData();
+                          } catch (err) {
+                            showToast(err.response?.data?.message || 'Failed to create category', 'error');
+                          }
+                        }}
+                        className="h-9 px-4 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
+                      >
+                        <Plus className="w-4 h-4" /> Add
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-[#FAFAFF] border-b border-[#E9E6F8] text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                            <th className="px-6 py-4">Category Name</th>
+                            <th className="px-6 py-4 text-center">Active</th>
+                            <th className="px-6 py-4 text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E9E6F8] text-sm text-[#111827]">
+                          {giftCategories.length > 0 ? (
+                            giftCategories.map((cat) => (
+                              <tr key={cat._id} className={`transition-colors ${!cat.isActive ? 'opacity-50' : ''} hover:bg-[#FAFAFF]/50`}>
+                                <td className="px-6 py-4">
+                                  {editingCategory === cat._id ? (
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editCategoryName}
+                                        onChange={(e) => setEditCategoryName(e.target.value)}
+                                        className="flex-1 h-8 px-2 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs font-medium focus:outline-none focus:border-[#6C4EFF]/40"
+                                      />
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            await api.put(`/gift/categories/${cat._id}`, { name: editCategoryName.trim() });
+                                            setEditingCategory(null);
+                                            showToast('Category renamed!', 'success');
+                                            fetchGiftData();
+                                          } catch (err) {
+                                            showToast(err.response?.data?.message || 'Failed to rename', 'error');
+                                          }
+                                        }}
+                                        className="h-8 px-3 bg-[#6C4EFF] text-white text-xs font-bold rounded-lg"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingCategory(null)}
+                                        className="h-8 px-3 bg-slate-100 text-[#6B7280] text-xs font-bold rounded-lg"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p className="font-bold">{cat.name}</p>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await api.put(`/gift/categories/${cat._id}`, { isActive: !cat.isActive });
+                                        fetchGiftData();
+                                        showToast(`Category ${cat.isActive ? 'deactivated' : 'activated'}`, 'success');
+                                      } catch { showToast('Failed to toggle category', 'error'); }
+                                    }}
+                                    className="mx-auto"
+                                  >
+                                    {cat.isActive ? (
+                                      <ToggleRight className="w-6 h-6 text-emerald-500" />
+                                    ) : (
+                                      <ToggleLeft className="w-6 h-6 text-[#9CA3AF]" />
+                                    )}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() => {
+                                        setEditingCategory(cat._id);
+                                        setEditCategoryName(cat.name);
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-[#F4F1FF] text-[#6C4EFF] hover:bg-[#E9E6F8] flex items-center justify-center transition-colors"
+                                      title="Rename"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={async () => {
+                                        if (!window.confirm(`Delete category "${cat.name}"?`)) return;
+                                        try {
+                                          await api.delete(`/gift/categories/${cat._id}`);
+                                          showToast('Category deleted!', 'success');
+                                          fetchGiftData();
+                                        } catch (err) {
+                                          showToast(err.response?.data?.message || 'Failed to delete category', 'error');
+                                        }
+                                      }}
+                                      className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors"
+                                      title="Delete Category"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="3" className="px-6 py-12 text-center text-[#6B7280]">
+                                No categories yet. Add one above.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* ID Card Image Preview Modal Overlay */}
+      {/* ID Card / Image Preview Modal Overlay */}
       {previewIdUrl && (
         <div className="admin-modal-overlay">
           <div className="admin-modal-backdrop" onClick={() => setPreviewIdUrl(null)} />
@@ -823,6 +1180,183 @@ export const AdminDashboard = () => {
                 alt="ID Card Front"
                 className="admin-preview-img"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gift Product Add/Edit Modal */}
+      {showGiftProductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowGiftProductModal(false)} />
+          <div className="relative w-full max-w-[600px] max-h-[90vh] bg-white rounded-3xl overflow-hidden z-10 flex flex-col border border-[#E9E6F8]">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center border-b border-[#E9E6F8] px-6 py-4">
+              <h3 className="font-bold text-sm text-[#111827]">{editingGiftProduct ? 'Edit Product' : 'Add New Product'}</h3>
+              <button
+                onClick={() => setShowGiftProductModal(false)}
+                className="w-8 h-8 rounded-full bg-[#FAFAFF] hover:bg-[#F4F1FF] flex items-center justify-center text-[#6B7280]"
+              >
+                <CloseIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4">
+              {/* Title */}
+              <div>
+                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Title *</label>
+                <input type="text" value={giftProductForm.title} onChange={(e) => setGiftProductForm({...giftProductForm, title: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40" placeholder="Product title" />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Description *</label>
+                <textarea value={giftProductForm.description} onChange={(e) => setGiftProductForm({...giftProductForm, description: e.target.value})} rows={3} className="w-full px-3 py-2 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40 resize-none" placeholder="Product description" />
+              </div>
+
+              {/* Category + Price row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Category *</label>
+                  <select value={giftProductForm.category} onChange={(e) => setGiftProductForm({...giftProductForm, category: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40 cursor-pointer">
+                    <option value="">Select category</option>
+                    {giftCategories.filter(c => c.isActive).map(c => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Base Price (₹) *</label>
+                  <input type="number" value={giftProductForm.basePrice} onChange={(e) => setGiftProductForm({...giftProductForm, basePrice: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40" placeholder="180" />
+                </div>
+              </div>
+
+              {/* Badge + Featured row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Badge</label>
+                  <select value={giftProductForm.badge} onChange={(e) => setGiftProductForm({...giftProductForm, badge: e.target.value})} className="w-full h-10 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-xl text-sm focus:outline-none focus:border-[#6C4EFF]/40 cursor-pointer">
+                    <option value="">None</option>
+                    <option value="BEST SELLER">Best Seller</option>
+                    <option value="NEW">New</option>
+                    <option value="TRENDING">Trending</option>
+                  </select>
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={giftProductForm.isFeatured} onChange={(e) => setGiftProductForm({...giftProductForm, isFeatured: e.target.checked})} className="w-4 h-4 accent-[#6C4EFF]" />
+                    <span className="text-xs font-bold text-[#111827]">Featured on homepage</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div>
+                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Features</label>
+                {giftProductForm.features.map((feat, idx) => (
+                  <div key={idx} className="flex gap-2 mb-1.5">
+                    <input type="text" value={feat} onChange={(e) => { const f = [...giftProductForm.features]; f[idx] = e.target.value; setGiftProductForm({...giftProductForm, features: f}); }} className="flex-1 h-8 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs focus:outline-none focus:border-[#6C4EFF]/40" placeholder={`Feature ${idx + 1}`} />
+                    {giftProductForm.features.length > 1 && (
+                      <button onClick={() => { const f = giftProductForm.features.filter((_, i) => i !== idx); setGiftProductForm({...giftProductForm, features: f}); }} className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xs">×</button>
+                    )}
+                  </div>
+                ))}
+                <button onClick={() => setGiftProductForm({...giftProductForm, features: [...giftProductForm.features, '']})} className="text-xs font-bold text-[#6C4EFF] hover:underline mt-1">+ Add feature</button>
+              </div>
+
+              {/* Size Options */}
+              <div>
+                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Size Options (optional)</label>
+                {giftProductForm.sizeOptions.map((so, idx) => (
+                  <div key={idx} className="flex gap-2 mb-1.5">
+                    <input type="text" value={so.label} onChange={(e) => { const s = [...giftProductForm.sizeOptions]; s[idx] = {...s[idx], label: e.target.value}; setGiftProductForm({...giftProductForm, sizeOptions: s}); }} className="flex-1 h-8 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs focus:outline-none" placeholder="e.g. 8×12" />
+                    <input type="number" value={so.priceModifier} onChange={(e) => { const s = [...giftProductForm.sizeOptions]; s[idx] = {...s[idx], priceModifier: Number(e.target.value)}; setGiftProductForm({...giftProductForm, sizeOptions: s}); }} className="w-24 h-8 px-3 bg-[#FAFAFF] border border-[#E9E6F8] rounded-lg text-xs focus:outline-none" placeholder="+₹ modifier" />
+                    <button onClick={() => { const s = giftProductForm.sizeOptions.filter((_, i) => i !== idx); setGiftProductForm({...giftProductForm, sizeOptions: s}); }} className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xs">×</button>
+                  </div>
+                ))}
+                <button onClick={() => setGiftProductForm({...giftProductForm, sizeOptions: [...giftProductForm.sizeOptions, { label: '', priceModifier: 0 }]})} className="text-xs font-bold text-[#6C4EFF] hover:underline mt-1">+ Add size option</button>
+              </div>
+
+              {/* Images */}
+              <div>
+                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Images {!editingGiftProduct && '*'}</label>
+                {/* Preview existing/selected images */}
+                {giftProductImagePreviews.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mb-2">
+                    {giftProductImagePreviews.map((src, idx) => (
+                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#E9E6F8]">
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => {
+                            setGiftProductImagePreviews(prev => prev.filter((_, i) => i !== idx));
+                            setGiftProductImages(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center leading-none"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    setGiftProductImages(prev => [...prev, ...files]);
+                    files.forEach(f => {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setGiftProductImagePreviews(prev => [...prev, ev.target.result]);
+                      reader.readAsDataURL(f);
+                    });
+                  }}
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 border-t border-[#E9E6F8] px-6 py-4">
+              <button
+                onClick={() => setShowGiftProductModal(false)}
+                className="flex-1 h-10 border border-[#E9E6F8] text-[#6B7280] font-bold text-xs rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const formData = new FormData();
+                    formData.append('title', giftProductForm.title);
+                    formData.append('description', giftProductForm.description);
+                    formData.append('category', giftProductForm.category);
+                    formData.append('basePrice', giftProductForm.basePrice);
+                    formData.append('badge', giftProductForm.badge);
+                    formData.append('isFeatured', giftProductForm.isFeatured);
+                    formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));
+                    formData.append('sizeOptions', JSON.stringify(giftProductForm.sizeOptions.filter(s => s.label.trim())));
+                    giftProductImages.forEach(file => formData.append('images', file));
+
+                    if (editingGiftProduct) {
+                      await api.put(`/gift/products/${editingGiftProduct._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                      showToast('Product updated!', 'success');
+                    } else {
+                      await api.post('/gift/products', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                      showToast('Product created!', 'success');
+                    }
+                    setShowGiftProductModal(false);
+                    fetchGiftData();
+                  } catch (err) {
+                    showToast(err.response?.data?.message || 'Failed to save product', 'error');
+                  }
+                }}
+                className="flex-1 h-10 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl transition-all"
+              >
+                {editingGiftProduct ? 'Save Changes' : 'Create Product'}
+              </button>
             </div>
           </div>
         </div>

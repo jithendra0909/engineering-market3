@@ -3,6 +3,8 @@ import User from '../models/User.js';
 import Listing from '../models/Listing.js';
 import Notification from '../models/Notification.js';
 import PrintOrder from '../models/PrintOrder.js';
+import GiftProduct from '../models/GiftProduct.js';
+import GiftCategory from '../models/GiftCategory.js';
 
 export const seedData = async () => {
   try {
@@ -491,6 +493,88 @@ export const seedData = async () => {
 
     await PrintOrder.insertMany(samplePrintOrders);
     console.log('Sample print orders seeded successfully.');
+
+    // 6. Seed Gift Studio data
+    await GiftCategory.deleteMany({});
+    await GiftProduct.deleteMany({});
+
+    await GiftCategory.create({ name: 'Photo Frames', isActive: true });
+
+    await GiftProduct.insertMany([
+      {
+        title: '8×12 Wooden Frame',
+        description: 'A beautifully crafted wooden photo frame with HD print quality and matte finish. Perfect for preserving your most cherished memories with a touch of premium elegance.',
+        category: 'Photo Frames',
+        features: ['HD Print Quality', 'Matte Finish', 'Premium Wood'],
+        basePrice: 180,
+        badge: 'BEST SELLER',
+        images: ['/images/frame_wooden.jpg'],
+        isFeatured: true,
+        isActive: true,
+        sizeOptions: [
+          { label: '8×12', priceModifier: 0 },
+          { label: '10×12', priceModifier: 30 },
+          { label: '10×15', priceModifier: 55 },
+          { label: '12×15', priceModifier: 80 },
+          { label: '12×18', priceModifier: 80 }
+        ]
+      },
+      {
+        title: '8×12 Collage Frame',
+        description: 'Create stunning photo collages with this premium collage frame. Features multiple photo slots with HD print quality and a premium finish for a professional look.',
+        category: 'Photo Frames',
+        features: ['Multiple Photos', 'Premium Finish', 'HD Print Quality'],
+        basePrice: 180,
+        badge: null,
+        images: ['/images/frame_collage.jpg'],
+        isFeatured: true,
+        isActive: true,
+        sizeOptions: [
+          { label: '8×12', priceModifier: 0 },
+          { label: '10×12', priceModifier: 30 },
+          { label: '10×15', priceModifier: 55 },
+          { label: '12×15', priceModifier: 80 },
+          { label: '12×18', priceModifier: 80 }
+        ]
+      },
+      {
+        title: '8×12 Motivational Frame',
+        description: 'An elegantly designed motivational photo frame that combines inspiring aesthetics with HD print quality. Perfect as a gift or for your workspace and study room.',
+        category: 'Photo Frames',
+        features: ['HD Print Quality', 'Elegant Design', 'Premium Frame'],
+        basePrice: 180,
+        badge: null,
+        images: ['/images/frame_motivational.jpg'],
+        isFeatured: true,
+        isActive: true,
+        sizeOptions: [
+          { label: '8×12', priceModifier: 0 },
+          { label: '10×12', priceModifier: 30 },
+          { label: '10×15', priceModifier: 55 },
+          { label: '12×15', priceModifier: 80 },
+          { label: '12×18', priceModifier: 80 }
+        ]
+      },
+      {
+        title: '8×12 Classic Frame',
+        description: 'A timeless classic photo frame with HD print quality and durable construction. The matte finish adds a sophisticated touch, making it ideal for any room or occasion.',
+        category: 'Photo Frames',
+        features: ['HD Print Quality', 'Matte Finish', 'Durable Frame'],
+        basePrice: 180,
+        badge: null,
+        images: ['/images/frame_classic.jpg'],
+        isFeatured: true,
+        isActive: true,
+        sizeOptions: [
+          { label: '8×12', priceModifier: 0 },
+          { label: '10×12', priceModifier: 30 },
+          { label: '10×15', priceModifier: 55 },
+          { label: '12×15', priceModifier: 80 },
+          { label: '12×18', priceModifier: 80 }
+        ]
+      }
+    ]);
+    console.log('Gift Studio data seeded successfully.');
   } catch (error) {
     console.error('Error during seeding data:', error);
     throw error;

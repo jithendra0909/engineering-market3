@@ -34,6 +34,8 @@ import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
 import FeedbackRoadmap from './pages/FeedbackRoadmap';
 import GiftStudio from './pages/GiftStudio';
+import GiftStudioProducts from './pages/GiftStudioProducts';
+import GiftProductDetails from './pages/GiftProductDetails';
 
 // Layout wrapper to inject Navbar & BottomNav
 const AppLayout = ({ children }) => {
@@ -156,6 +158,8 @@ function App() {
             {/* To launch Print Hub, restore original routes below */}
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/vendors/gift-studio" element={<GiftStudio />} />
+            <Route path="/gift-studio/products" element={<GiftStudioProducts />} />
+            <Route path="/gift-studio/product/:id" element={<GiftProductDetails />} />
             <Route path="/vendors/print-studio" element={<Navigate to="/vendors" replace />} />
             <Route path="/orders" element={<Navigate to="/vendors" replace />} />
             <Route 

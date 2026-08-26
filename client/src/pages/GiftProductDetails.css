@@ -1,0 +1,148 @@
+/* GiftProductDetails — extends ProductDetails.css patterns.
+   Only Gift Studio-specific elements styled here.
+   Layout/gallery/title/desc classes reuse details-* from ProductDetails.css. */
+
+.gift-details-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #F59E0B;
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.1));
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.gift-details-sizes {
+  margin-bottom: 1.25rem;
+}
+
+.gift-details-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+  margin: 0 0 0.625rem 0;
+}
+
+.gift-details-size-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gift-details-size-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 12px;
+  border: 1px solid rgba(233, 230, 248, 0.7);
+  background-color: #FAFAFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gift-details-size-pill:hover {
+  border-color: rgba(108, 78, 255, 0.3);
+}
+
+.gift-details-size-pill.active {
+  background-color: #F4F1FF;
+  border-color: #6C4EFF;
+}
+
+.gift-details-size-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.gift-details-size-price {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6C4EFF;
+}
+
+.gift-details-features {
+  margin-bottom: 1.5rem;
+}
+
+.gift-details-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gift-details-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.gift-details-check-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #6C4EFF;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+}
+
+.gift-details-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.gift-details-wa-btn {
+  flex: 1;
+  background-color: #059669;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0.875rem 0;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.gift-details-wa-btn:hover {
+  background-color: #047857;
+}
+
+.gift-details-wa-btn:active {
+  transform: scale(0.98);
+}
+
+.gift-details-cart-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  border: 1px solid #E9E6F8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+  color: #6C4EFF;
+  cursor: pointer;
+}
+
+.gift-details-cart-btn:hover {
+  background-color: #F4F1FF;
+  border-color: rgba(108, 78, 255, 0.3);
+}
+
+.gift-details-cart-btn:active {
+  transform: scale(0.95);
+}
