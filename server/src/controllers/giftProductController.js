@@ -173,10 +173,31 @@ const updateGiftProduct = async (req, res) => {
       }
     }
 
-    // Update uploaded images if provided
-    if (req.uploadedPaths && req.uploadedPaths.length > 0) {
-      product.images = req.uploadedPaths;
+    // Image handling: combine retained existing images and newly uploaded paths
+    let existingImagesList = [];
+    if (req.body.existingImages !== undefined) {
+      if (typeof req.body.existingImages === 'string') {
+        try {
+          existingImagesList = JSON.parse(req.body.existingImages);
+        } catch {
+          existingImagesList = req.body.existingImages ? [req.body.existingImages] : [];
+        }
+      } else if (Array.isArray(req.body.existingImages)) {
+        existingImagesList = req.body.existingImages;
+      }
+    } else if (!req.uploadedPaths || req.uploadedPaths.length === 0) {
+      // If existingImages not specified and no uploaded files, retain current images
+      existingImagesList = product.images || [];
     }
+
+    const newUploadedPaths = req.uploadedPaths || [];
+    const finalImages = [...existingImagesList, ...newUploadedPaths];
+
+    if (finalImages.length === 0) {
+      return res.status(400).json({ message: 'At least one product image is required.' });
+    }
+
+    product.images = finalImages;
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);

@@ -22,8 +22,8 @@ const router = express.Router();
 // Product routes
 router.get('/products', optionalProtect, getGiftProducts);
 router.get('/products/:id', optionalProtect, getGiftProductById);
-router.post('/products', protect, adminOnly, handleMultipleUpload('images', 6), createGiftProduct);
-router.put('/products/:id', protect, adminOnly, handleMultipleUpload('images', 6), updateGiftProduct);
+router.post('/products', protect, adminOnly, handleMultipleUpload('images', 20), createGiftProduct);
+router.put('/products/:id', protect, adminOnly, handleMultipleUpload('images', 20), updateGiftProduct);
 router.delete('/products/:id', protect, adminOnly, deleteGiftProduct);
 router.post('/products/:id/toggle-featured', protect, adminOnly, toggleFeatured);
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText, Gift, Star, Edit, ToggleLeft, ToggleRight, Plus, GraduationCap } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Users, Grid, Eye, Trash2, Check, X as CloseIcon, AlertTriangle, MessageSquare, FileText, Gift, Star, Edit, ToggleLeft, ToggleRight, Plus, GraduationCap, Upload } from 'lucide-react';
 import api from '../api/axios';
 import './AdminDashboard.css';
 
@@ -36,8 +36,7 @@ export const AdminDashboard = () => {
   const [giftProductForm, setGiftProductForm] = useState({
     title: '', description: '', category: '', basePrice: '', mrpPrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: []
   });
-  const [giftProductImages, setGiftProductImages] = useState([]);
-  const [giftProductImagePreviews, setGiftProductImagePreviews] = useState([]);
+  const [giftProductPhotoItems, setGiftProductPhotoItems] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
   const [editCategoryName, setEditCategoryName] = useState('');
@@ -909,8 +908,7 @@ export const AdminDashboard = () => {
                         onClick={() => {
                           setEditingGiftProduct(null);
                           setGiftProductForm({ title: '', description: '', category: '', basePrice: '', mrpPrice: '', features: [''], badge: '', isFeatured: false, sizeOptions: [] });
-                          setGiftProductImages([]);
-                          setGiftProductImagePreviews([]);
+                          setGiftProductPhotoItems([]);
                           setShowGiftProductModal(true);
                         }}
                         className="h-9 px-4 bg-[#6C4EFF] hover:bg-[#5C3EEF] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all"
@@ -1017,8 +1015,12 @@ export const AdminDashboard = () => {
                                           isFeatured: gp.isFeatured,
                                           sizeOptions: gp.sizeOptions || []
                                         });
-                                        setGiftProductImages([]);
-                                        setGiftProductImagePreviews(gp.images || []);
+                                        const existingItems = (gp.images || []).map((imgUrl, idx) => ({
+                                          id: `existing-${idx}-${Date.now()}`,
+                                          type: 'existing',
+                                          url: imgUrl
+                                        }));
+                                        setGiftProductPhotoItems(existingItems);
                                         setShowGiftProductModal(true);
                                       }}
                                       className="w-8 h-8 rounded-full bg-[#F4F1FF] text-[#6C4EFF] hover:bg-[#E9E6F8] flex items-center justify-center transition-colors"
@@ -1636,43 +1638,117 @@ export const AdminDashboard = () => {
                 <button onClick={() => setGiftProductForm({...giftProductForm, sizeOptions: [...giftProductForm.sizeOptions, { label: '', priceModifier: 0 }]})} className="text-xs font-bold text-[#6C4EFF] hover:underline mt-1">+ Add size option</button>
               </div>
 
-              {/* Images */}
+              {/* Images / Photos */}
               <div>
-                <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block mb-1">Images {!editingGiftProduct && '*'}</label>
-                {/* Preview existing/selected images */}
-                {giftProductImagePreviews.length > 0 && (
-                  <div className="flex gap-2 flex-wrap mb-2">
-                    {giftProductImagePreviews.map((src, idx) => (
-                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-[#E9E6F8]">
-                        <img src={src} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => {
-                            setGiftProductImagePreviews(prev => prev.filter((_, i) => i !== idx));
-                            setGiftProductImages(prev => prev.filter((_, i) => i !== idx));
-                          }}
-                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center leading-none"
-                        >
-                          ×
-                        </button>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider block">
+                    Product Photos ({giftProductPhotoItems.length}) *
+                  </label>
+                  <span className="text-[10px] text-[#6C4EFF] font-semibold">
+                    First photo is Main Cover
+                  </span>
+                </div>
+
+                {/* Grid of photo thumbnails */}
+                {giftProductPhotoItems.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {giftProductPhotoItems.map((item, idx) => (
+                      <div key={item.id} className="relative group rounded-xl overflow-hidden border border-[#E9E6F8] bg-slate-50 aspect-square flex flex-col justify-between">
+                        <img src={item.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                        
+                        {/* Cover Badge */}
+                        {idx === 0 && (
+                          <span className="absolute top-1 left-1 bg-[#6C4EFF] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shadow-sm z-10">
+                            Cover
+                          </span>
+                        )}
+
+                        {/* Controls Overlay */}
+                        <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-20">
+                          {idx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGiftProductPhotoItems(prev => {
+                                  const list = [...prev];
+                                  const temp = list[idx - 1];
+                                  list[idx - 1] = list[idx];
+                                  list[idx] = temp;
+                                  return list;
+                                });
+                              }}
+                              className="w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 flex items-center justify-center text-xs font-bold shadow"
+                              title="Move left"
+                            >
+                              ‹
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGiftProductPhotoItems(prev => prev.filter(i => i.id !== item.id));
+                            }}
+                            className="w-6 h-6 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-xs font-bold shadow"
+                            title="Remove photo"
+                          >
+                            ×
+                          </button>
+                          {idx < giftProductPhotoItems.length - 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGiftProductPhotoItems(prev => {
+                                  const list = [...prev];
+                                  const temp = list[idx + 1];
+                                  list[idx + 1] = list[idx];
+                                  list[idx] = temp;
+                                  return list;
+                                });
+                              }}
+                              className="w-6 h-6 rounded-full bg-white/90 hover:bg-white text-gray-800 flex items-center justify-center text-xs font-bold shadow"
+                              title="Move right"
+                            >
+                              ›
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files);
-                    setGiftProductImages(prev => [...prev, ...files]);
-                    files.forEach(f => {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setGiftProductImagePreviews(prev => [...prev, ev.target.result]);
-                      reader.readAsDataURL(f);
-                    });
-                  }}
-                  className="text-xs"
-                />
+
+                {/* Upload Button Box */}
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#E9E6F8] hover:border-[#6C4EFF]/50 rounded-2xl cursor-pointer bg-[#FAFAFF] hover:bg-[#F4F1FF]/30 transition-all text-center p-3">
+                  <Upload className="w-5 h-5 text-[#6C4EFF] mb-1" />
+                  <span className="text-xs font-bold text-[#111827]">Click to add photo(s)</span>
+                  <span className="text-[10px] text-[#6B7280] mt-0.5">Select multiple photos (JPG, PNG, WebP)</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files);
+                      if (!files.length) return;
+                      files.forEach((f, index) => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setGiftProductPhotoItems(prev => [
+                            ...prev,
+                            {
+                              id: `new-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${index}`,
+                              type: 'new',
+                              url: ev.target.result,
+                              file: f
+                            }
+                          ]);
+                        };
+                        reader.readAsDataURL(f);
+                      });
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
               </div>
             </div>
 
@@ -1692,6 +1768,11 @@ export const AdminDashboard = () => {
                       return;
                     }
 
+                    if (!giftProductPhotoItems || giftProductPhotoItems.length === 0) {
+                      showToast('Please add at least one product photo', 'error');
+                      return;
+                    }
+
                     const formData = new FormData();
                     formData.append('title', giftProductForm.title);
                     formData.append('description', giftProductForm.description);
@@ -1702,7 +1783,15 @@ export const AdminDashboard = () => {
                     formData.append('isFeatured', giftProductForm.isFeatured);
                     formData.append('features', JSON.stringify(giftProductForm.features.filter(f => f.trim())));
                     formData.append('sizeOptions', JSON.stringify(giftProductForm.sizeOptions.filter(s => s.label.trim())));
-                    giftProductImages.forEach(file => formData.append('images', file));
+
+                    const existingUrls = giftProductPhotoItems
+                      .filter(item => item.type === 'existing')
+                      .map(item => item.url);
+                    formData.append('existingImages', JSON.stringify(existingUrls));
+
+                    giftProductPhotoItems
+                      .filter(item => item.type === 'new' && item.file)
+                      .forEach(item => formData.append('images', item.file));
 
                     if (editingGiftProduct) {
                       await api.put(`/gift/products/${editingGiftProduct._id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
