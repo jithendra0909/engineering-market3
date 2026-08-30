@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import Notification from '../models/Notification.js';
+import { createNotification } from '../utils/pushNotification.js';
 
 const validatePasswordComplexity = (password) => {
   if (!password || password.length < 8) return false;
@@ -324,12 +325,14 @@ const updateUserProfile = async (req, res) => {
       user.verificationStatus = 'pending';
       
       // Create notification about re-verification
-      await Notification.create({
-        recipient: user._id,
+      createNotification({
+        userId: user._id,
         title: 'Verification Resubmitted ⏳',
-        message: 'Your profile updates and ID card have been submitted. An admin will review them shortly.',
-        type: 'verification'
-      });
+        body: 'Your profile updates and ID card have been submitted. An admin will review them shortly.',
+        type: 'verification',
+        url: '/profile',
+        sendPush: false,
+      }).catch((err) => console.error('[Auth] Re-verification notification error:', err.message));
     }
 
     await user.save();

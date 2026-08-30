@@ -34,16 +34,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Track whether push subscription was already initiated for this user session
+  const pushSubscribedUserRef = React.useRef(null);
+
   // Auto-subscribe to push notifications when user is loaded
   useEffect(() => {
-    if (user && token) {
+    if (user?._id && token) {
+      if (pushSubscribedUserRef.current === user._id) {
+        return;
+      }
+      pushSubscribedUserRef.current = user._id;
+
       // Delay slightly so the app is fully rendered before prompting
       const timer = setTimeout(() => {
         subscribeToPush().catch(() => {});
-      }, 3000);
+      }, 1500);
       return () => clearTimeout(timer);
+    } else if (!token) {
+      pushSubscribedUserRef.current = null;
     }
-  }, [user]);
+  }, [user?._id, token]);
 
   const fetchColleges = async () => {
     try {

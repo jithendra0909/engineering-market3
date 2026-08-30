@@ -2,9 +2,8 @@ import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
-import { sendWhatsAppNotification } from '../utils/whatsappNotification.js';
 import { sendChatEmailNotification } from '../utils/emailNotification.js';
-import { sendPushNotification } from '../utils/pushNotification.js';
+import { sendPushNotification, createNotification } from '../utils/pushNotification.js';
 
 // @desc    Get all conversations for logged-in user
 // @route   GET /api/chats
@@ -112,20 +111,18 @@ export const createConversation = async (req, res) => {
       });
       await conversation.save();
 
-      // Send WhatsApp notification to seller for new buyer interest
+      // Send in-website + browser push notification to seller for new buyer interest
       const buyer = await User.findById(buyerId).select('fullName');
-      const seller = await User.findById(sellerId).select('whatsappNumber fullName');
-
-      if (seller && seller.whatsappNumber) {
-        const clientBaseUrl = process.env.CLIENT_URL || 'https://engineering-market.vercel.app';
-        sendWhatsAppNotification({
-          recipientPhone: seller.whatsappNumber,
-          recipientName: seller.fullName,
-          itemTitle: listing.title || 'an item on Engineering Market',
-          chatUrl: clientBaseUrl,
-          customMessage: `${buyer?.fullName || 'A buyer'} is interested in your listing "${listing.title}"`
-        }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
-      }
+      createNotification({
+        userId: sellerId,
+        title: 'New buyer interest',
+        body: `${buyer?.fullName || 'Someone'} is interested in your "${listing.title}".`,
+        type: 'new_conversation',
+        url: `/chat?conversationId=${conversation._id}`,
+        tag: `chat-${conversation._id}`,
+        conversationId: conversation._id,
+        listingId: listing._id,
+      }).catch((err) => console.error('[Chat] Buyer interest notification error:', err.message));
     }
 
     res.status(201).json(conversation);
@@ -224,8 +221,10 @@ export const sendMessage = async (req, res) => {
           userId: recipientId.toString(),
           title: `${senderName}`,
           body: text.trim().length > 80 ? text.trim().substring(0, 80) + '...' : text.trim(),
+          type: 'new_message',
           url: `/chat?conversationId=${conversationId}`,
           tag: `chat-${conversationId}`,
+          conversationId: conversationId,
         }).catch((err) => console.error('[Chat] Push notification error:', err.message));
 
       } catch (err) {

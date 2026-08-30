@@ -3,6 +3,7 @@ import Listing from '../models/Listing.js';
 import Notification from '../models/Notification.js';
 import Conversation from '../models/Conversation.js';
 import Feedback from '../models/Feedback.js';
+import { createNotification } from '../utils/pushNotification.js';
 
 // @desc    Get users by verification status
 // @route   GET /api/admin/users
@@ -49,13 +50,14 @@ const approveUser = async (req, res) => {
     user.verificationStatus = 'approved';
     await user.save();
     
-    // Create verification approval notification
-    await Notification.create({
-      recipient: user._id,
-      title: 'Account Verified! 🎉',
-      message: 'Congratulations! Your student identity card has been verified. You can now post listings and chat with sellers/buyers.',
-      type: 'verification'
-    });
+    // Create verification approval in-app & push notification
+    createNotification({
+      userId: user._id,
+      title: 'Profile Verified ✅',
+      body: 'Your Engineering Market profile has been verified.',
+      type: 'profile_verified',
+      url: '/profile',
+    }).catch((err) => console.error('[Admin] Approval notification error:', err.message));
     
     res.json({ message: `User ${user.fullName} is now approved`, user });
   } catch (error) {
@@ -76,13 +78,14 @@ const rejectUser = async (req, res) => {
     user.verificationStatus = 'rejected';
     await user.save();
     
-    // Create verification rejection notification
-    await Notification.create({
-      recipient: user._id,
-      title: 'Verification Rejected ⚠️',
-      message: 'Unfortunately, your student identity verification was rejected. Please re-upload a clear image of your college ID card.',
-      type: 'verification'
-    });
+    // Create verification rejection in-app & push notification
+    createNotification({
+      userId: user._id,
+      title: 'Profile Verification Update',
+      body: 'Your profile verification needs attention.',
+      type: 'profile_verification_failed',
+      url: '/profile',
+    }).catch((err) => console.error('[Admin] Rejection notification error:', err.message));
     
     res.json({ message: `User ${user.fullName} has been rejected`, user });
   } catch (error) {
@@ -115,7 +118,20 @@ const deleteListingAdmin = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
     
+    const sellerId = listing.seller;
+    const listingTitle = listing.title;
     await listing.deleteOne();
+
+    if (sellerId) {
+      createNotification({
+        userId: sellerId,
+        title: 'Listing Update',
+        body: `Your listing "${listingTitle}" needs attention.`,
+        type: 'listing_rejected',
+        url: '/profile',
+      }).catch((err) => console.error('[Admin] Listing deletion notification error:', err.message));
+    }
+
     res.json({ message: 'Listing removed successfully by Admin' });
   } catch (error) {
     res.status(500).json({ message: 'Server error removing listing', error: error.message });
@@ -136,6 +152,18 @@ const dismissReports = async (req, res) => {
     listing.status = 'available'; // Restore to feed if it was auto-hidden
 
     await listing.save();
+
+    if (listing.seller) {
+      createNotification({
+        userId: listing.seller,
+        title: 'Listing Approved ✅',
+        body: `Your listing "${listing.title}" has been approved and is now visible.`,
+        type: 'listing_approved',
+        url: `/listing/${listing._id}`,
+        listingId: listing._id,
+      }).catch((err) => console.error('[Admin] Listing approval notification error:', err.message));
+    }
+
     res.json({ message: 'All reports dismissed successfully', listing });
   } catch (error) {
     res.status(500).json({ message: 'Server error dismissing reports', error: error.message });

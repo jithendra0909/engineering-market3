@@ -75,18 +75,30 @@ export const Notifications = () => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'verification':
+      case 'profile_verified':
         return (
           <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #a7f3d0', flexShrink: 0 }}>
             <ShieldCheck style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
+      case 'profile_verification_failed':
+        return (
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fecaca', flexShrink: 0 }}>
+            <AlertCircle style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
+          </div>
+        );
       case 'chat':
+      case 'new_message':
+      case 'new_conversation':
         return (
           <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #c7d2fe', flexShrink: 0 }}>
             <MessageSquare style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
           </div>
         );
       case 'listing':
+      case 'new_listing':
+      case 'listing_approved':
+      case 'listing_rejected':
         return (
           <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: '#fffbeb', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fde68a', flexShrink: 0 }}>
             <AlertCircle style={{ width: '20px', height: '20px', strokeWidth: 2 }} />
@@ -154,13 +166,19 @@ export const Notifications = () => {
               return (
                 <div
                   key={notification._id}
-                  onClick={() => isUnread && handleMarkAsRead(notification._id)}
+                  onClick={() => {
+                    if (isUnread) handleMarkAsRead(notification._id);
+                    if (notification.url) {
+                      navigate(notification.url);
+                    }
+                  }}
                   className={`notification-item ${isUnread ? 'unread' : 'read'}`}
+                  style={{ cursor: notification.url ? 'pointer' : 'default' }}
                 >
                   {getNotificationIcon(notification.type)}
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justify: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
                       <h3 style={{ fontSize: '13.5px', fontWeight: isUnread ? 700 : 600, color: isUnread ? '#111827' : '#4B5563', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {notification.title}
                       </h3>
@@ -169,7 +187,7 @@ export const Notifications = () => {
                       </span>
                     </div>
                     <p style={{ fontSize: '12.5px', marginTop: '0.25rem', lineHeight: 1.625, margin: 0, color: isUnread ? '#374151' : '#6B7280', fontWeight: isUnread ? 500 : 400 }}>
-                      {notification.message}
+                      {notification.message || notification.body}
                     </p>
                   </div>
 

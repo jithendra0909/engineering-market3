@@ -134,23 +134,56 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   try {
-    const data = event.data.json();
+    let data = {};
+    try {
+      data = event.data.json();
+    } catch (_) {
+      data = { body: event.data.text() };
+    }
+
+    const title = data.title || 'Engineering Market';
+    const body = data.body || 'You have a new update';
+    const icon = data.icon || '/icons/icon-192x192.svg';
+    const badge = data.badge || '/icons/icon-96x96.svg';
+    const tag = data.tag || data.type || 'em-notification';
+
+    let targetUrl = data.url;
+    if (!targetUrl) {
+      if (data.conversationId) {
+        targetUrl = `/chat?conversationId=${data.conversationId}`;
+      } else if (data.listingId) {
+        targetUrl = `/listing/${data.listingId}`;
+      } else if (data.type === 'profile_verified' || data.type === 'profile_verification_failed') {
+        targetUrl = '/profile';
+      } else {
+        targetUrl = '/notifications';
+      }
+    }
 
     const options = {
-      body: data.body || 'You have a new message',
-      icon: data.icon || '/icons/icon-192x192.svg',
-      badge: '/icons/icon-96x96.svg',
-      tag: data.tag || 'em-notification',
+      body,
+      icon,
+      badge,
+      tag,
       renotify: true,
       vibrate: [200, 100, 200],
       data: {
-        url: data.url || '/chat',
+        title,
+        body,
+        icon,
+        badge,
+        tag,
+        type: data.type || 'system',
+        url: targetUrl,
+        conversationId: data.conversationId,
+        listingId: data.listingId,
         timestamp: data.timestamp || Date.now(),
+        ...(data.data || {}),
       },
       actions: [
         {
           action: 'open',
-          title: 'Reply',
+          title: 'Open',
         },
         {
           action: 'dismiss',
@@ -160,7 +193,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(data.title || 'Engineering Market', options)
+      self.registration.showNotification(title, options)
     );
   } catch (error) {
     console.error('[SW] Error handling push event:', error);
@@ -174,20 +207,39 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'dismiss') return;
 
-  const urlToOpen = event.notification.data?.url || '/chat';
+  const data = event.notification.data || {};
+  let targetPath = data.url;
+
+  if (!targetPath) {
+    if (data.conversationId) {
+      targetPath = `/chat?conversationId=${data.conversationId}`;
+    } else if (data.listingId) {
+      targetPath = `/listing/${data.listingId}`;
+    } else if (data.type === 'profile_verified' || data.type === 'profile_verification_failed' || data.type === 'verification') {
+      targetPath = '/profile';
+    } else {
+      targetPath = '/notifications';
+    }
+  }
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If the app is already open, focus it and navigate
+      const targetUrl = new URL(targetPath, self.location.origin).href;
+
+      // If the app is already open in a tab, focus it and navigate
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin)) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus();
-          client.navigate(urlToOpen);
+          if ('navigate' in client) {
+            return client.navigate(targetUrl);
+          }
           return;
         }
       }
-      // Otherwise open a new window
-      return clients.openWindow(urlToOpen);
+      // Otherwise open a new browser window/tab
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });

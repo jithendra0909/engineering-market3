@@ -1,5 +1,6 @@
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
+import { sendNotificationToMultipleUsers } from '../utils/pushNotification.js';
 
 // @desc    Get all listings accessible by user
 // @route   GET /api/listings
@@ -79,7 +80,7 @@ const getCollegeListings = async (req, res) => {
 const getListingById = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
-      .populate('seller', 'fullName email profileImageUrl department year whatsappNumber');
+      .populate('seller', 'fullName profileImageUrl department year');
       
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
@@ -140,6 +141,39 @@ const createListing = async (req, res) => {
       sellerWhatsappNumber: whatsappNumber || req.user.whatsappNumber,
       status: 'available'
     });
+
+    // Asynchronously dispatch new listing notifications to interested / relevant college students
+    (async () => {
+      try {
+        const query = {
+          _id: { $ne: req.user._id },
+          verificationStatus: 'approved'
+        };
+
+        if (marketType === 'college' && req.user.college) {
+          query.college = req.user.college;
+        }
+
+        const potentialRecipients = await User.find(query)
+          .select('_id')
+          .sort({ updatedAt: -1 })
+          .limit(50);
+
+        if (potentialRecipients && potentialRecipients.length > 0) {
+          const priceDisplay = listing.listingType === 'donate' ? 'Free / Donation' : `₹${listing.price}`;
+          await sendNotificationToMultipleUsers({
+            userIds: potentialRecipients.map((u) => u._id),
+            title: 'New Listing 🛍️',
+            body: `"${listing.title}" is now available for ${priceDisplay}.`,
+            type: 'new_listing',
+            url: `/listing/${listing._id}`,
+            listingId: listing._id,
+          });
+        }
+      } catch (notifErr) {
+        console.error('[Listing] Notification dispatch error:', notifErr.message);
+      }
+    })();
     
     res.status(201).json(listing);
   } catch (error) {
@@ -215,15 +249,16 @@ const deleteListing = async (req, res) => {
 // @access  Private & Verified
 const contactListingSeller = async (req, res) => {
   try {
-    const listing = await Listing.findById(req.params.id).populate('seller', 'fullName whatsappNumber');
+    const listing = await Listing.findById(req.params.id).populate('seller', 'fullName');
     
     if (!listing) {
       return res.status(404).json({ message: 'Listing not found' });
     }
     
     res.json({
-      sellerWhatsappNumber: listing.sellerWhatsappNumber || listing.seller.whatsappNumber,
-      message: 'Is it available?'
+      sellerName: listing.seller?.fullName,
+      listingId: listing._id,
+      message: 'Use in-website chat to contact seller'
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error during contact route', error: error.message });
