@@ -36,6 +36,7 @@ export const Chat = () => {
   const [sending, setSending] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const pollingRef = useRef(null);
 
   // Chat Reporting states
@@ -160,10 +161,15 @@ export const Chat = () => {
     };
   }, [activeChat?._id]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (smooth = true) => {
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: smooth ? 'smooth' : 'auto'
+        });
+      }
+    }, 80);
   };
 
   const handleSelectChat = (chat) => {
@@ -421,7 +427,7 @@ export const Chat = () => {
             </div>
 
             {/* Messages box */}
-            <div className="chat-messages-container">
+            <div className="chat-messages-container" ref={messagesContainerRef}>
               {loadingMessages && messages.length === 0 ? (
                 <div className="chat-messages-loading">
                   <div className="chat-spinner animate-spin" />

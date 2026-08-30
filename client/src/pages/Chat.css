@@ -306,8 +306,8 @@
 .chat-main {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   background-color: #F6F5FB;
   height: 100%;
   position: relative;
@@ -320,7 +320,7 @@
 
 @media (min-width: 1024px) {
   .chat-main.hidden-mobile {
-    display: flex;
+    display: grid;
   }
 }
 
@@ -333,9 +333,8 @@
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
   z-index: 10;
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
@@ -530,7 +529,8 @@
 
 /* ─── Messages Container ─── */
 .chat-messages-container {
-  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   padding: 1rem;
   display: flex;

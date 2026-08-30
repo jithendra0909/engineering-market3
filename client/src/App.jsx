@@ -55,15 +55,20 @@ const AppLayout = ({ children }) => {
   const isChatActive = location.pathname.startsWith('/chat');
 
   return (
-    <div className="min-h-screen bg-white flex flex-col antialiased">
+    <div className={`min-h-screen bg-white flex flex-col antialiased ${isChatActive ? 'h-screen max-h-screen overflow-hidden' : ''}`}>
       {/* Animated intro splash screen overlay */}
       <IntroSplash />
 
       {/* Desktop + Mobile Header */}
-      <Navbar />
+      {!isChatActive && <Navbar />}
+      {isChatActive && (
+        <div className="hidden lg:block">
+          <Navbar />
+        </div>
+      )}
 
       {/* Main Page Panel */}
-      <main className="flex-1 w-full">
+      <main className={`flex-1 w-full ${isChatActive ? 'h-full overflow-hidden' : ''}`}>
         {children}
       </main>
 
