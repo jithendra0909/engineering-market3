@@ -1,6 +1,7 @@
 import Listing from '../models/Listing.js';
 import User from '../models/User.js';
-import { sendNotificationToMultipleUsers } from '../utils/pushNotification.js';
+import Notification from '../models/Notification.js';
+import { sendNotificationToMultipleUsers, createNotification, sendPushNotification } from '../utils/pushNotification.js';
 
 // @desc    Get all listings accessible by user
 // @route   GET /api/listings
@@ -289,6 +290,25 @@ const saveListing = async (req, res) => {
       // Save it
       user.savedListings.push(listingId);
       await user.save();
+
+      // Notify seller (skip self-like)
+      if (listing.seller && listing.seller.toString() !== user._id.toString()) {
+        Notification.create({
+          recipient: listing.seller,
+          title: 'Someone liked your listing! ❤️',
+          message: `${user.fullName || 'A student'} saved your listing "${listing.title}".`,
+          type: 'listing'
+        }).catch((err) => console.error('[Listing] Save notification error:', err.message));
+
+        sendPushNotification({
+          userId: listing.seller.toString(),
+          title: 'Someone liked your listing! ❤️',
+          body: `${user.fullName || 'A student'} saved your listing "${listing.title}".`,
+          url: `/listing/${listing._id}`,
+          tag: `listing-liked-${listing._id}`
+        }).catch((err) => console.error('[Listing] Push notification error:', err.message));
+      }
+
       res.json({ message: 'Listing saved successfully', saved: true });
     }
   } catch (error) {

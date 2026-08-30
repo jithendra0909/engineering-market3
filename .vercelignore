@@ -1,0 +1,9 @@
+# Local test and scratch files
+scratch/
+test_*.js
+server_test.js
+*.log
+.DS_Store
+.git
+.vscode
+.agents

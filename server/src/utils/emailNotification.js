@@ -57,7 +57,7 @@ export const sendChatEmailNotification = async ({
       ? messagePreview.substring(0, 100) + '...'
       : messagePreview;
 
-    const clientUrl = process.env.CLIENT_URL || 'https://engineering-market.vercel.app';
+    const clientUrl = process.env.CLIENT_URL || 'https://engineering-market.in';
 
     const mailOptions = {
       from: `"Engineering Market" <${smtpUser}>`,

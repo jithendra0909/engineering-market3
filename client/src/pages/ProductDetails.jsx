@@ -132,7 +132,7 @@ export const ProductDetails = () => {
     return `${days}d ago`;
   };
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
   const itemSlug = listing.slug || slugify(listing.title);
   const canonicalUrl = `${origin}/listing/${listing._id}${itemSlug ? '/' + itemSlug : ''}`;
   const priceDisplay = listing.listingType === 'donate' ? 'Free / Donation' : `₹${listing.price}`;

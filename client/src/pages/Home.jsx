@@ -88,7 +88,7 @@ export const Home = () => {
     </div>
   );
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
 
   const homeJsonLd = {
     "@context": "https://schema.org",

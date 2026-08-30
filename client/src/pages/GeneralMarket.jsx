@@ -17,7 +17,7 @@ export const GeneralMarket = () => {
   const [showSort, setShowSort] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
 
   useEffect(() => {
     const fetchListings = async () => {

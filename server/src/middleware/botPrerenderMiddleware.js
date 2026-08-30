@@ -1,6 +1,7 @@
 import Listing from '../models/Listing.js';
 import GiftProduct from '../models/GiftProduct.js';
 import connectDB from '../config/db.js';
+import { getOptimizedOgImageUrl } from '../utils/imageUtils.js';
 
 // List of known social & search crawler user-agent substrings
 const BOT_USER_AGENT_REGEX = /(WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Googlebot|bingbot|Applebot|Discordbot|SkypeUriPreview|YandexBot|DuckDuckBot)/i;
@@ -126,7 +127,8 @@ export const botPrerenderMiddleware = async (req, res, next) => {
         ? listing.description.slice(0, 150) + (listing.description.length > 150 ? '...' : '')
         : 'Available on Engineering Market';
       const description = `${descSnippet} — Condition: ${listing.condition || 'Good'} · Campus Marketplace`;
-      const image = (listing.images && listing.images.length > 0) ? listing.images[0] : defaultBanner;
+      const rawImage = (listing.images && listing.images.length > 0) ? listing.images[0] : defaultBanner;
+      const image = getOptimizedOgImageUrl(rawImage);
       const canonicalUrl = `${baseUrl}/listing/${listing._id}${listing.slug ? '/' + listing.slug : ''}`;
 
       const html = renderOgHtml({
@@ -169,7 +171,8 @@ export const botPrerenderMiddleware = async (req, res, next) => {
         ? product.description.slice(0, 140) + (product.description.length > 140 ? '...' : '')
         : 'Personalized gift crafted for students.';
       const description = `${discountText}${descSnippet}`;
-      const image = (product.images && product.images.length > 0) ? product.images[0] : defaultBanner;
+      const rawImage = (product.images && product.images.length > 0) ? product.images[0] : defaultBanner;
+      const image = getOptimizedOgImageUrl(rawImage);
       const canonicalUrl = `${baseUrl}/gift-studio/product/${product._id}${product.slug ? '/' + product.slug : ''}`;
 
       const html = renderOgHtml({

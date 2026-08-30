@@ -94,7 +94,7 @@ const GiftStudio = () => {
     </div>
   );
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
 
   return (
     <div className="gift-studio-page">

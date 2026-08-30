@@ -115,7 +115,7 @@ export const GiftProductDetails = () => {
     );
   }
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
   const itemSlug = product.slug || slugify(product.title);
   const canonicalUrl = `${origin}/gift-studio/product/${product._id}${itemSlug ? '/' + itemSlug : ''}`;
   const pageTitle = `${product.title} — ₹${finalPrice} | EM Gift Studio`;

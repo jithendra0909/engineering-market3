@@ -13,7 +13,7 @@ export const Vendors = () => {
   const [searchVal, setSearchVal] = useState('');
   const [showComingSoon, setShowComingSoon] = useState(false);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://engineering-market.in';
 
   // Filter vendors based on active tab and search
   const showPrintHub = (activeTab === 'All' || activeTab === 'Printing') && 

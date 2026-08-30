@@ -173,7 +173,7 @@ const forgotPassword = async (req, res) => {
       if (origin) {
         resetUrl = `${origin}/reset-password/${token}`;
       } else {
-        resetUrl = `https://engineering-market.vercel.app/reset-password/${token}`;
+        resetUrl = `https://engineering-market.in/reset-password/${token}`;
       }
     } else {
       resetUrl = `http://localhost:5173/reset-password/${token}`;
@@ -220,6 +220,13 @@ const forgotPassword = async (req, res) => {
       console.log(`[PASSWORD RESET LINK FOR ${user.email.toUpperCase()}]:`);
       console.log(resetUrl);
       console.log('======================================================\n');
+      
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(200).json({ 
+          message: 'If an account exists with that email, a password reset link has been sent.'
+        });
+      }
+
       return res.status(200).json({ 
         message: 'A secure reset link has been generated. Since email service is in offline/test mode, the link has been logged to the terminal console.',
         debugUrl: resetUrl

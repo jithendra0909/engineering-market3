@@ -81,6 +81,11 @@ export const createConversation = async (req, res) => {
       return res.status(404).json({ message: 'Listing not found' });
     }
 
+    // College market scope check
+    if (listing.marketType === 'college' && req.user.role !== 'admin' && listing.sellerCollege !== req.user.college) {
+      return res.status(403).json({ message: 'This listing is only visible to students of ' + listing.sellerCollege });
+    }
+
     const sellerId = listing.seller;
 
     // Cannot start a chat with yourself
@@ -123,6 +128,18 @@ export const createConversation = async (req, res) => {
         conversationId: conversation._id,
         listingId: listing._id,
       }).catch((err) => console.error('[Chat] Buyer interest notification error:', err.message));
+
+      const seller = await User.findById(sellerId).select('whatsappNumber fullName');
+      if (seller && seller.whatsappNumber) {
+        const clientBaseUrl = process.env.CLIENT_URL || 'https://engineering-market.in';
+        sendWhatsAppNotification({
+          recipientPhone: seller.whatsappNumber,
+          recipientName: seller.fullName,
+          itemTitle: listing.title || 'an item on Engineering Market',
+          chatUrl: clientBaseUrl,
+          customMessage: `${buyer?.fullName || 'A buyer'} is interested in your listing "${listing.title}"`
+        }).catch((err) => console.error('[WhatsApp Notification Error]', err.message));
+      }
     }
 
     res.status(201).json(conversation);
