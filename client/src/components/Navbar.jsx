@@ -199,7 +199,7 @@ export const Navbar = () => {
       )}
 
       {/* ══════════ MOBILE HEADER ══════════ */}
-      {!['/vendors', '/orders', '/profile'].includes(location.pathname) && (
+      {!['/vendors', '/orders', '/profile', '/chat'].includes(location.pathname) && !location.pathname.startsWith('/chat') && (
       <header className="navbar-mobile">
         <div className="navbar-mobile-container">
           <Link to="/" className="navbar-logo-link">

@@ -224,10 +224,20 @@ export const Chat = () => {
         
         {/* Sidebar Header */}
         <div className="chat-sidebar-header">
-          <h1 className="chat-sidebar-title">
-            <MessageSquare style={{ width: '20px', height: '20px', color: '#6C4EFF' }} />
-            Messages
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              onClick={() => navigate('/')}
+              className="chat-back-btn"
+              title="Go to Home"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.25rem', margin: '-0.25rem 0 0 -0.25rem' }}
+            >
+              <ChevronLeft style={{ width: '22px', height: '22px' }} />
+            </button>
+            <h1 className="chat-sidebar-title">
+              <MessageSquare style={{ width: '20px', height: '20px', color: '#6C4EFF' }} />
+              Messages
+            </h1>
+          </div>
           
           {/* Search bar */}
           <div className="chat-search-wrapper">
