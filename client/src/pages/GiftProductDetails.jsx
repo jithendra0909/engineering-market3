@@ -26,6 +26,7 @@ export const GiftProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImg, setSelectedImg] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const [error, setError] = useState(null);
 
@@ -347,12 +348,81 @@ export const GiftProductDetails = () => {
             <button
               onClick={handleAddToCart}
               className="gift-details-cart-btn"
+              title="Add to Cart"
             >
               <ShoppingBag style={{ width: '18px', height: '18px' }} />
+            </button>
+
+            {/* Tertiary: Share to WhatsApp */}
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="gift-details-share-btn"
+              title="Share to WhatsApp Group"
+            >
+              <WhatsAppIcon style={{ width: '20px', height: '20px' }} />
             </button>
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Share Preview Modal */}
+      {isShareModalOpen && (() => {
+        const shareText = `🎁 *EM Gift Studio - Custom Creation*
+
+*Product:* ${product.title}
+*Price:* ₹${finalPrice}${product.mrpPrice && product.mrpPrice > finalPrice ? ` (MRP ₹${product.mrpPrice})` : ''}
+*Category:* ${product.category || 'Gifts'}
+
+*Description:* ${product.description ? product.description.slice(0, 150) + (product.description.length > 150 ? '...' : '') : 'Custom personalized gift crafted for students.'}
+
+🔗 *View & customize here:* ${window.location.href}`;
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => setIsShareModalOpen(false)} />
+            <div style={{ position: 'relative', width: '100%', maxWidth: '440px', backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', padding: '1.5rem', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid #E9E6F8', textAlign: 'left' }}>
+              <h3 style={{ fontWeight: 700, fontSize: '16px', color: '#111827', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                <WhatsAppIcon style={{ width: '20px', height: '20px', color: '#059669' }} /> WhatsApp Group Quick-Share
+              </h3>
+              <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
+                Here is the clean, formatted message for your college and friend groups. Copy it or share directly to WhatsApp.
+              </p>
+              
+              <div style={{ backgroundColor: 'rgba(238,249,242,0.5)', border: '1px solid #d1fae5', borderRadius: '16px', padding: '1rem', fontFamily: 'monospace', fontSize: '11px', color: '#374151', lineHeight: 1.625, whiteSpace: 'pre-wrap', userSelect: 'all', maxHeight: '220px', overflowY: 'auto' }}>
+                {shareText}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsShareModalOpen(false)}
+                  style={{ flex: 1, height: '44px', border: '1px solid #E9E6F8', color: '#6B7280', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', background: 'none', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(shareText);
+                    showToast('Message copied to clipboard!', 'success');
+                  }}
+                  style={{ flex: 1, height: '44px', border: '1px solid #a7f3d0', backgroundColor: '#ffffff', color: '#047857', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                >
+                  Copy Message
+                </button>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ flex: 1, height: '44px', backgroundColor: '#059669', color: '#ffffff', fontWeight: 700, fontSize: '13px', borderRadius: '9999px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                >
+                  <WhatsAppIcon style={{ width: '16px', height: '16px' }} /> Share
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

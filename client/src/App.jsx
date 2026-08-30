@@ -51,9 +51,8 @@ const AppLayout = ({ children }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const location = useLocation();
 
-  // Check if we are currently inside an active chat thread on mobile
-  const searchParams = new URLSearchParams(location.search);
-  const isChatActive = location.pathname.startsWith('/chat') && searchParams.get('conversationId');
+  // Check if we are currently inside chat on mobile
+  const isChatActive = location.pathname.startsWith('/chat');
 
   return (
     <div className="min-h-screen bg-white flex flex-col antialiased">

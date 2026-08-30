@@ -220,7 +220,7 @@ export const Chat = () => {
   return (
     <div className="chat-container">
       {/* ─── LEFT SIDEBAR (CONVERSATIONS LIST) ─── */}
-      <div className={`chat-sidebar ${activeChat && conversationIdParam ? 'hidden-mobile' : ''}`}>
+      <div className={`chat-sidebar ${activeChat ? 'hidden-mobile' : ''}`}>
         
         {/* Sidebar Header */}
         <div className="chat-sidebar-header">
@@ -331,7 +331,7 @@ export const Chat = () => {
       </div>
 
       {/* ─── RIGHT MAIN CHAT AREA ─── */}
-      <div className={`chat-main ${!activeChat || !conversationIdParam ? 'hidden-mobile' : ''}`}>
+      <div className={`chat-main ${!activeChat ? 'hidden-mobile' : ''}`}>
         {activeChat ? (
           <>
             {/* Header info bar */}

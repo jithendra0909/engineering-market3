@@ -15,9 +15,8 @@ const FeedbackWidget = () => {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Hide feedback widget on admin dashboard and login pages
-  const hidePaths = ['/admin/dashboard', '/login', '/signup', '/dev/admin-simulator'];
-  if (hidePaths.some(p => location.pathname.startsWith(p)) || !isLoggedIn) return null;
+  // Show feedback widget ONLY on the home page ('/') and when user is logged in
+  if (location.pathname !== '/' || !isLoggedIn) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
