@@ -26,9 +26,10 @@ export const getSitemapXml = async (req, res) => {
     // Determine current protocol & host for absolute canonical URLs
     const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const defaultHost = host ? `${proto}://${host}` : 'https://engineering-market.in';
     const baseUrl = process.env.CLIENT_URL
       ? process.env.CLIENT_URL.replace(/\/$/, '')
-      : `${proto}://${host}`;
+      : defaultHost;
 
     // Static crawlable pages
     const staticPages = [
