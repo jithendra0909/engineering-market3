@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/signup', registerStudent);
 router.post('/login', loginUser);
 router.get('/me', protect, getUserProfile);
-router.put('/profile', protect, handleSingleUpload('idCardImage'), updateUserProfile);
+router.put('/profile', protect, updateUserProfile);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
 

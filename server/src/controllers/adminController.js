@@ -170,15 +170,12 @@ const dismissReports = async (req, res) => {
   }
 };
 
-// @desc    Get all reported conversations
-// @route   GET /api/admin/chats
-// @access  Private & Admin
 const getReportedConversations = async (req, res) => {
   try {
-    const conversations = await Conversation.find({ reports: { $exists: true, $not: { $size: 0 } } })
+    const conversations = await Conversation.find({ 'reports.0': { $exists: true } })
       .populate('listing', 'title price images status')
-      .populate('buyer', 'fullName email profileImageUrl department year')
-      .populate('seller', 'fullName email profileImageUrl department year')
+      .populate('buyer', 'fullName email profileImageUrl department year verificationStatus')
+      .populate('seller', 'fullName email profileImageUrl department year verificationStatus')
       .populate('reports.reporter', 'fullName email')
       .sort({ updatedAt: -1 });
 

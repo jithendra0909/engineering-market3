@@ -53,7 +53,7 @@ const registerStudent = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user with approved status by default
     const user = await User.create({
       fullName,
       email,
@@ -63,8 +63,8 @@ const registerStudent = async (req, res) => {
       department,
       year,
       college,
-      idCardImageUrl: req.file ? req.file.path : '',
-      verificationStatus: 'pending', // Default is pending approval
+      idCardImageUrl: '',
+      verificationStatus: 'approved',
       role: 'student'
     });
 
@@ -322,25 +322,6 @@ const updateUserProfile = async (req, res) => {
     if (department) user.department = department;
     if (year) user.year = year;
     if (college) user.college = college;
-
-    if (req.file) {
-      user.idCardImageUrl = req.file.path;
-    }
-
-    // If the student was rejected or uploads a new ID card, reset status to pending for review
-    if (user.verificationStatus === 'rejected' || req.file) {
-      user.verificationStatus = 'pending';
-      
-      // Create notification about re-verification
-      createNotification({
-        userId: user._id,
-        title: 'Verification Resubmitted ⏳',
-        body: 'Your profile updates and ID card have been submitted. An admin will review them shortly.',
-        type: 'verification',
-        url: '/profile',
-        sendPush: false,
-      }).catch((err) => console.error('[Auth] Re-verification notification error:', err.message));
-    }
 
     await user.save();
 

@@ -231,9 +231,9 @@ export const Profile = () => {
       case 'approved':
         return { icon: ShieldCheck, label: 'Verified', color: '#059669', bg: '#EEF9F2', border: '#a7f3d0', bannerText: 'Your account is verified', bannerSub: 'You can now buy, sell, donate and connect with other students.' };
       case 'rejected':
-        return { icon: XCircle, label: 'Rejected', color: '#e11d48', bg: '#fff1f2', border: '#ffe4e6', bannerText: 'Verification rejected', bannerSub: 'Please contact support or re-submit your ID card.' };
+        return { icon: XCircle, label: 'Restricted', color: '#e11d48', bg: '#fff1f2', border: '#ffe4e6', bannerText: 'Account Restricted', bannerSub: 'Your account access has been restricted. Please contact support.' };
       default:
-        return { icon: Clock, label: 'Pending', color: '#d97706', bg: '#fffbeb', border: '#fde68a', bannerText: 'Verification pending', bannerSub: 'Your ID card is being reviewed by the admin team.' };
+        return { icon: Clock, label: 'Pending', color: '#d97706', bg: '#fffbeb', border: '#fde68a', bannerText: 'Verification pending', bannerSub: 'Your student account is being reviewed by the admin team.' };
     }
   };
 

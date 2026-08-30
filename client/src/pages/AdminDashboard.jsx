@@ -346,7 +346,7 @@ export const AdminDashboard = () => {
                       <th>Student Name</th>
                       <th>Reg Number</th>
                       <th>Department / Year</th>
-                      <th>ID Card</th>
+                      <th>College & Contact</th>
                       <th className="text-center">Actions</th>
                     </tr>
                   </thead>
@@ -362,27 +362,12 @@ export const AdminDashboard = () => {
                           <td>
                              <div className="admin-cell-dept">{st.department}</div>
                              <div style={{ marginTop: '4px' }}>
-                               {st.year === '1st Year' ? (
-                                 <span className="admin-cell-year-badge" title="First year students don't have ID cards yet. Fee receipt or Allotment letter is accepted.">
-                                   {st.year} (Receipt Allowed)
-                                 </span>
-                               ) : (
-                                 <span className="admin-cell-year-text">{st.year}</span>
-                               )}
+                               <span className="admin-cell-year-text">{st.year}</span>
                              </div>
                           </td>
                           <td>
-                            {st.idCardImageUrl ? (
-                              <div
-                                onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle(`${st.fullName} ID Card Preview`); }}
-                                className="admin-id-thumb"
-                                title="Click to view ID card"
-                              >
-                                <img src={st.idCardImageUrl} alt="ID Card" />
-                              </div>
-                            ) : (
-                              <span className="admin-no-image">No Image</span>
-                            )}
+                            <p className="admin-cell-name" style={{ fontSize: '12px' }}>{st.college || '-'}</p>
+                            <p className="admin-cell-email" style={{ marginTop: '2px' }}>{st.whatsappNumber || '-'}</p>
                           </td>
                           <td className="text-center">
                             <div className="admin-action-group">
@@ -443,7 +428,7 @@ export const AdminDashboard = () => {
                         <th>Student Name</th>
                         <th>Reg Number</th>
                         <th>Department / Year</th>
-                        <th>ID Card</th>
+                        <th>College & Contact</th>
                         <th className="text-center">Status Action</th>
                       </tr>
                     </thead>
@@ -459,27 +444,12 @@ export const AdminDashboard = () => {
                             <td>
                              <div className="admin-cell-dept">{st.department}</div>
                              <div style={{ marginTop: '4px' }}>
-                               {st.year === '1st Year' ? (
-                                 <span className="admin-cell-year-badge" title="First year students don't have ID cards yet. Fee receipt or Allotment letter is accepted.">
-                                   {st.year} (Receipt Allowed)
-                                 </span>
-                               ) : (
-                                 <span className="admin-cell-year-text">{st.year}</span>
-                               )}
+                               <span className="admin-cell-year-text">{st.year}</span>
                              </div>
                             </td>
                             <td>
-                              {st.idCardImageUrl ? (
-                                <div
-                                  onClick={() => { setPreviewIdUrl(st.idCardImageUrl); setPreviewTitle(`${st.fullName} ID Card Preview`); }}
-                                  className="admin-id-thumb"
-                                  title="Click to view ID card"
-                                >
-                                  <img src={st.idCardImageUrl} alt="ID Card" />
-                                </div>
-                              ) : (
-                                <span className="admin-no-image">No Image</span>
-                              )}
+                              <p className="admin-cell-name" style={{ fontSize: '12px' }}>{st.college || '-'}</p>
+                              <p className="admin-cell-email" style={{ marginTop: '2px' }}>{st.whatsappNumber || '-'}</p>
                             </td>
                             <td className="text-center">
                               {subStatus === 'approved' ? (

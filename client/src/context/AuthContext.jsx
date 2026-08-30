@@ -123,6 +123,10 @@ export const AuthProvider = ({ children }) => {
     const interval = setInterval(() => {
       fetchUnreadNotificationsCount();
       fetchUnreadChatCount();
+      // Periodically refresh user profile to keep verification and role in sync
+      if (token) {
+        api.get('/auth/me').then(({ data }) => setUser(data)).catch(() => {});
+      }
     }, 15000);
 
     return () => {
@@ -155,7 +159,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/signup', signupData);
       setToken(data.token);
       setUser(data);
-      showToast('Registration successful! Account pending verification.', 'success');
+      showToast('Registration successful! Welcome to Engineering Market.', 'success');
       return { success: true, user: data };
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed';
@@ -181,7 +185,7 @@ export const AuthProvider = ({ children }) => {
 
   const isLoggedIn = !!user;
   const isAdmin = user?.role === 'admin';
-  const isVerified = user?.verificationStatus === 'approved';
+  const isVerified = user?.verificationStatus === 'approved' || user?.role === 'admin';
 
   return (
     <AuthContext.Provider
@@ -203,6 +207,7 @@ export const AuthProvider = ({ children }) => {
         showToast,
         updateProfile,
         loadUser,
+        refreshUser: loadUser,
         fetchColleges,
         fetchDepartments,
         fetchUnreadNotificationsCount,

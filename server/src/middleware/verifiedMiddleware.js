@@ -1,8 +1,8 @@
 const verifiedOnly = (req, res, next) => {
-  if (req.user && req.user.verificationStatus === 'approved') {
+  if (req.user && (req.user.verificationStatus === 'approved' || req.user.role === 'admin')) {
     next();
   } else {
-    res.status(403).json({ message: 'You are not verified' });
+    res.status(403).json({ message: 'Your account is pending verification or has been restricted.' });
   }
 };
 
