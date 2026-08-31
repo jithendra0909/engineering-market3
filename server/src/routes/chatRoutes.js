@@ -5,14 +5,18 @@ import {
   createConversation,
   sendMessage,
   getUnreadCount,
-  reportConversation
+  reportConversation,
+  ackDelivery
 } from '../controllers/chatController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { verifiedOnly } from '../middleware/verifiedMiddleware.js';
 
 const router = express.Router();
 
-// Apply authentication to all chat routes
+// Allow delivery acknowledgment (e.g. from background service worker) with optional auth
+router.post('/delivery-ack', optionalProtect, ackDelivery);
+
+// Apply authentication to all protected chat routes
 router.use(protect);
 router.use(verifiedOnly);
 

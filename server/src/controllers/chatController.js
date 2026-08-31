@@ -20,6 +20,21 @@ export const getConversations = async (req, res) => {
       .populate('seller', 'fullName profileImageUrl department year')
       .sort({ updatedAt: -1 });
 
+    // When user loads conversations, mark any pending incoming messages as delivered
+    const conversationIds = conversations.map((c) => c._id);
+    if (conversationIds.length > 0) {
+      await Message.updateMany(
+        {
+          conversation: { $in: conversationIds },
+          sender: { $ne: userId },
+          status: 'pending'
+        },
+        {
+          $set: { status: 'delivered', deliveredAt: new Date() }
+        }
+      );
+    }
+
     res.json(conversations);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching conversations', error: error.message });
@@ -48,12 +63,39 @@ export const getMessages = async (req, res) => {
     }
 
     // Mark as read: remove current user from unreadFor list if present
-    if (conversation.unreadFor.includes(userId)) {
+    if (conversation.unreadFor && conversation.unreadFor.some((id) => id.toString() === userId.toString())) {
       conversation.unreadFor = conversation.unreadFor.filter(
         (id) => id.toString() !== userId.toString()
       );
       await conversation.save();
     }
+
+    // Mark all incoming messages in this conversation as READ by the viewing receiver
+    const now = new Date();
+    await Message.updateMany(
+      {
+        conversation: conversationId,
+        sender: { $ne: userId },
+        status: { $ne: 'read' }
+      },
+      {
+        $set: {
+          status: 'read',
+          readAt: now
+        }
+      }
+    );
+    // Also ensure deliveredAt is set if it was null
+    await Message.updateMany(
+      {
+        conversation: conversationId,
+        sender: { $ne: userId },
+        deliveredAt: null
+      },
+      {
+        $set: { deliveredAt: now }
+      }
+    );
 
     const messages = await Message.find({ conversation: conversationId })
       .sort({ createdAt: 1 });
@@ -174,11 +216,12 @@ export const sendMessage = async (req, res) => {
       return res.status(403).json({ message: 'Access denied to this conversation' });
     }
 
-    // Create the message
+    // Create the message with pending status
     const message = new Message({
       conversation: conversationId,
       sender: senderId,
-      text: text.trim()
+      text: text.trim(),
+      status: 'pending'
     });
     await message.save();
 
@@ -242,6 +285,7 @@ export const sendMessage = async (req, res) => {
           url: `/chat?conversationId=${conversationId}`,
           tag: `chat-${conversationId}`,
           conversationId: conversationId,
+          messageId: message._id,
         }).catch((err) => console.error('[Chat] Push notification error:', err.message));
 
       } catch (err) {
@@ -262,6 +306,25 @@ export const getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    // When receiver checks unread count, acknowledge delivery for any pending messages
+    const conversations = await Conversation.find({
+      $or: [{ buyer: userId }, { seller: userId }]
+    }).select('_id');
+
+    const conversationIds = conversations.map((c) => c._id);
+    if (conversationIds.length > 0) {
+      await Message.updateMany(
+        {
+          conversation: { $in: conversationIds },
+          sender: { $ne: userId },
+          status: 'pending'
+        },
+        {
+          $set: { status: 'delivered', deliveredAt: new Date() }
+        }
+      );
+    }
+
     const count = await Conversation.countDocuments({
       $or: [{ buyer: userId }, { seller: userId }],
       unreadFor: userId
@@ -270,6 +333,36 @@ export const getUnreadCount = async (req, res) => {
     res.json({ count });
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching unread count', error: error.message });
+  }
+};
+
+// @desc    Acknowledge message delivery
+// @route   POST /api/chats/delivery-ack
+// @access  Optional Auth / Service Worker
+export const ackDelivery = async (req, res) => {
+  try {
+    const { messageId, conversationId } = req.body;
+    const userId = req.user?._id;
+
+    if (messageId) {
+      const query = { _id: messageId, status: 'pending' };
+      if (userId) {
+        query.sender = { $ne: userId };
+      }
+      await Message.updateOne(
+        query,
+        { $set: { status: 'delivered', deliveredAt: new Date() } }
+      );
+    } else if (conversationId && userId) {
+      await Message.updateMany(
+        { conversation: conversationId, sender: { $ne: userId }, status: 'pending' },
+        { $set: { status: 'delivered', deliveredAt: new Date() } }
+      );
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: 'Error acknowledging delivery', error: error.message });
   }
 };
 

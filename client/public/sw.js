@@ -192,8 +192,25 @@ self.addEventListener('push', (event) => {
       ],
     };
 
+    // Send delivery acknowledgment back to server if push includes messageId / conversationId
+    const deliveryAckPromise = (data.messageId || data.conversationId)
+      ? fetch('/api/chats/delivery-ack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messageId: data.messageId,
+            conversationId: data.conversationId,
+          }),
+        }).catch((ackErr) => {
+          console.warn('[SW] Delivery ack fetch warning:', ackErr?.message);
+        })
+      : Promise.resolve();
+
     event.waitUntil(
-      self.registration.showNotification(title, options)
+      Promise.all([
+        self.registration.showNotification(title, options),
+        deliveryAckPromise,
+      ])
     );
   } catch (error) {
     console.error('[SW] Error handling push event:', error);

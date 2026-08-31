@@ -8,6 +8,8 @@ import {
   Search, 
   MessageSquare, 
   Clock, 
+  Check,
+  CheckCheck,
   User, 
   GraduationCap,
   Sparkles,
@@ -35,9 +37,12 @@ export const Chat = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
+  const isNearBottomRef = useRef(true);
+  const prevMessagesCountRef = useRef(0);
+  const activeChatIdRef = useRef(null);
 
   // Chat Reporting states
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -82,6 +87,34 @@ export const Chat = () => {
     "Can I inspect the item before buying?"
   ];
 
+  // Helper to check if messages container is scrolled near bottom
+  const checkIfNearBottom = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return true;
+    const threshold = 90; // px threshold from bottom
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    return distanceToBottom <= threshold;
+  };
+
+  const handleContainerScroll = () => {
+    isNearBottomRef.current = checkIfNearBottom();
+  };
+
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (messagesContainerRef.current) {
+      if (behavior === 'auto') {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      } else {
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    } else if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior });
+    }
+  };
+
   // Fetch all user conversations
   const fetchConversations = async (silent = false) => {
     try {
@@ -123,11 +156,33 @@ export const Chat = () => {
     try {
       if (!silent) setLoadingMessages(true);
       const { data } = await api.get(`/chats/${chatId}/messages`);
+      
+      const isNewChat = activeChatIdRef.current !== chatId;
+      activeChatIdRef.current = chatId;
+
+      const wasNearBottom = isNearBottomRef.current;
+      const prevCount = prevMessagesCountRef.current;
+      const hasNewMessages = data.length > prevCount;
+      prevMessagesCountRef.current = data.length;
+
       setMessages(data);
-      scrollToBottom();
+
+      if (isNewChat) {
+        // CASE A: User opens a conversation -> Initial scroll to bottom
+        isNearBottomRef.current = true;
+        setTimeout(() => scrollToBottom('auto'), 50);
+      } else if (!silent) {
+        // Initial non-silent load
+        isNearBottomRef.current = true;
+        setTimeout(() => scrollToBottom('auto'), 50);
+      } else if (hasNewMessages && wasNearBottom) {
+        // CASE B / C: New message received while already near bottom -> Scroll to bottom
+        setTimeout(() => scrollToBottom('smooth'), 50);
+      }
+      // CASE D: User manually scrolled up -> DO NOT scroll! Preserve user's reading position.
     } catch (err) {
       console.error('Error fetching messages:', err);
-      showToast('Failed to load messages', 'error');
+      if (!silent) showToast('Failed to load messages', 'error');
     } finally {
       if (!silent) setLoadingMessages(false);
     }
@@ -161,18 +216,12 @@ export const Chat = () => {
     };
   }, [activeChat?._id]);
 
-  const scrollToBottom = (smooth = true) => {
-    setTimeout(() => {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTo({
-          top: messagesContainerRef.current.scrollHeight,
-          behavior: smooth ? 'smooth' : 'auto'
-        });
-      }
-    }, 80);
-  };
-
   const handleSelectChat = (chat) => {
+    if (activeChat?._id !== chat._id) {
+      activeChatIdRef.current = null;
+      prevMessagesCountRef.current = 0;
+      isNearBottomRef.current = true;
+    }
     setActiveChat(chat);
     setSearchParams({ conversationId: chat._id });
   };
@@ -186,7 +235,10 @@ export const Chat = () => {
       const { data } = await api.post(`/chats/${activeChat._id}/messages`, { text: text.trim() });
       setMessages(prev => [...prev, data]);
       setNewMessageText('');
-      scrollToBottom();
+      prevMessagesCountRef.current += 1;
+      isNearBottomRef.current = true;
+      // Sender sends a message -> Scroll to bottom
+      setTimeout(() => scrollToBottom('smooth'), 50);
       
       // Refresh conversations immediately to update preview/timestamp
       fetchConversations(true);
@@ -427,7 +479,11 @@ export const Chat = () => {
             </div>
 
             {/* Messages box */}
-            <div className="chat-messages-container" ref={messagesContainerRef}>
+            <div
+              className="chat-messages-container"
+              ref={messagesContainerRef}
+              onScroll={handleContainerScroll}
+            >
               {loadingMessages && messages.length === 0 ? (
                 <div className="chat-messages-loading">
                   <div className="chat-spinner animate-spin" />
@@ -448,8 +504,28 @@ export const Chat = () => {
                           {message.text}
                         </div>
                         <p className={`chat-message-time ${isSelf ? 'self' : 'other'}`}>
-                          <Clock style={{ width: '10px', height: '10px' }} />
-                          {formatTime(message.createdAt)}
+                          {isSelf && (
+                            message.status === 'read' ? (
+                              <CheckCheck
+                                className="chat-tick-icon chat-tick-read"
+                                style={{ width: '13px', height: '13px' }}
+                                title="Read"
+                              />
+                            ) : message.status === 'delivered' ? (
+                              <Check
+                                className="chat-tick-icon chat-tick-delivered"
+                                style={{ width: '12px', height: '12px' }}
+                                title="Delivered"
+                              />
+                            ) : (
+                              <Clock
+                                className="chat-tick-icon chat-tick-pending"
+                                style={{ width: '10px', height: '10px' }}
+                                title="Pending"
+                              />
+                            )
+                          )}
+                          <span>{formatTime(message.createdAt)}</span>
                         </p>
                       </div>
                     </div>

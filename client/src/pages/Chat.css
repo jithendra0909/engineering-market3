@@ -599,7 +599,7 @@
   border-top-left-radius: 0;
 }
 
-/* Message timestamp */
+/* Message timestamp & ticks */
 .chat-message-time {
   font-size: 10px;
   color: #9CA3AF;
@@ -615,6 +615,25 @@
 
 .chat-message-time.other {
   justify-content: flex-start;
+}
+
+/* Status tick indicators */
+.chat-tick-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.chat-tick-pending {
+  color: #9CA3AF;
+}
+
+.chat-tick-delivered {
+  color: #9CA3AF;
+}
+
+.chat-tick-read {
+  color: #60A5FA;
 }
 
 /* ─── Quick Replies ─── */

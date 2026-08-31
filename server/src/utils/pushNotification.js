@@ -51,6 +51,7 @@ export const sendPushNotification = async ({
   type = 'system',
   conversationId,
   listingId,
+  messageId,
   data = {},
 }) => {
   if (!vapidPublicKey || !vapidPrivateKey) {
@@ -82,12 +83,14 @@ export const sendPushNotification = async ({
       type: type || 'system',
       conversationId: conversationId ? conversationId.toString() : undefined,
       listingId: listingId ? listingId.toString() : undefined,
+      messageId: messageId ? messageId.toString() : undefined,
       timestamp: Date.now(),
       data: {
         url: url || '/notifications',
         type: type || 'system',
         conversationId: conversationId ? conversationId.toString() : undefined,
         listingId: listingId ? listingId.toString() : undefined,
+        messageId: messageId ? messageId.toString() : undefined,
         timestamp: Date.now(),
         ...data,
       },
