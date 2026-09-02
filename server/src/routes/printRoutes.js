@@ -11,6 +11,7 @@ import {
   getPrintFile
 } from '../controllers/printController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { adminOnly } from '../middleware/adminMiddleware.js';
 import { handlePdfUpload, handleSingleUpload } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
@@ -28,7 +29,7 @@ router.get('/cloudinary-sign', protect, getCloudinarySignature);  // Step 1: get
 router.post('/register-pdf', protect, registerPdf);               // Step 2: register after client upload
 
 // Server-side PDF proxy (fetches from Cloudinary and returns binary — bypasses all restrictions)
-router.get('/proxy-pdf', protect, proxyPdfDownload);
+router.get('/proxy-pdf', protect, adminOnly, proxyPdfDownload);
 
 // Legacy server-side upload (kept for local dev fallback)
 router.post('/upload-pdf', protect, handlePdfUpload('pdf'), (req, res) => {
@@ -46,7 +47,7 @@ router.post('/upload-screenshot', protect, handleSingleUpload('screenshot'), (re
 });
 
 // Admin/Vendor routes
-router.get('/all-orders', protect, getAllPrintOrders);
-router.put('/orders/:id/status', protect, updatePrintOrderStatus);
+router.get('/all-orders', protect, adminOnly, getAllPrintOrders);
+router.put('/orders/:id/status', protect, adminOnly, updatePrintOrderStatus);
 
 export default router;

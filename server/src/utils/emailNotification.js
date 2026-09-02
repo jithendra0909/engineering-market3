@@ -114,6 +114,11 @@ export const sendChatEmailNotification = async ({
 
     await transporter.sendMail(mailOptions);
     emailCooldowns.set(conversationId, Date.now());
+    setTimeout(() => {
+      if (emailCooldowns.get(conversationId) && Date.now() - emailCooldowns.get(conversationId) >= COOLDOWN_MS) {
+        emailCooldowns.delete(conversationId);
+      }
+    }, COOLDOWN_MS + 1000);
     console.log(`[Email] Notification sent to ${recipientEmail} for conversation ${conversationId}`);
   } catch (error) {
     console.error('[Email] Failed to send notification:', error.message);

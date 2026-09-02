@@ -120,9 +120,9 @@ const seedIfEmpty = async () => {
       // 2. Create Admin
       await User.create({
         fullName: 'System Administrator',
-        email: 'admin@vignan.edu.in',
-        password: 'admin123',
-        whatsappNumber: '919876543210',
+        email: process.env.ADMIN_EMAIL || 'admin@vignan.edu.in',
+        password: process.env.ADMIN_PASSWORD || 'admin123',
+        whatsappNumber: process.env.ADMIN_PHONE || '919876543210',
         registrationNumber: 'ADMIN-001',
         department: 'Administration',
         year: '4th Year',

@@ -196,8 +196,13 @@ export const updatePrintOrderStatus = async (req, res) => {
     if (status === 'delivered' && order.files && order.files.length > 0) {
       (async () => {
         try {
-          const SUPABASE_URL = 'https://ymarvpwrpwbkkonhsdhm.supabase.co';
-          const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltYXJ2cHdycHdia2tvbmhzZGhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MTU2MjMsImV4cCI6MjEwMDQ5MTYyM30.FHOV_bAzkOOuXTN3GXdYCkYFT92vUDovuozVT1WYawI';
+          const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ymarvpwrpwbkkonhsdhm.supabase.co';
+          const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+
+          if (!SUPABASE_URL || !SUPABASE_KEY) {
+            console.warn('[Cleanup] Supabase credentials not configured, skipping Supabase file cleanup');
+            return;
+          }
 
           const filesToDelete = [];
           for (const file of order.files) {
@@ -317,6 +322,20 @@ export const proxyPdfDownload = async (req, res) => {
   try {
     const { url, mode = 'download', fileName = 'document.pdf' } = req.query;
     if (!url) return res.status(400).json({ message: 'url query parameter is required' });
+
+    // Validate URL against allowlist to prevent SSRF and open redirects
+    try {
+      const parsedUrl = new URL(url, 'https://localhost');
+      const allowedHosts = ['res.cloudinary.com', 'cloudinary.com', 'ymarvpwrpwbkkonhsdhm.supabase.co'];
+      const isAllowedHost = allowedHosts.some(host => parsedUrl.hostname === host || parsedUrl.hostname.endsWith('.' + host));
+      const isLocalPath = url.startsWith('/uploads/') || url.startsWith('/api/print/');
+
+      if (!isAllowedHost && !isLocalPath) {
+        return res.status(400).json({ message: 'Access denied: URL host is not in the allowed storage domains.' });
+      }
+    } catch {
+      return res.status(400).json({ message: 'Invalid URL format' });
+    }
 
     // Non-Cloudinary URLs: redirect directly
     if (!url.includes('cloudinary.com')) {

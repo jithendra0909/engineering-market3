@@ -4,6 +4,7 @@ import Listing from '../models/Listing.js';
 import User from '../models/User.js';
 import { sendChatEmailNotification } from '../utils/emailNotification.js';
 import { sendPushNotification, createNotification } from '../utils/pushNotification.js';
+import { sendWhatsAppNotification } from '../utils/whatsappNotification.js';
 
 // @desc    Get all conversations for logged-in user
 // @route   GET /api/chats
@@ -150,6 +151,7 @@ export const createConversation = async (req, res) => {
         listing: listingId,
         buyer: buyerId,
         seller: sellerId,
+        unreadFor: [sellerId],
         lastMessage: {
           text: 'Started a chat for: ' + listing.title,
           sender: buyerId,
@@ -199,8 +201,8 @@ export const sendMessage = async (req, res) => {
     const conversationId = req.params.id;
     const { text } = req.body;
 
-    if (!text || text.trim() === '') {
-      return res.status(400).json({ message: 'Message text is required' });
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: 'Message text cannot be empty' });
     }
 
     // Check conversation and access rights
@@ -238,8 +240,11 @@ export const sendMessage = async (req, res) => {
       createdAt: message.createdAt
     };
 
-    // Add recipient to unreadFor if not already there
-    if (!conversation.unreadFor.includes(recipientId)) {
+    // Add recipient to unreadFor if not already there (using string comparison for ObjectIds)
+    const isAlreadyUnread = conversation.unreadFor.some(
+      (id) => id.toString() === recipientId.toString()
+    );
+    if (!isAlreadyUnread) {
       conversation.unreadFor.push(recipientId);
     }
     

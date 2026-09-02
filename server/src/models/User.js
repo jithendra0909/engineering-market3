@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
   verificationStatus: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'approved'
+    default: 'pending'
   },
   resetPasswordToken: {
     type: String,

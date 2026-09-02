@@ -64,7 +64,7 @@ const registerStudent = async (req, res) => {
       year,
       college,
       idCardImageUrl: '',
-      verificationStatus: 'approved',
+      verificationStatus: 'pending',
       role: 'student'
     });
 

@@ -161,10 +161,10 @@ const handleMultipleUpload = (fieldName, maxCount = 5) => {
 
 // PDF file filter
 const pdfFileFilter = (req, file, cb) => {
-  const isPdf = file.mimetype === 'application/pdf' || file.mimetype === 'application/x-pdf' || file.mimetype === '';
+  const isPdf = file.mimetype === 'application/pdf' || file.mimetype === 'application/x-pdf';
   const isExtPdf = path.extname(file.originalname).toLowerCase() === '.pdf';
 
-  if (isPdf || isExtPdf) {
+  if (isPdf && isExtPdf) {
     return cb(null, true);
   }
   cb(new Error('Only PDF files (.pdf) are allowed!'));
